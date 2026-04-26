@@ -50,6 +50,20 @@ export default {
       });
     }
 
+    // GET /polityka-prywatnosci
+    if (url.pathname === "/polityka-prywatnosci") {
+      return new Response(buildPrivacyPolicyHTML(cfg), {
+        headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(86400) }
+      });
+    }
+
+    // GET /rodo
+    if (url.pathname === "/rodo") {
+      return new Response(buildRODOHTML(cfg), {
+        headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(86400) }
+      });
+    }
+
     // GET / — HTML strony
     return new Response(buildHTML(cfg, hostname), {
       headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(300) }
@@ -126,6 +140,219 @@ function corsHeaders() {
 
 function cacheHeaders(seconds) {
   return { "Cache-Control": `public, max-age=${seconds}` };
+}
+
+// ── POLITYKA PRYWATNOŚCI ───────────────────────────────────────────────────
+function buildPrivacyPolicyHTML(cfg) {
+  return `<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Polityka Prywatności — Kancelaria Adwokacka Magdalena Idzik-Cieśla</title>
+<meta name="robots" content="noindex,follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .legal-page { max-width: 780px; margin: 0 auto; }
+  .legal-page h1 { font-family: var(--serif); font-size: clamp(1.8rem,3.5vw,2.6rem); font-weight:700; color:var(--navy); margin-bottom:.5rem; }
+  .legal-page h2 { font-family: var(--serif); font-size: 1.2rem; font-weight:700; color:var(--navy); margin: 2rem 0 .5rem; }
+  .legal-page p, .legal-page li { font-size:.95rem; color:var(--text); line-height:1.85; font-weight:300; margin-bottom:.6rem; }
+  .legal-page ul { padding-left: 1.4rem; margin-bottom:1rem; }
+  .legal-page li { margin-bottom:.3rem; }
+  .legal-page .meta { font-size:.8rem; color:var(--text-muted); margin-bottom:2.5rem; }
+  .legal-page a { color:var(--accent); }
+  .legal-nav { background:var(--white); border-bottom:1px solid var(--border); padding:.9rem var(--px); display:flex; align-items:center; gap:1rem; }
+  .legal-nav a { font-family:var(--serif); font-size:1rem; font-weight:700; color:var(--navy); }
+  .legal-nav span { color:var(--text-muted); font-size:.85rem; }
+</style>
+</head>
+<body>
+<nav class="legal-nav">
+  <a href="/">← Kancelaria Adwokacka Magdalena Idzik-Cieśla</a>
+  <span>/ Polityka Prywatności</span>
+</nav>
+<main>
+<section style="padding:clamp(2.5rem,5vw,4rem) 0 clamp(3rem,6vw,5rem)">
+  <div class="container">
+    <div class="legal-page">
+      <p class="section-label">Dokument prawny</p>
+      <h1>Polityka Prywatności</h1>
+      <p class="meta">Ostatnia aktualizacja: styczeń 2025</p>
+
+      <h2>1. Administrator danych osobowych</h2>
+      <p>Administratorem Twoich danych osobowych jest adwokat <strong>Magdalena Idzik-Cieśla</strong>, prowadząca Kancelarię Adwokacką z siedzibą przy ul. Ceramiczna 5E/79, 03-126 Warszawa.</p>
+      <p>Kontakt z Administratorem: <a href="mailto:kancelaria@idzik.org.pl">kancelaria@idzik.org.pl</a> lub tel. <a href="tel:+48605089552">605 089 552</a>.</p>
+
+      <h2>2. Jakie dane zbieramy?</h2>
+      <p>Za pośrednictwem formularza kontaktowego dostępnego na stronie internetowej zbieramy:</p>
+      <ul>
+        <li>imię,</li>
+        <li>numer telefonu,</li>
+        <li>adres e-mail (opcjonalnie),</li>
+        <li>krótki opis sprawy (opcjonalnie).</li>
+      </ul>
+      <p>Dane są przekazywane dobrowolnie. Podanie imienia i numeru telefonu jest niezbędne do umówienia bezpłatnej konsultacji.</p>
+
+      <h2>3. Cel i podstawa prawna przetwarzania</h2>
+      <ul>
+        <li><strong>Odpowiedź na zapytanie i umówienie konsultacji</strong> — art. 6 ust. 1 lit. b RODO (działania zmierzające do zawarcia umowy na żądanie osoby).</li>
+        <li><strong>Realizacja umowy o świadczenie pomocy prawnej</strong> — art. 6 ust. 1 lit. b RODO.</li>
+        <li><strong>Wypełnienie obowiązków prawnych</strong> (m.in. przepisów regulujących zawód adwokata) — art. 6 ust. 1 lit. c RODO.</li>
+        <li><strong>Prawnie uzasadniony interes Administratora</strong> (np. obrona przed roszczeniami) — art. 6 ust. 1 lit. f RODO.</li>
+      </ul>
+
+      <h2>4. Jak długo przechowujemy Twoje dane?</h2>
+      <p>Dane przesłane przez formularz kontaktowy przechowujemy przez czas niezbędny do obsługi zapytania, nie dłużej niż 2 lata od ostatniego kontaktu. W przypadku nawiązania współpracy — przez okres wymagany przepisami prawa (dokumentacja adwokacka).</p>
+
+      <h2>5. Odbiorcy danych</h2>
+      <p>Twoje dane mogą być przekazywane wyłącznie:</p>
+      <ul>
+        <li>podmiotom świadczącym usługi IT (hosting, systemy CRM) — na podstawie umów powierzenia przetwarzania danych,</li>
+        <li>pracownikom i współpracownikom kancelarii (aplikantom adwokackim, sekretariatowi) — w zakresie niezbędnym do obsługi sprawy.</li>
+      </ul>
+      <p>Kancelaria nie sprzedaje danych osobowych ani nie udostępnia ich podmiotom zewnętrznym w celach marketingowych.</p>
+
+      <h2>6. Twoje prawa</h2>
+      <p>Na podstawie przepisów RODO przysługuje Ci prawo do:</p>
+      <ul>
+        <li>dostępu do swoich danych (art. 15 RODO),</li>
+        <li>sprostowania danych (art. 16 RODO),</li>
+        <li>usunięcia danych — „prawo do bycia zapomnianym" (art. 17 RODO),</li>
+        <li>ograniczenia przetwarzania (art. 18 RODO),</li>
+        <li>przenoszenia danych (art. 20 RODO),</li>
+        <li>sprzeciwu wobec przetwarzania (art. 21 RODO).</li>
+      </ul>
+      <p>Aby skorzystać z powyższych praw, skontaktuj się z nami: <a href="mailto:kancelaria@idzik.org.pl">kancelaria@idzik.org.pl</a>. Odpowiemy bez zbędnej zwłoki, nie później niż w terminie 30 dni.</p>
+
+      <h2>7. Prawo do skargi</h2>
+      <p>Jeśli uważasz, że przetwarzanie Twoich danych narusza przepisy RODO, masz prawo wnieść skargę do Prezesa Urzędu Ochrony Danych Osobowych (UODO), ul. Stawki 2, 00-193 Warszawa, tel. 606 950 000.</p>
+
+      <h2>8. Pliki cookies</h2>
+      <p>Strona internetowa kancelarii korzysta wyłącznie z technicznie niezbędnych plików cookies służących do prawidłowego działania strony. Nie stosujemy plików cookies marketingowych, śledzących ani analitycznych bez Twojej wyraźnej zgody.</p>
+
+      <h2>9. Kontakt w sprawach ochrony danych</h2>
+      <p>W sprawach związanych z ochroną danych osobowych możesz kontaktować się z nami pod adresem: <a href="mailto:kancelaria@idzik.org.pl">kancelaria@idzik.org.pl</a> lub pisemnie: Kancelaria Adwokacka Magdalena Idzik-Cieśla, ul. Ceramiczna 5E/79, 03-126 Warszawa.</p>
+    </div>
+  </div>
+</section>
+</main>
+<footer>
+  <div class="footer-bottom" style="margin-top:0">
+    <div class="container" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;padding:1.5rem var(--px)">
+      <span style="color:rgba(255,255,255,.5);font-size:.8rem">© 2025 Kancelaria Adwokacka Magdalena Idzik-Cieśla. Wszelkie prawa zastrzeżone.</span>
+      <span style="font-size:.8rem"><a href="/polityka-prywatnosci" style="color:rgba(255,255,255,.5)">Polityka prywatności</a> · <a href="/rodo" style="color:rgba(255,255,255,.5)">RODO</a></span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>`;
+}
+
+// ── RODO ───────────────────────────────────────────────────────────────────
+function buildRODOHTML(cfg) {
+  return `<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RODO — Twoje prawa — Kancelaria Adwokacka Magdalena Idzik-Cieśla</title>
+<meta name="robots" content="noindex,follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .legal-page { max-width: 780px; margin: 0 auto; }
+  .legal-page h1 { font-family: var(--serif); font-size: clamp(1.8rem,3.5vw,2.6rem); font-weight:700; color:var(--navy); margin-bottom:.5rem; }
+  .legal-page h2 { font-family: var(--serif); font-size: 1.2rem; font-weight:700; color:var(--navy); margin: 2rem 0 .5rem; }
+  .legal-page p, .legal-page li { font-size:.95rem; color:var(--text); line-height:1.85; font-weight:300; margin-bottom:.6rem; }
+  .legal-page ul { padding-left: 1.4rem; margin-bottom:1rem; }
+  .legal-page li { margin-bottom:.3rem; }
+  .legal-page .meta { font-size:.8rem; color:var(--text-muted); margin-bottom:2.5rem; }
+  .legal-page a { color:var(--accent); }
+  .right-card { background:var(--accent-bg); border:1px solid rgba(139,94,26,.2); border-radius:var(--radius-lg); padding:1.5rem 1.75rem; margin-bottom:1.25rem; }
+  .right-card h2 { margin-top:0; }
+  .legal-nav { background:var(--white); border-bottom:1px solid var(--border); padding:.9rem var(--px); display:flex; align-items:center; gap:1rem; }
+  .legal-nav a { font-family:var(--serif); font-size:1rem; font-weight:700; color:var(--navy); }
+  .legal-nav span { color:var(--text-muted); font-size:.85rem; }
+</style>
+</head>
+<body>
+<nav class="legal-nav">
+  <a href="/">← Kancelaria Adwokacka Magdalena Idzik-Cieśla</a>
+  <span>/ RODO</span>
+</nav>
+<main>
+<section style="padding:clamp(2.5rem,5vw,4rem) 0 clamp(3rem,6vw,5rem)">
+  <div class="container">
+    <div class="legal-page">
+      <p class="section-label">Ochrona danych osobowych</p>
+      <h1>RODO — Twoje prawa</h1>
+      <p class="meta">Rozporządzenie (UE) 2016/679 z dnia 27 kwietnia 2016 r.</p>
+
+      <p>Rozporządzenie Parlamentu Europejskiego i Rady (UE) 2016/679 — RODO — przyznaje Ci szerokie uprawnienia w zakresie ochrony Twoich danych osobowych. Poniżej opisujemy każde z nich w kontekście relacji z naszą kancelarią.</p>
+      <p><strong>Administrator danych:</strong> adw. Magdalena Idzik-Cieśla, ul. Ceramiczna 5E/79, 03-126 Warszawa<br>
+      Kontakt: <a href="mailto:kancelaria@idzik.org.pl">kancelaria@idzik.org.pl</a> · <a href="tel:+48605089552">605 089 552</a></p>
+
+      <div class="right-card">
+        <h2>1. Prawo dostępu do danych (art. 15 RODO)</h2>
+        <p>Możesz w każdej chwili zapytać, czy przetwarzamy Twoje dane, a jeśli tak — uzyskać do nich dostęp oraz informacje o celu przetwarzania, kategoriach danych, odbiorcach i planowanym czasie przechowywania.</p>
+      </div>
+
+      <div class="right-card">
+        <h2>2. Prawo do sprostowania danych (art. 16 RODO)</h2>
+        <p>Jeśli Twoje dane są nieprawidłowe lub niekompletne, masz prawo żądać ich niezwłocznego sprostowania lub uzupełnienia.</p>
+      </div>
+
+      <div class="right-card">
+        <h2>3. Prawo do usunięcia danych (art. 17 RODO)</h2>
+        <p>Możesz żądać usunięcia swoich danych, gdy nie są już niezbędne do celu, w którym zostały zebrane, cofnęłeś/-aś zgodę lub przetwarzanie było bezprawne. Prawo to nie ma zastosowania, gdy przetwarzanie jest niezbędne do wywiązania się z obowiązku prawnego lub ustalenia, dochodzenia albo obrony roszczeń.</p>
+      </div>
+
+      <div class="right-card">
+        <h2>4. Prawo do ograniczenia przetwarzania (art. 18 RODO)</h2>
+        <p>Możesz zażądać ograniczenia przetwarzania Twoich danych, jeśli kwestionujesz ich prawidłowość, przetwarzanie jest bezprawne i sprzeciwiasz się usunięciu, lub wnosisz sprzeciw — do czasu jego rozpatrzenia.</p>
+      </div>
+
+      <div class="right-card">
+        <h2>5. Prawo do przenoszenia danych (art. 20 RODO)</h2>
+        <p>Jeśli przetwarzanie odbywa się na podstawie zgody lub umowy i jest zautomatyzowane, masz prawo otrzymać swoje dane w ustrukturyzowanym, powszechnie używanym formacie lub zażądać ich przekazania innemu administratorowi.</p>
+      </div>
+
+      <div class="right-card">
+        <h2>6. Prawo do sprzeciwu (art. 21 RODO)</h2>
+        <p>Masz prawo w dowolnym momencie wnieść sprzeciw wobec przetwarzania Twoich danych opartego na naszym prawnie uzasadnionym interesie. Po jego wniesieniu zaprzestaniemy przetwarzania, chyba że wykażemy ważne, nadrzędne podstawy prawne.</p>
+      </div>
+
+      <div class="right-card">
+        <h2>7. Prawo do skargi do organu nadzorczego</h2>
+        <p>Jeśli uważasz, że przetwarzanie Twoich danych narusza RODO, masz prawo złożyć skargę do:</p>
+        <p><strong>Prezes Urzędu Ochrony Danych Osobowych (UODO)</strong><br>
+        ul. Stawki 2, 00-193 Warszawa<br>
+        Tel. 606 950 000 · <a href="mailto:kancelaria@uodo.gov.pl">kancelaria@uodo.gov.pl</a></p>
+      </div>
+
+      <h2>Jak skorzystać ze swoich praw?</h2>
+      <p>Wyślij wiadomość e-mail na adres <a href="mailto:kancelaria@idzik.org.pl">kancelaria@idzik.org.pl</a> lub zadzwoń pod numer <a href="tel:+48605089552">605 089 552</a>. Odpowiemy bez zbędnej zwłoki, nie później niż w ciągu <strong>30 dni</strong> od otrzymania żądania (z możliwością przedłużenia do 3 miesięcy w wyjątkowo skomplikowanych przypadkach — poinformujemy Cię o tym z wyprzedzeniem).</p>
+
+      <p style="margin-top:2rem"><a href="/polityka-prywatnosci">Przeczytaj pełną Politykę Prywatności →</a></p>
+    </div>
+  </div>
+</section>
+</main>
+<footer>
+  <div class="footer-bottom" style="margin-top:0">
+    <div class="container" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;padding:1.5rem var(--px)">
+      <span style="color:rgba(255,255,255,.5);font-size:.8rem">© 2025 Kancelaria Adwokacka Magdalena Idzik-Cieśla. Wszelkie prawa zastrzeżone.</span>
+      <span style="font-size:.8rem"><a href="/polityka-prywatnosci" style="color:rgba(255,255,255,.5)">Polityka prywatności</a> · <a href="/rodo" style="color:rgba(255,255,255,.5)">RODO</a></span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>`;
 }
 
 // ── PAGE.JS Z WSTRZYKNIĘTĄ KONFIGURACJĄ ───────────────────────────────────
@@ -286,7 +513,7 @@ function buildHTML(cfg, hostname) {
 <div class="stats-bar">
   <div class="container">
     <div class="stats-inner">
-      <div class="stat-item"><div class="stat-number" data-count="12" data-suffix="+">12+</div><div class="stat-label">Lat doświadczenia</div></div>
+      <div class="stat-item"><div class="stat-number" data-count="15" data-suffix="+">15+</div><div class="stat-label">Lat doświadczenia</div></div>
       <div class="stat-item"><div class="stat-number" data-count="850" data-suffix="+">850+</div><div class="stat-label">Zakończonych spraw</div></div>
       <div class="stat-item"><div class="stat-number" data-count="97" data-suffix="%">97%</div><div class="stat-label">Klientów poleca dalej</div></div>
       <div class="stat-item"><div class="stat-number" data-count="10">10</div><div class="stat-label">Lokalizacji</div></div>
@@ -316,10 +543,10 @@ function buildHTML(cfg, hostname) {
           <p class="section-desc">Każda sprawa jest inna. Niezależnie od tego, jak skomplikowana jest Twoja sytuacja — masz prawo do rzetelnej i ludzkiej pomocy prawnej.</p>
         </div>
         <div class="pain-items">
-          <div class="pain-item"><div class="pain-icon">⚖️</div><div><h4>Nie wiem od czego zacząć</h4><p>Wyjaśniamy każdy krok po ludzku — bez żargonu, bez ukrytych kosztów.</p></div></div>
-          <div class="pain-item"><div class="pain-icon">🏠</div><div><h4>Obawiamy się o mieszkanie i majątek</h4><p>Zadbamy o sprawiedliwy podział — nieruchomości, oszczędności, firma, kredyt.</p></div></div>
-          <div class="pain-item"><div class="pain-icon">👶</div><div><h4>Dzieci są dla mnie najważniejsze</h4><p>Pomagamy ustalić plan wychowawczy zabezpieczający dobro dzieci i Twój realny kontakt.</p></div></div>
-          <div class="pain-item"><div class="pain-icon">🤝</div><div><h4>Chcę to zakończyć polubownie</h4><p>Mediacja jest często szybsza i tańsza. Wspieramy ugodowe rozwiązania gdzie to możliwe.</p></div></div>
+          <div class="pain-item"><div class="pain-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="20"/><path d="M5 20h14"/><line x1="4" y1="7" x2="20" y2="7"/><path d="M4 7l-3 6h6l-3-6z"/><path d="M20 7l-3 6h6l-3-6z"/></svg></div><div><h4>Nie wiem od czego zacząć</h4><p>Wyjaśniamy każdy krok po ludzku — bez żargonu, bez ukrytych kosztów.</p></div></div>
+          <div class="pain-item"><div class="pain-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div><h4>Obawiamy się o mieszkanie i majątek</h4><p>Zadbamy o sprawiedliwy podział — nieruchomości, oszczędności, firma, kredyt.</p></div></div>
+          <div class="pain-item"><div class="pain-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div><h4>Dzieci są dla mnie najważniejsze</h4><p>Pomagamy ustalić plan wychowawczy zabezpieczający dobro dzieci i Twój realny kontakt.</p></div></div>
+          <div class="pain-item"><div class="pain-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg></div><div><h4>Chcę to zakończyć polubownie</h4><p>Mediacja jest często szybsza i tańsza. Wspieramy ugodowe rozwiązania gdzie to możliwe.</p></div></div>
         </div>
       </div>
       <div>
@@ -411,7 +638,7 @@ function buildHTML(cfg, hostname) {
     </div>
     <form id="contact-form" class="form-card" onsubmit="submitLead(event)">
       <div class="form-card-title">Umów bezpłatną konsultację</div>
-      <p class="form-card-sub">Oddzwonimy w ciągu 2 godzin (pn–pt 8:00–18:00).</p>
+      <p class="form-card-sub">Oddzwonimy jak najszybciej!</p>
       <div class="form-row">
         <div class="form-group"><label for="imie">Imię *</label><input type="text" id="imie" name="imie" required></div>
         <div class="form-group"><label for="tel">Telefon *</label><input type="tel" id="tel" name="telefon" required></div>
@@ -565,7 +792,7 @@ a { text-decoration: none; }
   /* Spacing */
   --max-w:  1100px;
   --px:     clamp(1.25rem, 5vw, 4rem);
-  --section-py: clamp(4rem, 8vw, 7rem);
+  --section-py: clamp(2rem, 4vw, 3.5rem);
 
   /* Misc */
   --radius:  6px;
@@ -598,13 +825,14 @@ body {
 
 /* ── TICKER ── */
 .ticker-wrap {
-  background: var(--navy);
+  background: linear-gradient(90deg, #0A1828 0%, var(--navy) 50%, #0A1828 100%);
   overflow: hidden;
-  height: 36px;
+  height: 46px;
   display: flex;
   align-items: center;
   position: relative;
   z-index: 200;
+  border-bottom: 1px solid rgba(255,255,255,.12);
 }
 .ticker-track {
   display: flex;
@@ -617,22 +845,23 @@ body {
   display: inline-flex;
   align-items: center;
   gap: .5rem;
-  padding: 0 1.5rem;
-  font-size: .72rem;
+  padding: 0 1.75rem;
+  font-size: .8rem;
   font-weight: 500;
-  letter-spacing: .1em;
+  letter-spacing: .12em;
   text-transform: uppercase;
-  color: rgba(255,255,255,.55);
+  color: rgba(255,255,255,.78);
   transition: color var(--transition);
 }
 .ticker-item.active-district {
   color: var(--accent-light);
+  font-weight: 700;
 }
 .ticker-item::before {
   content: '⬥';
-  font-size: .55rem;
+  font-size: .6rem;
   color: var(--accent-light);
-  opacity: .6;
+  opacity: .9;
 }
 .ticker-item a {
   color: inherit;
@@ -666,20 +895,20 @@ body {
 .nav-logo {
   display: flex;
   flex-direction: column;
-  line-height: 1.15;
+  line-height: 1.2;
 }
 .nav-logo-name {
   font-family: var(--serif);
-  font-size: .95rem;
+  font-size: 1.18rem;
   font-weight: 700;
   color: var(--navy);
   letter-spacing: -.01em;
 }
 .nav-logo-sub {
-  font-size: .68rem;
-  font-weight: 400;
-  color: var(--text-muted);
-  letter-spacing: .06em;
+  font-size: .78rem;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: .05em;
   text-transform: uppercase;
 }
 .nav-links {
@@ -940,7 +1169,7 @@ body {
   max-width: 580px;
 }
 .section-center .section-desc { margin: 0 auto; }
-.section-header { margin-bottom: clamp(2.5rem, 5vw, 4rem); }
+.section-header { margin-bottom: clamp(1.5rem, 3vw, 2.5rem); }
 
 /* ── PAIN SECTION ── */
 .pain-grid {
@@ -958,13 +1187,14 @@ body {
 }
 .pain-item:first-child { border-top: 1px solid var(--border); }
 .pain-icon {
-  width: 44px; height: 44px;
-  border-radius: 10px;
+  width: 50px; height: 50px;
+  border-radius: 12px;
   background: var(--accent-bg);
+  border: 1.5px solid rgba(var(--accent-rgb, 139,94,26),.18);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  color: var(--accent);
   flex-shrink: 0;
 }
 .pain-item h4 {
@@ -1530,6 +1760,10 @@ function initNav() {
 }
 
 function initAnimations() {
+  // Logo entrance
+  anime({ targets: ".nav-logo-name", translateX: [-20, 0], opacity: [0, 1], duration: 800, easing: "easeOutCubic" });
+  anime({ targets: ".nav-logo-sub",  translateX: [-14, 0], opacity: [0, 1], duration: 650, delay: 160, easing: "easeOutCubic" });
+
   const seq = [
     { targets: ".hero-eyebrow", translateY: [20,0], opacity: [0,1], duration: 600 },
     { targets: ".hero h1",      translateY: [30,0], opacity: [0,1], duration: 700 },
