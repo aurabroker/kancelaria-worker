@@ -1,2 +1,2 @@
 # kancelaria-worker-
-Worker dla Kancelarii
+Worker dla Kancelarii domena ROZWOD.WAW.PL
