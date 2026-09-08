@@ -4,22 +4,23 @@
  */
 
 // ── KONFIGURACJA DOMEN ─────────────────────────────────────────────────────
-const DOMAIN_CONFIG = {
-  "rozwod.waw.pl":         { district: "Warszawa",  key: "warszawa",  accent: "#8B5E1A", light: "#C49A3C", bg: "#FDF6E9" },
-  "rozwodbielany.pl":      { district: "Bielany",   key: "bielany",   accent: "#1A4E8B", light: "#4A7FC1", bg: "#EEF4FB" },
-  "rozwodzoliborz.pl":     { district: "Żoliborz",  key: "zoliborz",  accent: "#5B2D8E", light: "#8B5EC1", bg: "#F3EEF9" },
-  "rozwodwola.pl":         { district: "Wola",      key: "wola",      accent: "#8B3A1A", light: "#C46A3C", bg: "#FDF0E9" },
-  "rozwodochota.pl":       { district: "Ochota",    key: "ochota",    accent: "#1A6B5B", light: "#3CA48B", bg: "#EEFAF7" },
-  "rozwodmokotow.pl":      { district: "Mokotów",   key: "mokotow",   accent: "#2D4A6B", light: "#5A7FA8", bg: "#EEF2F8" },
-  "rozwodtarchomin.pl":    { district: "Tarchomin", key: "tarchomin", accent: "#4A6B1A", light: "#7FA83C", bg: "#F2F7EE", gtag: "AW-18123853335", conversionTag: "AW-18123853335/ocgpCLSM168cEJeckMJD" },
-  "rozwodlegionowo.pl":    { district: "Legionowo", key: "legionowo", accent: "#1A5E6B", light: "#3C9AA8", bg: "#EEF8FA" },
-  "rozwodlomianki.pl":     { district: "Łomianki",  key: "lomianki",  accent: "#2D6B1A", light: "#5AA83C", bg: "#EEF8EE" },
-  "rozwodjablonna.pl":     { district: "Jabłonna",  key: "jablonna",  accent: "#6B5B1A", light: "#A89040", bg: "#FAF7EE" },
+import { DOMAIN_CONFIG, DEFAULT_CONFIG, ALL_HOSTS, FIRM, AD_HEADLINES } from "./domains.js";
+import { CATEGORIES, faqForHost, faqPoolGrouped } from "./faq.js";
+import { sendLeadNotification } from "./mail.js";
+
+/* Pomiar. GA4 wspolny dla calej sieci. Identyfikator Google Ads
+   uzupelnic po otrzymaniu z panelu — do tego czasu tag Ads sie nie renderuje,
+   a rozwodtarchomin.pl korzysta z wlasnego wpisu w konfiguracji domeny. */
+export const TRACKING = {
+  ga4:          "G-9QQRN32R64",
+  adsId:        "",   // AW-XXXXXXXXX
+  adsLeadLabel: "",   // AW-XXXXXXXXX/etykieta-formularz
+  adsCallLabel: "",   // AW-XXXXXXXXX/etykieta-telefon
 };
 
-const DEFAULT_CONFIG = DOMAIN_CONFIG["rozwod.waw.pl"];
+const YEAR = new Date().getUTCFullYear();
+const esc = (v) => String(v ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-// ── SUPABASE ───────────────────────────────────────────────────────────────
 const SUPABASE_URL  = "https://kukvgsjrmrqtzhkszzum.supabase.co";
 // Klucz anon — tylko INSERT na kancelaria_leads (RLS ogranicza resztę)
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1a3Znc2pybXJxdHpoa3N6enVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MTI0NzYsImV4cCI6MjA4ODQ4ODQ3Nn0.wOB-4CJTcRksSUY7WD7CXEccTKNxPIVF8AT8hczS5zY";
@@ -33,7 +34,28 @@ export default {
 
     // POST /api/lead — zapis do Supabase
     if (request.method === "POST" && url.pathname === "/api/lead") {
-      return handleLead(request, cfg, hostname);
+      return handleLead(request, cfg, hostname, env);
+    }
+
+    if (url.pathname === "/robots.txt") {
+      return new Response(buildRobots(hostname), {
+        headers: { "Content-Type": "text/plain; charset=utf-8", ...cacheHeaders(3600) } });
+    }
+    if (url.pathname === "/sitemap.xml") {
+      return new Response(buildSitemap(hostname), {
+        headers: { "Content-Type": "application/xml; charset=utf-8", ...cacheHeaders(3600) } });
+    }
+    if (url.pathname === "/llms.txt") {
+      return new Response(buildLlms(cfg, hostname), {
+        headers: { "Content-Type": "text/plain; charset=utf-8", ...cacheHeaders(3600) } });
+    }
+    if (url.pathname === "/pytania") {
+      return new Response(buildPytaniaHTML(cfg, hostname), {
+        headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(300) } });
+    }
+    if (url.pathname === "/polityka-prywatnosci" || url.pathname === "/rodo") {
+      return new Response(buildLegalHTML(cfg, hostname, url.pathname), {
+        headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(3600) } });
     }
 
     // GET /assets/style.css
@@ -64,21 +86,29 @@ export default {
       });
     }
 
-    // GET / — HTML strony
-    return new Response(buildHTML(cfg, hostname), {
+    // GET / — strona glowna
+    if (url.pathname === "/") {
+      return new Response(buildHTML(cfg, hostname, url), {
+        headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(300) }
+      });
+    }
+
+    // Wszystko pozostale to prawdziwy 404, nie kopia strony glownej.
+    return new Response(build404HTML(cfg, hostname), {
+      status: 404,
       headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(300) }
     });
   }
 };
 
 // ── OBSŁUGA LEADA ──────────────────────────────────────────────────────────
-async function handleLead(request, cfg, hostname) {
+async function handleLead(request, cfg, hostname, env) {
   let body;
   try { body = await request.json(); } catch {
     return jsonError(400, "Nieprawidłowy JSON");
   }
 
-  const { imie, telefon, email = "", temat = "", wiadomosc = "" } = body;
+  const { imie, telefon, email = "", temat = "", wiadomosc = "", utm = {} } = body;
 
   if (!imie?.trim() || !telefon?.trim()) {
     return jsonError(400, "Imię i telefon są wymagane");
@@ -102,6 +132,11 @@ async function handleLead(request, cfg, hostname) {
         zrodlo_domena: hostname,
         dzielnica:     cfg.district,
         status:        "nowy",
+        utm_source:    (utm.utm_source   || "").slice(0, 64),
+        utm_medium:    (utm.utm_medium   || "").slice(0, 64),
+        utm_campaign:  (utm.utm_campaign || "").slice(0, 64),
+        utm_content:   (utm.utm_content  || "").slice(0, 64),
+        utm_term:      (utm.utm_term     || "").slice(0, 64),
       }),
     });
 
@@ -110,6 +145,14 @@ async function handleLead(request, cfg, hostname) {
       console.error("Supabase error:", err);
       return jsonError(500, "Błąd zapisu — spróbuj ponownie");
     }
+
+    // Powiadomienie mailowe jest best-effort: lead jest juz zapisany,
+    // wiec blad wysylki nie moze przerwac obslugi formularza.
+    await sendLeadNotification(env, {
+      imie: imie.trim(), telefon: telefon.trim(), email: email.trim(),
+      temat, wiadomosc: wiadomosc.trim(), zrodlo_domena: hostname,
+      dzielnica: cfg.district, ...utm,
+    }, FIRM);
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
@@ -156,9 +199,13 @@ ${PAGE_JS}`;
 }
 
 // ── HTML TEMPLATE ──────────────────────────────────────────────────────────
-function buildHTML(cfg, hostname) {
-  const title = `Adwokat Rozwodowy ${cfg.district} | Kancelaria Idzik-Cieśla`;
-  const desc  = `Adwokat rozwodowy ${cfg.district} — Kancelaria Magdalena Idzik-Cieśla. Bezpłatna konsultacja 30 minut. Tel. 605 089 552.`;
+function buildHTML(cfg, hostname, url) {
+  const title = cfg.title;
+  const desc  = cfg.desc;
+  // Naglowek dopasowany do grupy reklam, gdy adres niesie utm_content.
+  const adGroup = url && url.searchParams ? url.searchParams.get("utm_content") : null;
+  const h1 = (AD_HEADLINES[adGroup] && AD_HEADLINES[adGroup](cfg)) || cfg.h1;
+  const faqItems = faqForHost(hostname, 8);
 
   return `<!DOCTYPE html>
 <html lang="pl">
@@ -188,28 +235,36 @@ function buildHTML(cfg, hostname) {
     {"@type":"PostalAddress","streetAddress":"ul. Ceramiczna 5E/79","addressLocality":"Warszawa","postalCode":"03-126","addressCountry":"PL"},
     {"@type":"PostalAddress","streetAddress":"ul. Bolkowska 2A/28","addressLocality":"Warszawa","postalCode":"01-466","addressCountry":"PL"}
   ],
-  "openingHours": "Mo-Fr 08:00-18:00",
+  "openingHours": "${FIRM.hours}",
   "priceRange": "$$",
+  "vatID": "${FIRM.nip}",
+  "areaServed": ${JSON.stringify(cfg.areas)},
+  "founder": {
+    "@type": "Person",
+    "name": "${FIRM.attorney}",
+    "jobTitle": "Adwokat",
+    "identifier": "${FIRM.barNumber}",
+    "memberOf": { "@type": "Organization", "name": "${FIRM.barCouncil}" }
+  },
   "hasMap": "https://maps.google.com/?q=Ceramiczna+5E,+Warszawa"
 }
 <\/script>
 
-<!-- FAQ Schema -->
+<!-- FAQ Schema — generowany z pytan faktycznie widocznych na stronie -->
 <script type="application/ld+json">
-{
+${JSON.stringify({
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  "mainEntity": [
-    {"@type":"Question","name":"Ile trwa sprawa rozwodowa?","acceptedAnswer":{"@type":"Answer","text":"Rozwód bez orzekania o winie trwa 3–6 miesięcy. Sprawy sporne z dziećmi i majątkiem — rok lub dłużej."}},
-    {"@type":"Question","name":"Ile kosztuje adwokat rozwodowy?","acceptedAnswer":{"@type":"Answer","text":"Honorarium ustalane indywidualnie. Opłata sądowa od pozwu to 600 zł. Pierwsza konsultacja 30 minut jest bezpłatna."}},
-    {"@type":"Question","name":"Czy można się skonsultować online?","acceptedAnswer":{"@type":"Answer","text":"Tak. Konsultacje przez Teams, Zoom lub telefon dla klientów z całej Polski. Pierwsza konsultacja bezpłatna."}}
-  ]
-}
+  mainEntity: faqItems.map(f => ({
+    "@type": "Question", name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a }
+  }))
+})}
 <\/script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>
   :root {
@@ -222,14 +277,7 @@ function buildHTML(cfg, hostname) {
     .hero-2col .hero-actions { flex-direction: column; }
   }
 </style>
-${cfg.gtag ? `<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=${cfg.gtag}"><\/script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', '${cfg.gtag}');
-<\/script>` : ""}
+${trackingHead(cfg)}
 </head>
 <body>
 
@@ -270,15 +318,14 @@ ${cfg.gtag ? `<!-- Google tag (gtag.js) -->
           Kancelaria Adwokacka · ${cfg.district} · Prawo Rodzinne
         </p>
         <h1 style="text-align:left;margin:0 0 1.25rem;font-size:clamp(1.9rem,3.2vw,2.9rem);">
-          Skuteczna pomoc prawna<br>w <em>najtrudniejszym</em> momencie
+          ${esc(h1)}
         </h1>
         <p class="hero-sub" style="text-align:left;margin:0 0 2rem;max-width:100%;">
-          Rozwód, podział majątku, opieka nad dziećmi — przeprowadzimy Cię przez cały
-          proces jasno, dyskretnie i po Twojej stronie.
+          ${esc(cfg.lead)}
         </p>
         <div class="hero-actions" style="justify-content:flex-start;margin-bottom:2rem;">
           <a href="#kontakt" class="btn btn-primary btn-lg">Umów bezpłatną konsultację →</a>
-          <a href="tel:+48605089552" class="btn btn-outline btn-lg">📞 605 089 552</a>
+          <a href="tel:+48605089552" onclick="trackCall()" class="btn btn-outline btn-lg">📞 605 089 552</a>
         </div>
         <div class="hero-trust" style="justify-content:flex-start;flex-direction:column;align-items:flex-start;gap:.6rem;">
           <span class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 3L5.5 10 2 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Bezpłatna konsultacja 30 min</span>
@@ -410,16 +457,28 @@ ${cfg.gtag ? `<!-- Google tag (gtag.js) -->
         <p class="section-label no-line">Najczęstsze pytania</p>
         <h2 class="section-title">Odpowiadamy<br>na <em>Twoje</em><br>pytania</h2>
         <p class="section-desc" style="margin-bottom:2rem">Nie znajdziesz odpowiedzi? Zadzwoń — oddzwonimy w ciągu 2 godzin.</p>
-        <a href="tel:+48605089552" class="btn btn-primary">📞 605 089 552</a>
+        <a href="tel:+48605089552" onclick="trackCall()" class="btn btn-primary">📞 605 089 552</a>
       </div>
       <div class="faq-list">
-        <div class="faq-item"><button class="faq-btn">Ile trwa sprawa rozwodowa w Polsce?<span class="faq-icon">+</span></button><div class="faq-body"><p>Rozwód bez orzekania o winie trwa 3–6 miesięcy. Sprawy sporne z dziećmi i majątkiem — rok lub dłużej. Podczas pierwszej konsultacji ocenimy realny czas dla Twojej sprawy.</p></div></div>
-        <div class="faq-item"><button class="faq-btn">Ile kosztuje pomoc adwokata?<span class="faq-icon">+</span></button><div class="faq-body"><p>Honorarium ustalane indywidualnie. Opłata sądowa od pozwu to 600 zł. Przed podpisaniem umowy przedstawiamy pełne wynagrodzenie — bez niespodzianek.</p></div></div>
-        <div class="faq-item"><button class="faq-btn">Czy mogę uzyskać rozwód bez orzekania o winie?<span class="faq-icon">+</span></button><div class="faq-body"><p>Tak — jeśli obie strony się zgadzają. To szybsze i tańsze rozwiązanie. Doradzimy która opcja jest lepsza w Twoim przypadku.</p></div></div>
-        <div class="faq-item"><button class="faq-btn">Co z mieszkaniem i kredytem hipotecznym?<span class="faq-icon">+</span></button><div class="faq-body"><p>Podział majątku — w tym nieruchomości i kredytów — może być przeprowadzony w trakcie lub po sprawie. Możliwe scenariusze: sprzedaż, spłata jednego małżonka lub współwłasność.</p></div></div>
-        <div class="faq-item"><button class="faq-btn">Czy mogę skonsultować się online?<span class="faq-icon">+</span></button><div class="faq-body"><p>Tak. Konsultacje przez Teams, Zoom lub telefon dla klientów z całej Polski. Pierwsza konsultacja 30 minut bezpłatna.</p></div></div>
+        ${faqItems.map(f => `<div class="faq-item"><button class="faq-btn">${esc(f.q)}<span class="faq-icon">+</span></button><div class="faq-body"><p>${esc(f.a)}</p></div></div>`).join("\n        ")}
+        <p style="margin-top:1.25rem;font-size:.9rem"><a href="/pytania">Zobacz wszystkie pytania i odpowiedzi \u2192</a></p>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- SAD WLASCIWY -->
+<section class="section" style="background:var(--accent-bg);">
+  <div class="container">
+    <div class="section-header section-center text-center">
+      <p class="section-label">Gdzie toczy się sprawa</p>
+      <h2 class="section-title">${esc(cfg.court.name)}</h2>
+      <p class="section-desc">${esc(cfg.courtNote)}</p>
+    </div>
+    <p style="text-align:center;font-size:.92rem;color:var(--text-muted)">
+      ${esc(cfg.court.address)}<br>
+      Obsługujemy: ${cfg.areas.map(esc).join(" · ")}
+    </p>
   </div>
 </section>
 
@@ -460,7 +519,7 @@ ${cfg.gtag ? `<!-- Google tag (gtag.js) -->
       </div>
     </form>
     <div style="text-align:center;margin-top:2.5rem;display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;">
-      <a href="tel:+48605089552" class="btn btn-white btn-lg">📞 605 089 552</a>
+      <a href="tel:+48605089552" onclick="trackCall()" class="btn btn-white btn-lg">📞 605 089 552</a>
       <a href="mailto:kancelaria@idzik.org.pl" class="btn btn-white btn-lg">✉ kancelaria@idzik.org.pl</a>
     </div>
   </div>
@@ -474,12 +533,18 @@ ${cfg.gtag ? `<!-- Google tag (gtag.js) -->
         <div class="footer-brand">Kancelaria Adwokacka Magdalena Idzik‑Cieśla</div>
         <p class="footer-tagline">Dyskretna i skuteczna pomoc prawna w sprawach rodzinnych. Warszawa i Mazowieckie.</p>
         <div class="footer-contact">
-          <a href="tel:+48605089552">📞 605 089 552</a>
+          <a href="tel:+48605089552" onclick="trackCall()">📞 605 089 552</a>
           <a href="mailto:kancelaria@idzik.org.pl">✉ kancelaria@idzik.org.pl</a>
         </div>
       </div>
       <div class="footer-col"><h5>Usługi</h5><ul><li><a href="#pomoc">Rozwód</a></li><li><a href="#pomoc">Podział majątku</a></li><li><a href="#pomoc">Opieka nad dziećmi</a></li><li><a href="#pomoc">Alimenty</a></li></ul></div>
       <div class="footer-col"><h5>Biura</h5><ul><li>ul. Ceramiczna 5E/79</li><li>03-126 Warszawa</li><li style="margin-top:.4rem">ul. Bolkowska 2A/28</li><li>01-466 Warszawa</li></ul></div>
+      <div class="footer-col"><h5>Dane kancelarii</h5><ul>
+        <li>${esc(FIRM.attorney)}</li>
+        <li>Wpis nr ${esc(FIRM.barNumber)}</li>
+        <li>${esc(FIRM.barCouncil)}</li>
+        <li>NIP ${esc(FIRM.nip)}</li>
+      </ul></div>
       <div class="footer-col"><h5>Inne dzielnice</h5><ul>
         <li><a href="https://rozwodbielany.pl">Bielany</a></li>
         <li><a href="https://rozwodzoliborz.pl">Żoliborz</a></li>
@@ -492,8 +557,8 @@ ${cfg.gtag ? `<!-- Google tag (gtag.js) -->
   </div>
   <div class="footer-bottom">
     <div class="container" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
-      <span>© 2025 Kancelaria Adwokacka Magdalena Idzik-Cieśla. Wszelkie prawa zastrzeżone.</span>
-      <span><a href="/polityka-prywatnosci" style="color:inherit">Polityka prywatności</a> · <a href="/rodo" style="color:inherit">RODO</a></span>
+      <span>© ${YEAR} ${esc(FIRM.name)}. Wszelkie prawa zastrzeżone.</span>
+      <span><a href="/polityka-prywatnosci" style="color:inherit">Polityka prywatności</a> · <a href="/rodo" style="color:inherit">RODO</a> · <a href="/pytania" style="color:inherit">Pytania</a></span>
     </div>
   </div>
 </footer>
@@ -501,6 +566,23 @@ ${cfg.gtag ? `<!-- Google tag (gtag.js) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 <script src="/assets/page.js"></script>
 <script>
+function trackLead() {
+  try {
+    if (window.gtag) {
+      gtag('event', 'generate_lead', { form: 'kontakt' });
+      if (window.ADS_LEAD) gtag('event', 'conversion', { send_to: window.ADS_LEAD });
+    }
+  } catch (e) {}
+}
+function trackCall() {
+  try {
+    if (window.gtag) {
+      gtag('event', 'contact', { method: 'telefon' });
+      if (window.ADS_CALL) gtag('event', 'conversion', { send_to: window.ADS_CALL });
+    }
+  } catch (e) {}
+}
+
 function playVideo() {
   const video = document.getElementById('hero-video');
   const overlay = document.getElementById('video-overlay');
@@ -513,12 +595,17 @@ async function submitLead(e) {
   const btn = e.target.querySelector('.form-submit');
   btn.disabled = true;
   btn.textContent = 'Wysyłanie...';
+  const q = new URLSearchParams(location.search);
+  const utm = {};
+  ['utm_source','utm_medium','utm_campaign','utm_content','utm_term']
+    .forEach(k => { if (q.get(k)) utm[k] = q.get(k); });
   const payload = {
     imie:      document.getElementById('imie').value,
     telefon:   document.getElementById('tel').value,
     email:     document.getElementById('email').value,
     temat:     document.getElementById('temat').value,
     wiadomosc: document.getElementById('wiadomosc').value,
+    utm,
   };
   try {
     const res = await fetch('/api/lead', {
@@ -530,6 +617,9 @@ async function submitLead(e) {
     if (data.ok) {
       document.getElementById('contact-form').style.display = 'none';
       document.getElementById('form-success').style.display = 'block';
+      // Konwersja liczona tam, gdzie uzytkownik naprawde konczy,
+      // a nie na stronie /dziekujemy.html, do ktorej nikt nie trafia.
+      trackLead();
     } else {
       btn.disabled = false;
       btn.textContent = 'Błąd — spróbuj ponownie';
@@ -553,7 +643,8 @@ const CSS = `/* ============================================================
    Dostosowanie per domena: nadpisz zmienne CSS w <style> w index.html
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+/* Fonty ladowane wylacznie znacznikiem <link> w <head>.
+   @import z arkusza tworzyl drugi, szeregowy lancuch pobran. */
 
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1626,7 +1717,7 @@ function buildOpiniaHTML(cfg) {
 <meta name="robots" content="noindex, nofollow">
 <style>:root{--accent:${cfg.accent};--accent-light:${cfg.light};--accent-bg:${cfg.bg};}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>
   .hero-star{display:inline-block;font-size:2.6rem;color:var(--accent);animation:heroSpin 1.2s ease-in-out both;filter:drop-shadow(0 0 6px var(--accent-light));}
@@ -1644,14 +1735,7 @@ function buildOpiniaHTML(cfg) {
   .admin-btn.reject{background:#f59e0b;color:#fff;border-color:#f59e0b;}
   .admin-btn.del{background:#dc2626;color:#fff;border-color:#dc2626;}
 </style>
-${cfg.gtag ? `<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=${cfg.gtag}"><\/script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', '${cfg.gtag}');
-<\/script>` : ""}
+${trackingHead(cfg)}
 </head>
 <body>
 <div class="ticker-wrap"><div class="ticker-track" id="ticker-track"></div></div>
@@ -1737,7 +1821,7 @@ ${cfg.gtag ? `<!-- Google tag (gtag.js) -->
         <div class="footer-brand">Kancelaria Adwokacka Magdalena Idzik‑Cieśla</div>
         <p class="footer-tagline">Dyskretna i skuteczna pomoc prawna. ${cfg.district} · Warszawa i Mazowieckie.</p>
         <div class="footer-contact">
-          <a href="tel:+48605089552">\u{1F4DE} 605 089 552</a>
+          <a href="tel:+48605089552" onclick="trackCall()">\u{1F4DE} 605 089 552</a>
           <a href="mailto:kancelaria@idzik.org.pl">✉ kancelaria@idzik.org.pl</a>
         </div>
       </div>
@@ -1888,17 +1972,10 @@ function buildDziekujemyHTML(cfg, hostname) {
 <link rel="canonical" href="https://${hostname}/dziekujemy.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>:root{--accent:${cfg.accent};--accent-light:${cfg.light};--accent-bg:${cfg.bg};}</style>
-${cfg.gtag ? `<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=${cfg.gtag}"><\/script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', '${cfg.gtag}');
-<\/script>` : ""}
+${trackingHead(cfg)}
 </head>
 <body>
 ${cfg.gtag && cfg.conversionTag ? `<!-- Event snippet for Kontakt conversion page -->
@@ -1925,7 +2002,7 @@ ${cfg.gtag && cfg.conversionTag ? `<!-- Event snippet for Kontakt conversion pag
         Jeśli wolisz zadzwonić sam — jesteśmy dostępni pod numerem poniżej.
       </p>
       <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem;">
-        <a href="tel:+48605089552" class="btn btn-primary btn-lg">&#x1F4DE; 605 089 552</a>
+        <a href="tel:+48605089552" onclick="trackCall()" class="btn btn-primary btn-lg">&#x1F4DE; 605 089 552</a>
         <a href="https://${hostname}/" class="btn btn-outline btn-lg">← Wróć na stronę</a>
       </div>
       <p style="font-size:.85rem;color:var(--text-muted);">
@@ -1939,4 +2016,196 @@ ${cfg.gtag && cfg.conversionTag ? `<!-- Event snippet for Kontakt conversion pag
 <script src="/assets/page.js"><\/script>
 </body>
 </html>`;
+}
+
+
+// ── POMIAR ─────────────────────────────────────────────────────────────────
+function adsFor(cfg) {
+  const id   = TRACKING.adsId || cfg.gtag || "";
+  const lead = TRACKING.adsLeadLabel || cfg.conversionTag || "";
+  const call = TRACKING.adsCallLabel || "";
+  return { id, lead, call };
+}
+
+function trackingHead(cfg) {
+  const ads = adsFor(cfg);
+  const loadId = TRACKING.ga4 || ads.id;
+  if (!loadId) return "";
+  return `<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=${loadId}"><\/script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+${TRACKING.ga4 ? `  gtag('config', '${TRACKING.ga4}');\n` : ""}${ads.id ? `  gtag('config', '${ads.id}');\n` : ""}${ads.lead ? `  window.ADS_LEAD = '${ads.lead}';\n` : ""}${ads.call ? `  window.ADS_CALL = '${ads.call}';\n` : ""}<\/script>`;
+}
+
+// ── ROBOTS / SITEMAP / LLMS ────────────────────────────────────────────────
+const PATHS = ["/", "/pytania", "/polityka-prywatnosci", "/rodo"];
+
+function buildRobots(hostname) {
+  return `# ${hostname}
+# Roboty AI: swiadoma decyzja wlasciciela serwisu.
+# Wpuszczamy asystentow, ktorzy cytuja zrodlo z odnosnikiem.
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# Roboty zbierajace dane masowo, bez odsylania ruchu.
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: *
+Allow: /
+Disallow: /dziekujemy.html
+Disallow: /opinia.html
+
+Sitemap: https://${hostname}/sitemap.xml
+`;
+}
+
+function buildSitemap(hostname) {
+  const today = new Date().toISOString().slice(0, 10);
+  const urls = PATHS.map(path => `  <url>
+    <loc>https://${hostname}${path}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${path === "/" ? "weekly" : "monthly"}</changefreq>
+    <priority>${path === "/" ? "1.0" : "0.6"}</priority>
+  </url>`).join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>
+`;
+}
+
+function buildLlms(cfg, hostname) {
+  const items = faqForHost(hostname, 8);
+  return `# ${FIRM.name}
+
+> Kancelaria adwokacka prowadzaca sprawy rozwodowe i rodzinne.
+> Obszar: ${cfg.district} i okolice. Sad wlasciwy: ${cfg.court.name}.
+
+Adwokat: ${FIRM.attorney}, wpis nr ${FIRM.barNumber}, ${FIRM.barCouncil}.
+NIP ${FIRM.nip}. Telefon ${FIRM.phoneLabel}. E-mail ${FIRM.email}.
+Pierwsza konsultacja trwajaca 30 minut jest bezplatna.
+
+## Strony
+- [Strona glowna](https://${hostname}/): zakres pomocy, proces, kontakt
+- [Pytania i odpowiedzi](https://${hostname}/pytania): baza odpowiedzi na pytania o rozwod
+- [Polityka prywatnosci](https://${hostname}/polityka-prywatnosci)
+
+## Wybrane odpowiedzi
+${items.map(f => `### ${f.q}\n${f.a}`).join("\n\n")}
+`;
+}
+
+// ── STRONY DODATKOWE ───────────────────────────────────────────────────────
+function shell(cfg, hostname, title, desc, body, opts = {}) {
+  return `<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="${esc(desc)}">
+<title>${esc(title)}</title>
+${opts.noindex ? '<meta name="robots" content="noindex, follow">' : `<link rel="canonical" href="https://${hostname}${opts.path || "/"}">`}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>:root{--accent:${cfg.accent};--accent-light:${cfg.light};--accent-bg:${cfg.bg};}
+.prose{max-width:44rem;margin:0 auto}
+.prose h2{margin:2rem 0 .6rem}
+.prose p,.prose li{font-size:.95rem;line-height:1.7}
+${opts.schema ? "" : ""}</style>
+${trackingHead(cfg)}
+</head>
+<body>
+<header class="nav"><div class="nav-inner">
+  <a href="/" class="nav-logo">
+    <span class="nav-logo-name">Kancelaria Adwokacka</span>
+    <span class="nav-logo-sub">Magdalena Idzik‑Cieśla</span>
+  </a>
+  <nav class="nav-links nav-desktop"><a href="/#kontakt" class="btn nav-cta">Bezpłatna konsultacja</a></nav>
+</div></header>
+<main class="section"><div class="container">${body}</div></main>
+<footer><div class="footer-bottom"><div class="container" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+  <span>© ${YEAR} ${esc(FIRM.name)} · NIP ${esc(FIRM.nip)} · Wpis ${esc(FIRM.barNumber)}</span>
+  <span><a href="/polityka-prywatnosci" style="color:inherit">Polityka prywatności</a> · <a href="/rodo" style="color:inherit">RODO</a></span>
+</div></div></footer>
+<script src="/assets/page.js"><\/script>
+</body>
+</html>`;
+}
+
+function buildPytaniaHTML(cfg, hostname) {
+  const groups = faqPoolGrouped(hostname);
+  const all = groups.flatMap(g => g.items);
+  const schema = JSON.stringify({
+    "@context": "https://schema.org", "@type": "FAQPage",
+    mainEntity: all.map(f => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } }))
+  });
+  const body = `<div class="prose">
+<p class="section-label">Baza wiedzy · ${esc(cfg.district)}</p>
+<h1>Pytania o rozwód — ${esc(cfg.district)}</h1>
+<p class="section-desc">Odpowiedzi przygotowane przez ${esc(FIRM.attorney)}. Stan prawny na ${YEAR} rok. Jeżeli nie znajdziesz swojej sytuacji, zadzwoń pod ${esc(FIRM.phoneLabel)} — pierwsza konsultacja trwa 30 minut i jest bezpłatna.</p>
+${groups.map(g => `<h2>${esc(g.label)}</h2>
+${g.items.map(f => `<h3 style="font-size:1rem;margin:1.2rem 0 .3rem">${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join("\n")}`).join("\n")}
+<p style="margin-top:2.5rem"><a href="/#kontakt" class="btn btn-primary">Umów bezpłatną konsultację →</a></p>
+</div>
+<script type="application/ld+json">${schema}<\/script>`;
+  return shell(cfg, hostname, `Pytania o rozwód — ${cfg.district} | Kancelaria Idzik-Cieśla`,
+    `Odpowiedzi na najczęstsze pytania o rozwód, alimenty, podział majątku i opiekę nad dziećmi. ${cfg.district}.`,
+    body, { path: "/pytania" });
+}
+
+function buildLegalHTML(cfg, hostname, path) {
+  const rodo = path === "/rodo";
+  const body = `<div class="prose">
+<h1>${rodo ? "Informacja o przetwarzaniu danych osobowych" : "Polityka prywatności"}</h1>
+<p><strong>Administrator danych.</strong> ${esc(FIRM.name)}, ${esc(FIRM.offices[0].street)}, ${esc(FIRM.offices[0].postal)} ${esc(FIRM.offices[0].city)}, NIP ${esc(FIRM.nip)}. Kontakt: ${esc(FIRM.email)}, ${esc(FIRM.phoneLabel)}.</p>
+<h2>Jakie dane zbieramy</h2>
+<p>Za pośrednictwem formularza kontaktowego zbieramy imię, numer telefonu oraz opcjonalnie adres e-mail, temat sprawy i jej krótki opis. Serwis prowadzi też własną analitykę po stronie serwera, bez plików cookie i bez zapisywania adresu IP w formie pozwalającej zidentyfikować osobę.</p>
+<h2>W jakim celu i na jakiej podstawie</h2>
+<p>Dane z formularza przetwarzamy wyłącznie po to, aby odpowiedzieć na zapytanie i przedstawić warunki pomocy prawnej. Podstawą jest podjęcie działań na żądanie osoby przed zawarciem umowy oraz prawnie uzasadniony interes administratora polegający na obsłudze korespondencji.</p>
+<h2>Jak długo przechowujemy</h2>
+<p>Zapytania niezakończone zawarciem umowy usuwamy po dwunastu miesiącach. Dane klientów, z którymi zawarto umowę, przechowujemy przez okres wymagany przepisami o wykonywaniu zawodu adwokata oraz przepisami podatkowymi.</p>
+<h2>Komu przekazujemy dane</h2>
+<p>Dane trafiają do dostawców usług technicznych działających na nasze zlecenie: hostingu serwisu, bazy danych zgłoszeń oraz usługi wysyłki poczty. Nie sprzedajemy danych i nie przekazujemy ich do celów marketingowych podmiotom trzecim.</p>
+<h2>Twoje prawa</h2>
+<p>Masz prawo dostępu do swoich danych, ich sprostowania, usunięcia, ograniczenia przetwarzania, przenoszenia oraz wniesienia sprzeciwu. Możesz też wnieść skargę do Prezesa Urzędu Ochrony Danych Osobowych. Aby skorzystać z tych praw, napisz na ${esc(FIRM.email)}.</p>
+<h2>Tajemnica adwokacka</h2>
+<p>Informacje przekazane w związku ze sprawą objęte są tajemnicą adwokacką na zasadach określonych w ustawie Prawo o adwokaturze. Obowiązuje ona niezależnie od przepisów o ochronie danych osobowych i jest nieograniczona w czasie.</p>
+<p style="margin-top:2rem;font-size:.85rem;color:var(--text-muted)">Ostatnia aktualizacja: ${new Date().toISOString().slice(0,10)}.</p>
+</div>`;
+  return shell(cfg, hostname, rodo ? `Informacja RODO | ${FIRM.name}` : `Polityka prywatności | ${FIRM.name}`,
+    "Zasady przetwarzania danych osobowych w kancelarii adwokackiej.", body, { path });
+}
+
+function build404HTML(cfg, hostname) {
+  const body = `<div class="prose" style="text-align:center">
+<p class="section-label">Błąd 404</p>
+<h1>Nie ma takiej strony</h1>
+<p class="section-desc">Adres, który otworzyłeś, nie istnieje w tym serwisie. Być może zmieniliśmy jego strukturę albo w odnośniku jest literówka.</p>
+<p style="margin-top:2rem;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+  <a href="/" class="btn btn-primary">Strona główna</a>
+  <a href="/pytania" class="btn btn-outline">Pytania o rozwód</a>
+  <a href="tel:${FIRM.phone}" onclick="trackCall()" class="btn btn-outline">📞 ${esc(FIRM.phoneLabel)}</a>
+</p>
+</div>`;
+  return shell(cfg, hostname, `Nie ma takiej strony | ${FIRM.name}`,
+    "Strona o podanym adresie nie istnieje.", body, { noindex: true });
 }
