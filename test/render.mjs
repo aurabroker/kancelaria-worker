@@ -86,4 +86,27 @@ const rb = await (await get("rozwodbemowo.pl","/robots.txt")).text();
 for (const bot of ["GPTBot","ClaudeBot","PerplexityBot","Google-Extended","CCBot","Bytespider"]) check("robots: "+bot, rb.includes(bot));
 check("sitemap w robots", rb.includes("https://rozwodbemowo.pl/sitemap.xml"));
 
+// 8. zdjecie adwokatki
+console.log("\n=== ZDJECIE ADWOKATKI ===");
+for (const [path, minKb] of [["/assets/adwokat.webp", 10], ["/assets/adwokat-og.webp", 15]]) {
+  const r = await get("rozwod.waw.pl", path);
+  const buf = new Uint8Array(await r.arrayBuffer());
+  const isWebp = buf[0]===0x52 && buf[1]===0x49 && buf[8]===0x57 && buf[9]===0x45;
+  check(path+" 200", r.status===200, r.status);
+  check(path+" typ webp", r.headers.get("content-type")==="image/webp" && isWebp);
+  check(path+" cache roczny", (r.headers.get("cache-control")||"").includes("31536000"));
+  check(path+" rozmiar > "+minKb+"kB", buf.length > minKb*1024, (buf.length/1024).toFixed(1)+" kB");
+  console.log(`  ${path}  ${(buf.length/1024).toFixed(1)} kB`);
+}
+for (const host of ALL_HOSTS) {
+  const h = texts[host];
+  check(host+" <img> portretu", h.includes('src="/assets/adwokat.webp"'));
+  check(host+" wymiary obrazu", h.includes('width="560" height="747"'));
+  check(host+" og:image", h.includes(`https://${host}/assets/adwokat-og.webp`));
+  const person = [...h.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)]
+    .map(m=>JSON.parse(m[1])).find(x=>x["@type"]==="LegalService");
+  check(host+" obraz w schemacie", !!person && !!person.image && !!person.founder.image);
+}
+check("HTML nie zawiera base64 obrazu", !texts["rozwod.waw.pl"].includes("data:image"));
+
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));

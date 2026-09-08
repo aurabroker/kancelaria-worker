@@ -7,6 +7,7 @@
 import { DOMAIN_CONFIG, DEFAULT_CONFIG, ALL_HOSTS, FIRM, AD_HEADLINES } from "./domains.js";
 import { CATEGORIES, faqForHost, faqPoolGrouped } from "./faq.js";
 import { sendLeadNotification } from "./mail.js";
+import { photoResponse, PHOTO_DIMS } from "./photo.js";
 
 /* Pomiar. GA4 wspolny dla calej sieci. Identyfikator Google Ads
    uzupelnic po otrzymaniu z panelu — do tego czasu tag Ads sie nie renderuje,
@@ -36,6 +37,9 @@ export default {
     if (request.method === "POST" && url.pathname === "/api/lead") {
       return handleLead(request, cfg, hostname, env);
     }
+
+    const photo = photoResponse(url.pathname);
+    if (photo) return photo;
 
     if (url.pathname === "/robots.txt") {
       return new Response(buildRobots(hostname), {
@@ -219,6 +223,11 @@ function buildHTML(cfg, hostname, url) {
 <meta property="og:description" content="${desc}">
 <meta property="og:url" content="https://${hostname}">
 <meta property="og:type" content="website">
+<meta property="og:locale" content="pl_PL">
+<meta property="og:image" content="https://${hostname}${FIRM.photoOg}">
+<meta property="og:image:width" content="${PHOTO_DIMS.square.w}">
+<meta property="og:image:height" content="${PHOTO_DIMS.square.h}">
+<meta name="twitter:card" content="summary_large_image">
 
 <!-- JSON-LD Schema -->
 <script type="application/ld+json">
@@ -238,12 +247,14 @@ function buildHTML(cfg, hostname, url) {
   "openingHours": "${FIRM.hours}",
   "priceRange": "$$",
   "vatID": "${FIRM.nip}",
+  "image": "https://${hostname}${FIRM.photoOg}",
   "areaServed": ${JSON.stringify(cfg.areas)},
   "founder": {
     "@type": "Person",
     "name": "${FIRM.attorney}",
     "jobTitle": "Adwokat",
     "identifier": "${FIRM.barNumber}",
+    "image": "https://${hostname}${FIRM.photoOg}",
     "memberOf": { "@type": "Organization", "name": "${FIRM.barCouncil}" }
   },
   "hasMap": "https://maps.google.com/?q=Ceramiczna+5E,+Warszawa"
@@ -294,6 +305,7 @@ ${trackingHead(cfg)}
     <nav class="nav-links nav-desktop" id="nav-desktop">
       <a href="#pomoc"   class="nav-link">Zakres pomocy</a>
       <a href="#proces"  class="nav-link">Jak działamy</a>
+      <a href="#adwokat" class="nav-link">Adwokat</a>
       <a href="#opinie"  class="nav-link">Opinie</a>
       <a href="#faq"     class="nav-link">FAQ</a>
       <a href="#kontakt" class="btn nav-cta">Bezpłatna konsultacja</a>
@@ -462,6 +474,34 @@ ${trackingHead(cfg)}
       <div class="faq-list">
         ${faqItems.map(f => `<div class="faq-item"><button class="faq-btn">${esc(f.q)}<span class="faq-icon">+</span></button><div class="faq-body"><p>${esc(f.a)}</p></div></div>`).join("\n        ")}
         <p style="margin-top:1.25rem;font-size:.9rem"><a href="/pytania">Zobacz wszystkie pytania i odpowiedzi \u2192</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ADWOKATKA -->
+<section class="section" id="adwokat">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:minmax(0,320px) 1fr;gap:3rem;align-items:center;" class="lawyer-grid">
+      <div>
+        <img src="${FIRM.photo}" alt="${esc(FIRM.attorney)}, adwokat prowadzący sprawy rozwodowe ${esc(cfg.locative)}"
+             width="${PHOTO_DIMS.portrait.w}" height="${PHOTO_DIMS.portrait.h}" loading="lazy" decoding="async"
+             style="width:100%;height:auto;display:block;border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);">
+      </div>
+      <div>
+        <p class="section-label">Kto poprowadzi Twoją sprawę</p>
+        <h2 class="section-title" style="margin-bottom:1rem">${esc(FIRM.attorney)}</h2>
+        <p class="section-desc" style="margin-bottom:1.25rem">
+          Prowadzę sprawy rozwodowe i rodzinne ${esc(cfg.locative)} od kilkunastu lat. Na pierwszym
+          spotkaniu mówię wprost, jak wygląda Twoja sytuacja i czego realnie możesz się spodziewać —
+          także wtedy, gdy odpowiedź nie jest ta, którą chciałabyś usłyszeć.
+        </p>
+        <ul style="list-style:none;padding:0;margin:0;display:grid;gap:.45rem;font-size:.92rem">
+          <li><strong>Wpis na listę adwokatów:</strong> ${esc(FIRM.barNumber)}</li>
+          <li><strong>Izba:</strong> ${esc(FIRM.barCouncil)}</li>
+          <li><strong>NIP:</strong> ${esc(FIRM.nip)}</li>
+          <li><strong>Kontakt:</strong> <a href="tel:${FIRM.phone}" onclick="trackCall()">${esc(FIRM.phoneLabel)}</a> · <a href="mailto:${FIRM.email}">${esc(FIRM.email)}</a></li>
+        </ul>
       </div>
     </div>
   </div>
@@ -1571,6 +1611,7 @@ footer {
   .stats-inner { grid-template-columns: 1fr 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .footer-bottom { flex-direction: column; gap: .5rem; text-align: center; }
+  .lawyer-grid { grid-template-columns: 1fr !important; gap: 1.75rem !important; }
   .process-step::before { display: none; }
 }
 
