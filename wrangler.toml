@@ -5,3 +5,12 @@ compatibility_date = "2024-09-23"
 [observability.logs]
 enabled = false
 invocation_logs = true
+
+# Powiazanie z magazynem sekretow Cloudflare. MUSI byc zadeklarowane w tym
+# pliku — wrangler wysyla przy wgrywaniu wersji dokladnie te bindingi, ktore
+# tu widzi, wiec brak wpisu oznacza ciche wygaszenie wysylki poczty.
+# Wartosci odczytane z wersji wdrozonej 8 wrzesnia 2026.
+[[secrets_store_secrets]]
+binding     = "RESEND_API_KEY"
+store_id    = "15030d8ca051490e96bd866168384aa9"
+secret_name = "RESEND_API_KEY"
