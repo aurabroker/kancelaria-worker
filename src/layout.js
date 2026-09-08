@@ -35,21 +35,21 @@ const SIEC = [
 const esc = (v) => String(v ?? "").replace(/[&<>"]/g, c =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-/* ---------- KROKI SPRAWY ---------- */
-const KROKI = [
-  ["Pierwsza rozmowa", "30 minut, bez opłaty",
-   "Ustalamy, czego dotyczy sprawa, gdzie mieszkają dzieci, kto zostaje w mieszkaniu i czy jest zgoda co do winy."],
-  ["Przygotowanie pozwu", "1–3 tygodnie",
-   "Zbieramy akt małżeństwa, akty urodzenia dzieci i dane o dochodach. Tempo zależy głównie od Ciebie."],
-  ["Złożenie pozwu", "opłata 600 zł",
-   "Badanie formalne i doręczenie drugiej stronie zajmuje sądowi zwykle kilka tygodni."],
-  ["Odpowiedź na pozew", "2 tygodnie od doręczenia",
-   "Tu okazuje się, którą ścieżką idziecie. Wcześniej można się umówić — to skraca całą sprawę najbardziej."],
-  ["Rozprawa", "zgodna: jedna · sporna: kilka",
-   "Sąd przesłuchuje oboje małżonków. W sprawie zgodnej trwa to około pół godziny."],
-  ["Wyrok i uprawomocnienie", "3 tygodnie po wyroku",
-   "Po uprawomocnieniu zamawiasz odpis z klauzulą i możesz wystąpić o podział majątku."],
+/* ---------- DROGA PRZEZ SPRAWĘ ----------
+   Rysunek pokazuje mechanizm, a nie listę: sprawa biegnie wspólnym
+   pniem do odpowiedzi na pozew i dopiero tam rozgałęzia się na dwie
+   ścieżki o bardzo różnej długości. To rozgałęzienie jest tu
+   informacją — lista sześciu kroków je ukrywała. */
+
+const PIEN = [
+  ["Pierwsza rozmowa", "30 minut, bez opłaty"],
+  ["Przygotowanie pozwu", "1–3 tygodnie"],
+  ["Złożenie pozwu", "opłata 600 zł"],
+  ["Odpowiedź na pozew", "2 tygodnie od doręczenia"],
 ];
+const ZGODNA = [["Jedna rozprawa", "ok. 30 minut"], ["Wyrok", "uprawomocnienie 3 tyg."]];
+const SPORNA = [["Świadkowie", "kilka terminów"], ["Opinia biegłych", "4–8 miesięcy"],
+                ["Kolejne rozprawy", "co 2–4 miesiące"], ["Wyrok", "możliwa apelacja"]];
 
 /* ---------- SCENARIUSZE MIESZKANIOWE ---------- */
 const MIESZKANIE = [
@@ -154,7 +154,15 @@ button{font:inherit;cursor:pointer}
 .sec h2{font-size:clamp(23px,3.6vw,30px);line-height:1.18;margin:0 0 12px}
 .sec-desc{font-size:15.5px;line-height:1.6;color:var(--muted);margin:0}
 
-/* ── przebieg sprawy ── */
+/* ── przebieg sprawy: rysunek ── */
+.rysunek{margin:0;max-width:520px}
+.rysunek svg{width:100%;height:auto;color:var(--ink)}
+.rysunek figcaption{font-size:13.5px;line-height:1.55;color:var(--muted);margin-top:14px;max-width:56ch}
+@media(min-width:900px){.rysunek{max-width:none;display:grid;
+  grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:44px;align-items:center}
+  .rysunek figcaption{margin-top:0}}
+
+/* ── stara oś (nieużywana, do usunięcia przy sprzątaniu) ── */
 .legenda{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:22px;font-size:13px;color:var(--muted)}
 .legenda span{display:flex;align-items:center;gap:7px}
 .kropka{width:9px;height:9px;border-radius:50%;flex:none}
@@ -327,14 +335,62 @@ ${schema}
     <p class="sec-desc">Widełki z warszawskich sądów okręgowych. Twoja sprawa może być szybsza —
       nie obiecuję terminu, którego nie kontroluję.</p>
   </div>
-  <div class="legenda">
-    <span><i class="kropka" style="background:var(--agree)"></i>zgodna: zwykle 4–8 miesięcy</span>
-    <span><i class="kropka" style="background:var(--dispute)"></i>sporna: od półtora roku</span>
-  </div>
-  ${KROKI.map(([t, czas, op], i) => `<div class="krok">
-    <div class="krok-nr">${i + 1}</div>
-    <div><h3>${esc(t)}</h3><p class="krok-czas">${esc(czas)}</p><p>${esc(op)}</p></div>
-  </div>`).join("\n  ")}
+  <figure class="rysunek">
+    <svg viewBox="0 0 400 620" role="img" xmlns="http://www.w3.org/2000/svg"
+         aria-label="Droga przez sprawę rozwodową. Wspólny początek: pierwsza rozmowa, przygotowanie pozwu, złożenie pozwu, odpowiedź na pozew. Potem sprawa rozgałęzia się. Ścieżka zgodna to jedna rozprawa i wyrok w cztery do ośmiu miesięcy. Ścieżka sporna to świadkowie, opinia biegłych i kolejne rozprawy, łącznie od półtora roku do trzech lat.">
+      <defs>
+        <marker id="grot-z" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="var(--agree)"/>
+        </marker>
+        <marker id="grot-s" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="var(--dispute)"/>
+        </marker>
+      </defs>
+
+      <!-- pień wspólny -->
+      <line x1="26" y1="34" x2="26" y2="250" stroke="currentColor" stroke-width="1.5" opacity=".35"/>
+      ${PIEN.map(([t, c], k) => {
+        const y = 34 + k * 72;
+        return `<circle cx="26" cy="${y}" r="6.5" fill="var(--paper)" stroke="var(--accent)" stroke-width="1.5"/>
+      <text x="46" y="${y - 2}" font-size="13.5" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+      <text x="46" y="${y + 14}" font-size="11.5" fill="var(--muted)">${esc(c)}</text>`;
+      }).join("\n      ")}
+
+      <!-- rozgałęzienie -->
+      <text x="46" y="278" font-size="11" font-weight="600" letter-spacing=".08em" fill="var(--muted)">TU SPRAWA SIĘ ROZDZIELA</text>
+      <path d="M26 250 L26 300" stroke="var(--agree)" stroke-width="2" fill="none"/>
+      <path d="M26 250 Q26 300 96 300 L214 300" stroke="var(--dispute)" stroke-width="2" fill="none"/>
+
+      <!-- ścieżka zgodna -->
+      <line x1="26" y1="300" x2="26" y2="428" stroke="var(--agree)" stroke-width="2"
+            marker-end="url(#grot-z)"/>
+      <text x="14" y="322" font-size="11" font-weight="600" fill="var(--agree)"
+            transform="rotate(-90 14 322)" text-anchor="end">ZGODNA</text>
+      ${ZGODNA.map(([t, c], k) => {
+        const y = 336 + k * 62;
+        return `<circle cx="26" cy="${y}" r="5" fill="var(--agree)"/>
+      <text x="44" y="${y - 2}" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+      <text x="44" y="${y + 13}" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
+      }).join("\n      ")}
+      <text x="44" y="452" font-size="13" font-weight="600" fill="var(--agree)">4–8 miesięcy</text>
+
+      <!-- ścieżka sporna -->
+      <line x1="214" y1="300" x2="214" y2="596" stroke="var(--dispute)" stroke-width="2"
+            marker-end="url(#grot-s)"/>
+      <text x="202" y="322" font-size="11" font-weight="600" fill="var(--dispute)"
+            transform="rotate(-90 202 322)" text-anchor="end">SPORNA</text>
+      ${SPORNA.map(([t, c], k) => {
+        const y = 336 + k * 62;
+        return `<circle cx="214" cy="${y}" r="5" fill="var(--dispute)"/>
+      <text x="232" y="${y - 2}" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+      <text x="232" y="${y + 13}" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
+      }).join("\n      ")}
+      <text x="232" y="614" font-size="13" font-weight="600" fill="var(--dispute)">1,5–3 lata</text>
+    </svg>
+    <figcaption>Obie ścieżki mają ten sam początek. Różnica pojawia się dopiero przy odpowiedzi
+      na pozew i decyduje o tym, czy sprawa potrwa pół roku, czy kilka lat. Widełki z warszawskich
+      sądów okręgowych — nie obiecuję terminu, którego nie kontroluję.</figcaption>
+  </figure>
 </div></section>
 
 <section class="sec sec-alt" id="koszty"><div class="wrap">
