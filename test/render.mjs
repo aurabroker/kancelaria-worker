@@ -45,7 +45,7 @@ for (const host of ALL_HOSTS) {
   const faq = blocks.find(x=>x["@type"]==="FAQPage");
   check(host+" ma FAQPage", !!faq);
   if (faq) {
-    const visible = [...h.matchAll(/<button class="faq-btn">([^<]*)<span/g)].map(m=>m[1]);
+    const visible = [...h.matchAll(/<summary>([^<]*)<\/summary>/g)].map(m=>m[1]);
     check(host+" schemat = widok", faq.mainEntity.length===visible.length, `${faq.mainEntity.length} vs ${visible.length}`);
     const allIn = faq.mainEntity.every(q => visible.some(v => v.includes(q.name.slice(0,25).replace(/&/g,"&amp;"))));
     check(host+" pytania zgodne", allIn);
@@ -78,7 +78,10 @@ console.log("  h1:", (ad.match(/<h1[^>]*>\s*([^<]+)/)||[])[1]?.trim());
 console.log("\n=== KONWERSJE ===");
 const t = texts["rozwodtarchomin.pl"];
 check("ADS_LEAD na tarchominie", t.includes("window.ADS_LEAD"));
-check("trackLead w kodzie", t.includes("trackLead()"));
+const pjs = await (await get("rozwodtarchomin.pl", "/assets/page.js")).text();
+check("trackLead w skrypcie strony", pjs.includes("function trackLead"));
+check("submitLead w skrypcie strony", pjs.includes("function submitLead"));
+check("konwersja po sukcesie formularza", /trackLead\(\);/.test(pjs));
 check("trackCall na telefonie", t.includes('onclick="trackCall()"'));
 
 // 7. robots
@@ -131,8 +134,8 @@ for (const host of ALL_HOSTS) {
   check(host+" autor w meta", h.includes('name="author"'));
   check(host+" dateModified", h.includes('"dateModified"'));
   check(host+" podpis pod FAQ", h.includes("WAW/Adw/3678") && h.includes("<time datetime="));
-  check(host+" wideo bez preload", h.includes('preload="none"'));
-  check(host+" wideo z plakatem", h.includes('poster="/assets/adwokat.webp"'));
+  check(host+" brak wideo z github", !h.includes("github.com/user-attachments"));
+  check(host+" portret w hero", h.includes('src="/assets/adwokat.webp"'));
 }
 check("rok w stopce aktualny", texts["rozwod.waw.pl"].includes("© " + new Date().getUTCFullYear()));
 
@@ -157,7 +160,7 @@ for (const [nazwa, hex] of [["atrament","#12203C"],["papier","#FAF7F2"],["kreda"
 }
 check("krój nagłówkowy Newsreader", css.includes("Newsreader"));
 check("krój tekstowy IBM Plex Sans", css.includes("IBM Plex Sans"));
-check("przycisk w kolorze gliny", css.includes("background: var(--clay)"));
+check("przycisk w kolorze gliny", /background:\s*var\(--clay\)/.test(css));
 check("stary Playfair usunięty", !css.includes("Playfair"));
 check("stary DM Sans usunięty", !css.includes("DM Sans"));
 
@@ -183,7 +186,7 @@ for (const host of ALL_HOSTS) {
   check(host+" nie obiecuje porady za darmo", !/[Bb]ezpłatn\w* konsultacj/.test(h));
   check(host+" nazywa to rozmową", h.includes("rozmowa organizacyjna") || h.includes("rozmowę"));
   check(host+" mówi kiedy jest porada", h.includes("po ich przeczytaniu") || h.includes("po zapoznaniu"));
-  check(host+" wpis w pierwszym ekranie", h.includes("Wpis WAW/Adw/3678"));
+  check(host+" wpis w pierwszym ekranie", h.includes(FIRM.barNumber));
 }
 const faqTxt = JSON.stringify(POOLS ?? {});
 check("opis w treści meta", DOMAIN_CONFIG["rozwod.waw.pl"].desc.includes("rozmowa wstępna"));

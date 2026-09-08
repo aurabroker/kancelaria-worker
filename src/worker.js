@@ -9,6 +9,7 @@ import { CATEGORIES, faqForHost, faqPoolGrouped } from "./faq.js";
 import { sendLeadNotification } from "./mail.js";
 import { photoResponse, PHOTO_DIMS } from "./photo.js";
 import { icon } from "./icons.js";
+import { CSS as LAYOUT_CSS, buildHome } from "./layout.js";
 
 /* Pomiar. GA4 wspolny dla calej sieci. Identyfikator Google Ads
    uzupelnic po otrzymaniu z panelu — do tego czasu tag Ads sie nie renderuje,
@@ -65,7 +66,7 @@ export default {
 
     // GET /assets/style.css
     if (url.pathname === "/assets/style.css") {
-      return new Response(CSS, {
+      return new Response(LAYOUT_CSS, {
         headers: { "Content-Type": "text/css; charset=utf-8", ...cacheHeaders(86400) }
       });
     }
@@ -213,494 +214,73 @@ ${PAGE_JS}`;
 
 // ── HTML TEMPLATE ──────────────────────────────────────────────────────────
 function buildHTML(cfg, hostname, url) {
-  const title = cfg.title;
-  const desc  = cfg.desc;
-  // Naglowek dopasowany do grupy reklam, gdy adres niesie utm_content.
   const adGroup = url && url.searchParams ? url.searchParams.get("utm_content") : null;
   const h1 = (AD_HEADLINES[adGroup] && AD_HEADLINES[adGroup](cfg)) || cfg.h1;
   const faqItems = faqForHost(hostname, 8);
+  const dzis = new Date().toISOString().slice(0, 10);
 
-  return `<!DOCTYPE html>
-<html lang="pl">
-<head>
-<meta charset="UTF-8">
+  const head = `<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="${desc}">
+<title>${esc(cfg.title)}</title>
+<meta name="description" content="${esc(cfg.desc)}">
+<meta name="author" content="${esc(FIRM.attorney)}">
 <link rel="canonical" href="https://${hostname}">
-<title>${title}</title>
-<meta property="og:title" content="${title}">
-<meta property="og:description" content="${desc}">
+<meta property="og:title" content="${esc(cfg.title)}">
+<meta property="og:description" content="${esc(cfg.desc)}">
 <meta property="og:url" content="https://${hostname}">
 <meta property="og:type" content="website">
-<meta name="author" content="${esc(FIRM.attorney)}">
 <meta property="og:locale" content="pl_PL">
 <meta property="og:image" content="https://${hostname}${FIRM.photoOg}">
 <meta property="og:image:width" content="${PHOTO_DIMS.square.w}">
 <meta property="og:image:height" content="${PHOTO_DIMS.square.h}">
 <meta name="twitter:card" content="summary_large_image">
-
-<!-- JSON-LD Schema -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "LegalService",
-  "name": "Kancelaria Adwokacka Magdalena Idzik-Cieśla",
-  "description": "${desc}",
-  "url": "https://${hostname}",
-  "telephone": "+48605089552",
-  "email": "kancelaria@idzik.org.pl",
-  "areaServed": "${cfg.district}",
-  "address": [
-    {"@type":"PostalAddress","streetAddress":"ul. Ceramiczna 5E/79","addressLocality":"Warszawa","postalCode":"03-126","addressCountry":"PL"},
-    {"@type":"PostalAddress","streetAddress":"ul. Bolkowska 2A/28","addressLocality":"Warszawa","postalCode":"01-466","addressCountry":"PL"}
-  ],
-  "openingHours": "${FIRM.hours}",
-  "priceRange": "$$",
-  "vatID": "${FIRM.nip}",
-  "dateModified": "${new Date().toISOString().slice(0,10)}",
-  "image": "https://${hostname}${FIRM.photoOg}",
-  "areaServed": ${JSON.stringify(cfg.areas)},
-  "founder": {
-    "@type": "Person",
-    "name": "${FIRM.attorney}",
-    "jobTitle": "Adwokat",
-    "identifier": "${FIRM.barNumber}",
-    "image": "https://${hostname}${FIRM.photoOg}",
-    "memberOf": { "@type": "Organization", "name": "${FIRM.barCouncil}" }
-  },
-  "hasMap": "https://maps.google.com/?q=Ceramiczna+5E,+Warszawa"
-}
-<\/script>
-
-<!-- FAQ Schema — generowany z pytan faktycznie widocznych na stronie -->
-<script type="application/ld+json">
-${JSON.stringify({
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqItems.map(f => ({
-    "@type": "Question", name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a }
-  }))
-})}
-<\/script>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
-<style>
-  :root {
-    --accent:       ${cfg.accent};
-    --accent-light: ${cfg.light};
-    --accent-bg:    ${cfg.bg};
-  }
-  @media (max-width: 760px) {
-    .hero-2col { grid-template-columns: 1fr !important; }
-    .hero-2col .hero-actions { flex-direction: column; }
-  }
-</style>
-${trackingHead(cfg)}
-</head>
-<body>
+<style>:root{
+  --ink:#12203C; --paper:#FAF7F2; --chalk:#F1ECE4;
+  --clay:#A85A3C; --agree:#3D6B54; --dispute:#96342C;
+  --muted:#46536B; --rule:#DDD5C9; --rule-strong:#C9BFAF;
+  --accent:${cfg.accent}; --accent-light:${cfg.light};
+}</style>
+${trackingHead(cfg)}`;
 
-<div class="ticker-wrap" aria-label="Obszary działania kancelarii">
-  <div class="ticker-track" id="ticker-track"></div>
-</div>
+  const ld = (obj) => "<script type=\"application/ld+json\">\n" + JSON.stringify(obj) + "\n<" + "/script>";
 
-<header class="nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo">
-      <span class="nav-logo-name">Kancelaria Adwokacka</span>
-      <span class="nav-logo-sub">Magdalena Idzik‑Cieśla</span>
-    </a>
-    <nav class="nav-links nav-desktop" id="nav-desktop">
-      <a href="#pomoc"   class="nav-link">Zakres pomocy</a>
-      <a href="#proces"  class="nav-link">Jak działamy</a>
-      <a href="#adwokat" class="nav-link">Adwokat</a>
-      <a href="#opinie"  class="nav-link">Opinie</a>
-      <a href="#faq"     class="nav-link">FAQ</a>
-      <a href="#kontakt" class="btn nav-cta">Bezpłatna rozmowa</a>
-    </nav>
-    <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
-  </div>
-</header>
-
-<main>
-
-<!-- HERO -->
-<section class="hero section" style="padding-top:clamp(4rem,8vw,6rem);padding-bottom:clamp(3rem,6vw,5rem);background:var(--bg);">
-  <div class="container">
-    <div class="hero-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:3.5rem;align-items:center;">
-
-      <!-- LEWA: tekst -->
-      <div>
-        <p class="hero-eyebrow" style="justify-content:flex-start;">
-          <span class="hero-eyebrow-dot"></span>
-          Kancelaria Adwokacka · ${cfg.district} · Prawo Rodzinne
-        </p>
-        <h1 style="text-align:left;margin:0 0 1.25rem;font-size:clamp(1.9rem,3.2vw,2.9rem);">
-          ${esc(h1)}
-        </h1>
-        <p class="hero-sub" style="text-align:left;margin:0 0 2rem;max-width:100%;">
-          ${esc(cfg.lead)}
-        </p>
-        <p style="margin:-.75rem 0 1.5rem;font-size:.88rem;color:var(--text-muted);max-width:52ch;">
-          Pierwsze 30 minut bez opłaty. To rozmowa organizacyjna — ustalamy zakres sprawy,
-          potrzebne dokumenty i koszt. Porady prawnej udzielam po ich przeczytaniu.
-        </p>
-        <div class="hero-actions" style="justify-content:flex-start;margin-bottom:2rem;">
-          <a href="#kontakt" class="btn btn-primary btn-lg">Umów bezpłatną rozmowę →</a>
-          <a href="tel:+48605089552" onclick="trackCall()" class="btn btn-outline btn-lg">📞 605 089 552</a>
-        </div>
-        <div class="hero-trust" style="justify-content:flex-start;flex-direction:column;align-items:flex-start;gap:.6rem;">
-          <span class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 3L5.5 10 2 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Wpis ${esc(FIRM.barNumber)}, ${esc(FIRM.barCouncil)}</span>
-          <span class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 3L5.5 10 2 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Pierwsze 30 minut bez opłaty</span>
-          <span class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 3L5.5 10 2 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Wyłącznie prawo rodzinne</span>
-          <span class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 3L5.5 10 2 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Biura na Bemowie i Białołęce · konsultacje online</span>
-        </div>
-      </div>
-
-      <!-- PRAWA: wideo rozciągnięte -->
-      <div style="position:relative;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg);background:var(--navy);align-self:stretch;min-height:320px;">
-        <video id="hero-video" src="https://github.com/user-attachments/assets/7c593bf7-b8ff-47d8-af33-d6ca0661c832"
-          poster="${FIRM.photo}" width="${PHOTO_DIMS.portrait.w}" height="${PHOTO_DIMS.portrait.h}"
-          playsinline controls preload="none"
-          style="position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;"></video>
-        <div id="video-overlay" onclick="playVideo()" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:opacity .3s;background:rgba(15,31,56,.42);z-index:1;">
-          <div id="play-btn" style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.13);backdrop-filter:blur(12px);border:1.5px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="white" style="margin-left:4px"><path d="M8 5v14l11-7z"/></svg>
-          </div>
-          <p style="margin-top:1rem;font-family:var(--serif);font-size:.95rem;font-style:italic;color:rgba(255,255,255,.85);">Posłuchaj o kancelarii</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- STATYSTYKI -->
-<div class="stats-bar">
-  <div class="container">
-    <div class="stats-inner">
-      <div class="stat-item"><div class="stat-number" data-count="12" data-suffix="+">12+</div><div class="stat-label">Lat doświadczenia</div></div>
-      <div class="stat-item"><div class="stat-number" data-count="850" data-suffix="+">850+</div><div class="stat-label">Zakończonych spraw</div></div>
-      <div class="stat-item"><div class="stat-number" data-count="97" data-suffix="%">97%</div><div class="stat-label">Klientów poleca dalej</div></div>
-      <div class="stat-item"><div class="stat-number" data-count="10">10</div><div class="stat-label">Lokalizacji</div></div>
-    </div>
-  </div>
-</div>
-
-<!-- LOKALIZACJE -->
-<div class="location-strip">
-  <div class="container">
-    <div class="location-strip-inner">
-      <span class="location-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>ul. Ceramiczna 5E/79, Warszawa</span>
-      <span class="location-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>ul. Bolkowska 2A/28, Warszawa</span>
-      <span class="location-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>Legionowo · Łomianki · online</span>
-    </div>
-  </div>
-</div>
-
-<!-- POMOC -->
-<section class="section" id="pomoc">
-  <div class="container">
-    <div class="pain-grid">
-      <div>
-        <div class="section-header">
-          <p class="section-label">Rozumiem Twoją sytuację</p>
-          <h2 class="section-title">To jeden z najtrudniejszych momentów.<br><em>Nie musisz</em> przez to przechodzić sam.</h2>
-          <p class="section-desc">Każda sprawa jest inna. Niezależnie od tego, jak skomplikowana jest Twoja sytuacja — masz prawo do rzetelnej i ludzkiej pomocy prawnej.</p>
-        </div>
-        <div class="pain-items">
-          <div class="pain-item"><div class="pain-icon">⚖️</div><div><h4>Nie wiem od czego zacząć</h4><p>Wyjaśniamy każdy krok po ludzku — bez żargonu, bez ukrytych kosztów.</p></div></div>
-          <div class="pain-item"><div class="pain-icon">🏠</div><div><h4>Obawiamy się o mieszkanie i majątek</h4><p>Zadbamy o sprawiedliwy podział — nieruchomości, oszczędności, firma, kredyt.</p></div></div>
-          <div class="pain-item"><div class="pain-icon">👶</div><div><h4>Dzieci są dla mnie najważniejsze</h4><p>Pomagamy ustalić plan wychowawczy zabezpieczający dobro dzieci i Twój realny kontakt.</p></div></div>
-          <div class="pain-item"><div class="pain-icon">🤝</div><div><h4>Chcę to zakończyć polubownie</h4><p>Mediacja jest często szybsza i tańsza. Wspieramy ugodowe rozwiązania gdzie to możliwe.</p></div></div>
-        </div>
-      </div>
-      <div>
-        <div class="pain-quote-block">
-          <blockquote>„Kiedy trafiłam do kancelarii, czułam się całkowicie zagubiona. Pani mecenas spokojnie wyjaśniła mi każdy krok. Po raz pierwszy od miesięcy poczułam, że mam kogoś po swojej stronie."</blockquote>
-          <cite>— Klientka kancelarii, Warszawa 2024</cite>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- USŁUGI -->
-<section class="section" style="background:var(--bg-card);">
-  <div class="container">
-    <div class="section-header section-center text-center">
-      <p class="section-label">Zakres pomocy</p>
-      <h2 class="section-title">Czym możemy <em>Ci pomóc</em></h2>
-      <p class="section-desc">Kompleksowa obsługa prawna w sprawach rodzinnych — od pierwszej rozmowy do prawomocnego wyroku.</p>
-    </div>
-    <div class="services-grid">
-      <div class="service-card"><div class="service-icon">${icon("rozwod-bez-orzekania-o-winie")}</div><h3>Rozwód</h3><p>Pozew, reprezentacja przed sądem, negocjacje. Sprawy polubowne i sporne.</p><div class="service-tags"><span class="tag">Z orzekaniem o winie</span><span class="tag">Bez orzekania</span><span class="tag">Separacja</span></div></div>
-      <div class="service-card"><div class="service-icon">${icon("podzial-majatku")}</div><h3>Podział majątku</h3><p>Analiza majątku wspólnego, negocjacje, reprezentacja sądowa lub notarialna.</p><div class="service-tags"><span class="tag">Nieruchomości</span><span class="tag">Firmy</span><span class="tag">Kredyty</span></div></div>
-      <div class="service-card"><div class="service-icon">${icon("alimenty-na-dziecko")}</div><h3>Opieka i alimenty</h3><p>Plan wychowawczy, alimenty, prawo do kontaktów. Zmiana ustalonych warunków.</p><div class="service-tags"><span class="tag">Plan wychowawczy</span><span class="tag">Alimenty</span><span class="tag">Kontakty</span></div></div>
-    </div>
-  </div>
-</section>
-
-<!-- PROCES -->
-<section class="section process-section" id="proces">
-  <div class="container">
-    <div class="section-header section-center text-center">
-      <p class="section-label">Jak działamy</p>
-      <h2 class="section-title">Cztery kroki do <em>nowego początku</em></h2>
-      <p class="section-desc">Przejrzysty, przewidywalny proces — bez niespodzianek.</p>
-    </div>
-    <div class="process-steps">
-      <div class="process-step"><div class="step-badge">1</div><h4>Rozmowa wstępna</h4><p>30 minut bez zobowiązań i bez opłaty. Ustalamy zakres sprawy, potrzebne dokumenty i dalszy tryb. Porada prawna następuje po zapoznaniu się z dokumentami.</p></div>
-      <div class="process-step"><div class="step-badge">2</div><h4>Analiza i strategia</h4><p>Analizujemy dokumenty i opracowujemy indywidualną strategię działania.</p></div>
-      <div class="process-step"><div class="step-badge">3</div><h4>Reprezentacja</h4><p>Przygotowujemy pisma, negocjujemy i reprezentujemy Cię przed sądem.</p></div>
-      <div class="process-step"><div class="step-badge">4</div><h4>Wyrok i nowy etap</h4><p>Prawomocny wyrok z pewnością, że kluczowe kwestie zostały zabezpieczone.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- OPINIE -->
-<section class="section" id="opinie">
-  <div class="container">
-    <div class="section-header section-center text-center">
-      <p class="section-label">Opinie klientów</p>
-      <h2 class="section-title">Co mówią <em>nasi klienci</em></h2>
-    </div>
-    <div class="testimonials-grid">
-      <div class="testimonial"><div class="t-stars">★★★★★</div><p class="t-quote">„Profesjonalizm i spokój — przez cały czas miałem poczucie, że wszystko jest pod kontrolą. Serdecznie polecam."</p><div class="t-author"><div class="t-avatar">MK</div><div><div class="t-name">Marek K.</div><div class="t-meta">Sprawa rozwodowa · Warszawa</div></div></div></div>
-      <div class="testimonial"><div class="t-stars">★★★★★</div><p class="t-quote">„Pani mecenas skutecznie zawalczyła o moje prawa. Warunki, które ustaliliśmy, są dobre dla całej rodziny."</p><div class="t-author"><div class="t-avatar">AW</div><div><div class="t-name">Anna W.</div><div class="t-meta">Opieka nad dziećmi · Legionowo</div></div></div></div>
-      <div class="testimonial"><div class="t-stars">★★★★★</div><p class="t-quote">„Sprawny kontakt, zawsze dostępni. Podział majątku zakończony szybciej niż myślałem."</p><div class="t-author"><div class="t-avatar">PT</div><div><div class="t-name">Piotr T.</div><div class="t-meta">Podział majątku · Łomianki</div></div></div></div>
-    </div>
-  </div>
-</section>
-
-<!-- FAQ -->
-<section class="section faq-section" id="faq">
-  <div class="container">
-    <div class="faq-layout">
-      <div class="faq-sticky">
-        <p class="section-label no-line">Najczęstsze pytania</p>
-        <h2 class="section-title">Odpowiadamy<br>na <em>Twoje</em><br>pytania</h2>
-        <p class="section-desc" style="margin-bottom:2rem">Nie znajdziesz odpowiedzi? Zadzwoń — oddzwonimy w ciągu 2 godzin.</p>
-        <a href="tel:+48605089552" onclick="trackCall()" class="btn btn-primary">📞 605 089 552</a>
-      </div>
-      <div class="faq-list">
-        ${faqItems.map(f => `<div class="faq-item"><button class="faq-btn">${esc(f.q)}<span class="faq-icon">+</span></button><div class="faq-body"><p>${esc(f.a)}</p></div></div>`).join("\n        ")}
-        <p style="margin-top:1.25rem;font-size:.82rem;color:var(--text-muted)">
-          Odpowiedzi przygotowała ${esc(FIRM.attorney)}, wpis ${esc(FIRM.barNumber)}.
-          Stan prawny na <time datetime="${new Date().toISOString().slice(0,10)}">${new Date().toISOString().slice(0,10)}</time>.
-        </p>
-        <p style="margin-top:.6rem;font-size:.9rem"><a href="/pytania">Zobacz wszystkie pytania i odpowiedzi \u2192</a></p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ADWOKATKA -->
-<section class="section" id="adwokat">
-  <div class="container">
-    <div style="display:grid;grid-template-columns:minmax(0,320px) 1fr;gap:3rem;align-items:center;" class="lawyer-grid">
-      <div>
-        <img src="${FIRM.photo}" alt="${esc(FIRM.attorney)}, adwokat prowadzący sprawy rozwodowe ${esc(cfg.locative)}"
-             width="${PHOTO_DIMS.portrait.w}" height="${PHOTO_DIMS.portrait.h}" loading="lazy" decoding="async"
-             style="width:100%;height:auto;display:block;border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);">
-      </div>
-      <div>
-        <p class="section-label">Kto poprowadzi Twoją sprawę</p>
-        <h2 class="section-title" style="margin-bottom:1rem">${esc(FIRM.attorney)}</h2>
-        <p class="section-desc" style="margin-bottom:1.25rem">
-          Prowadzę sprawy rozwodowe i rodzinne ${esc(cfg.locative)} od kilkunastu lat. Na pierwszym
-          spotkaniu mówię wprost, jak wygląda Twoja sytuacja i czego realnie możesz się spodziewać —
-          także wtedy, gdy odpowiedź nie jest ta, którą chciałabyś usłyszeć.
-        </p>
-        <ul style="list-style:none;padding:0;margin:0;display:grid;gap:.45rem;font-size:.92rem">
-          <li><strong>Wpis na listę adwokatów:</strong> ${esc(FIRM.barNumber)}</li>
-          <li><strong>Izba:</strong> ${esc(FIRM.barCouncil)}</li>
-          <li><strong>NIP:</strong> ${esc(FIRM.nip)}</li>
-          <li><strong>Kontakt:</strong> <a href="tel:${FIRM.phone}" onclick="trackCall()">${esc(FIRM.phoneLabel)}</a> · <a href="mailto:${FIRM.email}">${esc(FIRM.email)}</a></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- SAD WLASCIWY -->
-<section class="section" style="background:var(--accent-bg);">
-  <div class="container">
-    <div class="section-header section-center text-center">
-      <p class="section-label">Gdzie toczy się sprawa</p>
-      <h2 class="section-title">${esc(cfg.court.name)}</h2>
-      <p class="section-desc">${esc(cfg.courtNote)}</p>
-    </div>
-    <p style="text-align:center;font-size:.92rem;color:var(--text-muted)">
-      ${esc(cfg.court.address)}<br>
-      Obsługujemy: ${cfg.areas.map(esc).join(" · ")}
-    </p>
-  </div>
-</section>
-
-<!-- KONTAKT -->
-<section class="contact-section" id="kontakt">
-  <div class="container">
-    <div class="section-header section-center text-center">
-      <p class="section-label">Bezpłatna rozmowa wstępna</p>
-      <h2 class="section-title">Zrób pierwszy krok<br><em>w swoim tempie</em></h2>
-      <p class="section-desc">Oddzwonimy w ciągu 2 godzin w dni robocze.</p>
-    </div>
-    <form id="contact-form" class="form-card" onsubmit="submitLead(event)">
-      <div class="form-card-title">Umów bezpłatną rozmowę wstępną</div>
-      <p class="form-card-sub">Oddzwonimy w ciągu 2 godzin (pn–pt 9:00–17:00).</p>
-      <div class="form-row">
-        <div class="form-group"><label for="imie">Imię *</label><input type="text" id="imie" name="imie" required></div>
-        <div class="form-group"><label for="tel">Telefon *</label><input type="tel" id="tel" name="telefon" required></div>
-      </div>
-      <div class="form-group"><label for="email">E-mail</label><input type="email" id="email" name="email"></div>
-      <div class="form-group"><label for="temat">Czego dotyczy sprawa?</label>
-        <select id="temat" name="temat">
-          <option value="" disabled selected>Wybierz temat</option>
-          <option>Rozwód bez orzekania o winie</option>
-          <option>Rozwód z orzeczeniem o winie</option>
-          <option>Podział majątku wspólnego</option>
-          <option>Opieka nad dziećmi / alimenty</option>
-          <option>Separacja prawna</option>
-          <option>Inne</option>
-        </select>
-      </div>
-      <div class="form-group"><label for="wiadomosc">Krótki opis sytuacji</label><textarea id="wiadomosc" name="wiadomosc"></textarea></div>
-      <button type="submit" class="form-submit">Wyślij i umów konsultację →</button>
-      <div class="form-group" style="flex-direction:row;align-items:flex-start;gap:.6rem">
-        <input type="checkbox" id="zgoda" name="zgoda" required style="margin-top:.28rem;width:auto;flex:none">
-        <label for="zgoda" style="font-weight:400;font-size:.83rem;line-height:1.5">
-          Wyrażam zgodę na przetwarzanie moich danych w celu odpowiedzi na zapytanie.
-          Administratorem jest ${esc(FIRM.name)}. Szczegóły w <a href="/polityka-prywatnosci">polityce prywatności</a>. *
-        </label>
-      </div>
-      <p class="form-notice">🔒 Dane są bezpieczne i chronione. Przetwarzamy je wyłącznie w celu obsługi zapytania.</p>
-      <div id="form-success" style="display:none;text-align:center;padding:1.5rem 0;">
-        <div style="font-size:2rem;margin-bottom:.75rem">✅</div>
-        <div style="font-family:var(--serif);font-size:1.2rem;font-weight:700;color:var(--navy);margin-bottom:.4rem">Dziękujemy!</div>
-        <p style="font-size:.9rem;color:var(--text-muted)">Oddzwonimy wkrótce.</p>
-      </div>
-    </form>
-    <div style="text-align:center;margin-top:2.5rem;display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;">
-      <a href="tel:+48605089552" onclick="trackCall()" class="btn btn-white btn-lg">📞 605 089 552</a>
-      <a href="mailto:kancelaria@idzik.org.pl" class="btn btn-white btn-lg">✉ kancelaria@idzik.org.pl</a>
-    </div>
-  </div>
-</section>
-</main>
-
-<footer>
-  <div class="container">
-    <div class="footer-grid">
-      <div>
-        <div class="footer-brand">Kancelaria Adwokacka Magdalena Idzik‑Cieśla</div>
-        <p class="footer-tagline">Dyskretna i skuteczna pomoc prawna w sprawach rodzinnych. Warszawa i Mazowieckie.</p>
-        <div class="footer-contact">
-          <a href="tel:+48605089552" onclick="trackCall()">📞 605 089 552</a>
-          <a href="mailto:kancelaria@idzik.org.pl">✉ kancelaria@idzik.org.pl</a>
-        </div>
-      </div>
-      <div class="footer-col"><h5>Usługi</h5><ul><li><a href="#pomoc">Rozwód</a></li><li><a href="#pomoc">Podział majątku</a></li><li><a href="#pomoc">Opieka nad dziećmi</a></li><li><a href="#pomoc">Alimenty</a></li></ul></div>
-      <div class="footer-col"><h5>Biura</h5><ul><li>ul. Ceramiczna 5E/79</li><li>03-126 Warszawa</li><li style="margin-top:.4rem">ul. Bolkowska 2A/28</li><li>01-466 Warszawa</li></ul></div>
-      <div class="footer-col"><h5>Dane kancelarii</h5><ul>
-        <li>${esc(FIRM.attorney)}</li>
-        <li>Wpis nr ${esc(FIRM.barNumber)}</li>
-        <li>${esc(FIRM.barCouncil)}</li>
-        <li>NIP ${esc(FIRM.nip)}</li>
-      </ul></div>
-      <div class="footer-col"><h5>Inne dzielnice</h5><ul>
-        <li><a href="https://rozwodbielany.pl">Bielany</a></li>
-        <li><a href="https://rozwodzoliborz.pl">Żoliborz</a></li>
-        <li><a href="https://rozwodwola.pl">Wola</a></li>
-        <li><a href="https://rozwodmokotow.pl">Mokotów</a></li>
-        <li><a href="https://rozwodlegionowo.pl">Legionowo</a></li>
-        <li><a href="https://rozwodlomianki.pl">Łomianki</a></li>
-      </ul></div>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <div class="container" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
-      <span>© ${YEAR} ${esc(FIRM.name)}. Wszelkie prawa zastrzeżone.</span>
-      <span><a href="/polityka-prywatnosci" style="color:inherit">Polityka prywatności</a> · <a href="/rodo" style="color:inherit">RODO</a> · <a href="/pytania" style="color:inherit">Pytania</a></span>
-    </div>
-  </div>
-</footer>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-<script src="/assets/page.js"></script>
-<script>
-function trackLead() {
-  try {
-    if (window.gtag) {
-      gtag('event', 'generate_lead', { form: 'kontakt' });
-      if (window.ADS_LEAD) gtag('event', 'conversion', { send_to: window.ADS_LEAD });
+  const schema = ld({
+    "@context": "https://schema.org",
+    "@type": "LegalService",
+    name: FIRM.name,
+    description: cfg.desc,
+    url: `https://${hostname}`,
+    telephone: FIRM.phone,
+    email: FIRM.email,
+    image: `https://${hostname}${FIRM.photoOg}`,
+    vatID: FIRM.nip,
+    dateModified: dzis,
+    areaServed: cfg.areas,
+    address: FIRM.offices.map(o => ({
+      "@type": "PostalAddress", streetAddress: o.street,
+      addressLocality: o.city, postalCode: o.postal, addressCountry: "PL"
+    })),
+    openingHours: FIRM.hours,
+    priceRange: "$$",
+    founder: {
+      "@type": "Person", name: FIRM.attorney, jobTitle: "Adwokat",
+      identifier: FIRM.barNumber,
+      image: `https://${hostname}${FIRM.photoOg}`,
+      memberOf: { "@type": "Organization", name: FIRM.barCouncil }
     }
-  } catch (e) {}
-}
-function trackCall() {
-  try {
-    if (window.gtag) {
-      gtag('event', 'contact', { method: 'telefon' });
-      if (window.ADS_CALL) gtag('event', 'conversion', { send_to: window.ADS_CALL });
-    }
-  } catch (e) {}
-}
+  }) + "\n" + ld({
+    "@context": "https://schema.org", "@type": "FAQPage",
+    mainEntity: faqItems.map(f => ({
+      "@type": "Question", name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a }
+    }))
+  });
 
-function playVideo() {
-  const video = document.getElementById('hero-video');
-  const overlay = document.getElementById('video-overlay');
-  video.play();
-  anime({ targets: overlay, opacity: [1,0], duration: 400, easing: 'easeOutCubic',
-    complete: () => { overlay.style.display = 'none'; } });
-}
-async function submitLead(e) {
-  e.preventDefault();
-  const btn = e.target.querySelector('.form-submit');
-  btn.disabled = true;
-  btn.textContent = 'Wysyłanie...';
-  const q = new URLSearchParams(location.search);
-  const utm = {};
-  ['utm_source','utm_medium','utm_campaign','utm_content','utm_term']
-    .forEach(k => { if (q.get(k)) utm[k] = q.get(k); });
-  const payload = {
-    imie:      document.getElementById('imie').value,
-    telefon:   document.getElementById('tel').value,
-    email:     document.getElementById('email').value,
-    temat:     document.getElementById('temat').value,
-    wiadomosc: document.getElementById('wiadomosc').value,
-    zgoda:     document.getElementById('zgoda').checked,
-    utm,
-  };
-  try {
-    const res = await fetch('/api/lead', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (data.ok) {
-      document.getElementById('contact-form').style.display = 'none';
-      document.getElementById('form-success').style.display = 'block';
-      // Konwersja liczona tam, gdzie uzytkownik naprawde konczy,
-      // a nie na stronie /dziekujemy.html, do ktorej nikt nie trafia.
-      trackLead();
-    } else {
-      btn.disabled = false;
-      btn.textContent = 'Błąd — spróbuj ponownie';
-      setTimeout(() => { btn.textContent = 'Wyślij i umów konsultację →'; }, 3000);
-    }
-  } catch {
-    btn.disabled = false;
-    btn.textContent = 'Błąd — spróbuj ponownie';
-  }
-}
-</script>
-</body>
-</html>`;
+  return buildHome({ cfg, hostname, h1, faqItems, head, schema });
 }
 
 // ── WBUDOWANY CSS (importowany z pliku style.css) ──────────────────────────
@@ -1664,130 +1244,73 @@ footer {
 
 // ── WBUDOWANY PAGE.JS ──────────────────────────────────────────────────────
 const PAGE_JS = `
-const DISTRICTS = [
-  { name: "Warszawa",   url: "https://rozwod.waw.pl",       key: "warszawa" },
-  { name: "Bielany",    url: "https://rozwodbielany.pl",    key: "bielany" },
-  { name: "Żoliborz",  url: "https://rozwodzoliborz.pl",   key: "zoliborz" },
-  { name: "Wola",       url: "https://rozwodwola.pl",       key: "wola" },
-  { name: "Ochota",     url: "https://rozwodochota.pl",     key: "ochota" },
-  { name: "Mokotów",   url: "https://rozwodmokotow.pl",    key: "mokotow" },
-  { name: "Tarchomin", url: "https://rozwodtarchomin.pl",  key: "tarchomin" },
-  { name: "Legionowo", url: "https://rozwodlegionowo.pl",  key: "legionowo" },
-  { name: "Łomianki",  url: "https://rozwodlomianki.pl",   key: "lomianki" },
-  { name: "Jabłonna",  url: "https://rozwodjablonna.pl",   key: "jablonna" },
-];
+/* Skrypt strony — nowy uklad z kanwy.
+   Rozwijane pytania dziala natywnie na <details>, wiec JS obsluguje
+   wylacznie formularz i pomiar. */
 
-document.addEventListener("DOMContentLoaded", () => {
-  applyTheme();
-  initTicker();
-  initNav();
-  initAnimations();
-  initFAQ();
-});
-
-function applyTheme() {
-  const r = document.documentElement.style;
-  r.setProperty("--accent",       SITE_CONFIG.accentColor);
-  r.setProperty("--accent-light", SITE_CONFIG.accentLight);
-  r.setProperty("--accent-bg",    SITE_CONFIG.accentBg);
-}
-
-function initTicker() {
-  const wrap = document.getElementById("ticker-track");
-  if (!wrap) return;
-  const items = [...DISTRICTS, ...DISTRICTS];
-  wrap.innerHTML = items.map(d =>
-    '<span class="ticker-item' + (d.key === SITE_CONFIG.districtKey ? " active-district" : "") + '">' +
-    '<a href="' + d.url + '">' + d.name + '</a></span>'
-  ).join("");
-  const singleWidth = DISTRICTS.length * 180;
-  anime({ targets: "#ticker-track", translateX: ["0px", "-" + singleWidth + "px"],
-    duration: DISTRICTS.length * 2200, easing: "linear", loop: true });
-}
-
-function initNav() {
-  const hamburger = document.getElementById("hamburger");
-  const navDesktop = document.getElementById("nav-desktop");
-  if (!hamburger || !navDesktop) return;
-  hamburger.addEventListener("click", () => {
-    const isOpen = navDesktop.classList.toggle("open");
-    hamburger.setAttribute("aria-expanded", isOpen);
-    const spans = hamburger.querySelectorAll("span");
-    if (isOpen) {
-      anime({ targets: spans[0], rotate: 45,  translateY: 6.5,  duration: 200, easing: "easeInOutSine" });
-      anime({ targets: spans[1], opacity: 0,                    duration: 200, easing: "easeInOutSine" });
-      anime({ targets: spans[2], rotate: -45, translateY: -6.5, duration: 200, easing: "easeInOutSine" });
-    } else {
-      anime({ targets: spans[0], rotate: 0, translateY: 0, duration: 200, easing: "easeInOutSine" });
-      anime({ targets: spans[1], opacity: 1,               duration: 200, easing: "easeInOutSine" });
-      anime({ targets: spans[2], rotate: 0, translateY: 0, duration: 200, easing: "easeInOutSine" });
+function trackLead() {
+  try {
+    if (window.gtag) {
+      gtag('event', 'generate_lead', { form: 'kontakt' });
+      if (window.ADS_LEAD) gtag('event', 'conversion', { send_to: window.ADS_LEAD });
     }
-  });
+  } catch (e) {}
 }
 
-function initAnimations() {
-  const seq = [
-    { targets: ".hero-eyebrow", translateY: [20,0], opacity: [0,1], duration: 600 },
-    { targets: ".hero h1",      translateY: [30,0], opacity: [0,1], duration: 700 },
-    { targets: ".hero-sub",     translateY: [20,0], opacity: [0,1], duration: 600 },
-    { targets: ".hero-actions", translateY: [15,0], opacity: [0,1], duration: 500 },
-    { targets: ".hero-trust",   translateY: [10,0], opacity: [0,1], duration: 500 },
-  ];
-  let delay = 0;
-  seq.forEach(cfg => {
-    const el = document.querySelector(cfg.targets);
-    if (!el) return;
-    anime({ ...cfg, easing: "easeOutCubic", delay });
-    delay += 180;
-  });
-
-  const stats = document.querySelectorAll(".stat-number[data-count]");
-  if (stats.length) {
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (!e.isIntersecting) return;
-        const el = e.target;
-        const target = parseInt(el.dataset.count, 10);
-        const suffix = el.dataset.suffix || "";
-        const counter = { val: 0 };
-        anime({ targets: counter, val: target, round: 1, duration: 1600, easing: "easeOutExpo",
-          update() { el.innerHTML = Math.round(counter.val) + suffix; } });
-        obs.unobserve(el);
-      });
-    }, { threshold: 0.5 });
-    stats.forEach(s => obs.observe(s));
-  }
-
-  const fadeEls = document.querySelectorAll(".service-card,.testimonial,.process-step,.pain-item,.faq-item");
-  const fadeObs = new IntersectionObserver(entries => {
-    const visible = entries.filter(e => e.isIntersecting).map(e => e.target);
-    if (!visible.length) return;
-    anime({ targets: visible, translateY: [24,0], opacity: [0,1], duration: 650,
-      delay: anime.stagger(80), easing: "easeOutCubic" });
-    visible.forEach(el => fadeObs.unobserve(el));
-  }, { threshold: 0.1 });
-  fadeEls.forEach(el => { el.style.opacity="0"; el.style.transform="translateY(24px)"; fadeObs.observe(el); });
+function trackCall() {
+  try {
+    if (window.gtag) {
+      gtag('event', 'contact', { method: 'telefon' });
+      if (window.ADS_CALL) gtag('event', 'conversion', { send_to: window.ADS_CALL });
+    }
+  } catch (e) {}
 }
 
-function initFAQ() {
-  document.querySelectorAll(".faq-item").forEach(item => {
-    const btn  = item.querySelector(".faq-btn");
-    const body = item.querySelector(".faq-body");
-    if (!btn || !body) return;
-    btn.addEventListener("click", () => {
-      const isOpen = item.classList.contains("open");
-      document.querySelectorAll(".faq-item.open").forEach(other => {
-        other.classList.remove("open");
-        anime({ targets: other.querySelector(".faq-body"), maxHeight: 0, duration: 280, easing: "easeInCubic" });
-      });
-      if (!isOpen) {
-        item.classList.add("open");
-        anime({ targets: body, maxHeight: [0, body.scrollHeight + 20], duration: 360, easing: "easeOutCubic" });
-      }
+async function submitLead(e) {
+  e.preventDefault();
+  const form = e.target;
+  const btn = form.querySelector('.wyslij');
+  const etykieta = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Wysyłanie…';
+
+  const q = new URLSearchParams(location.search);
+  const utm = {};
+  ['utm_source','utm_medium','utm_campaign','utm_content','utm_term']
+    .forEach(k => { if (q.get(k)) utm[k] = q.get(k); });
+
+  const payload = {
+    imie:      document.getElementById('imie').value,
+    telefon:   document.getElementById('tel').value,
+    email:     document.getElementById('email').value,
+    temat:     document.getElementById('temat').value,
+    wiadomosc: document.getElementById('wiadomosc').value,
+    zgoda:     document.getElementById('zgoda').checked,
+    utm,
+  };
+
+  try {
+    const res  = await fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
-  });
+    const data = await res.json();
+    if (data.ok) {
+      form.style.display = 'none';
+      document.getElementById('form-success').style.display = 'block';
+      trackLead();
+      return;
+    }
+    btn.textContent = data.error || 'Nie udało się wysłać';
+  } catch {
+    btn.textContent = 'Brak połączenia — spróbuj ponownie';
+  }
+  btn.disabled = false;
+  setTimeout(() => { btn.textContent = etykieta; }, 3500);
 }
 `;
+
 
 function buildOpiniaHTML(cfg) {
   const ADM_URL = SUPABASE_URL + "/functions/v1/review-admin";
