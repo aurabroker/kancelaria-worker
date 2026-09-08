@@ -135,4 +135,16 @@ for (const host of ALL_HOSTS) {
 }
 check("rok w stopce aktualny", texts["rozwod.waw.pl"].includes("© " + new Date().getUTCFullYear()));
 
+// 10. zywa kampania Ads na Tarchominie — regresja z 8 wrzesnia
+console.log("\n=== TAG GOOGLE ADS TARCHOMINA ===");
+const tarch = DOMAIN_CONFIG["rozwodtarchomin.pl"];
+check("konfiguracja ma gtag", /^AW-\d+$/.test(tarch.gtag || ""), tarch.gtag);
+check("konfiguracja ma etykiete", /^AW-\d+\/[\w-]+$/.test(tarch.conversionTag || ""), tarch.conversionTag);
+const th = texts["rozwodtarchomin.pl"];
+check("tag w HTML strony", th.includes(tarch.gtag));
+check("etykieta w HTML strony", th.includes(tarch.conversionTag));
+const dz = await (await get("rozwodtarchomin.pl", "/dziekujemy.html")).text();
+check("konwersja na stronie podziekowania", dz.includes(tarch.conversionTag));
+console.log("  " + tarch.gtag + " — obecny na stronie i w module pomiaru");
+
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));

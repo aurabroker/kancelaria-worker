@@ -140,6 +140,10 @@ export const DOMAIN_CONFIG = {
   "rozwodtarchomin.pl": {
     district: "Tarchomin", key: "tarchomin",
     accent: "#4A6B1A", light: "#7FA83C", bg: "#F2F7EE",
+    // ZYWA KAMPANIA GOOGLE ADS — nie usuwac bez zgody wlasciciela konta.
+    // Jedyna domena w sieci z wlasnym tagiem konwersji. Do czasu uzupelnienia
+    // TRACKING.adsId te wartosci sa jedynym zrodlem pomiaru konwersji.
+    gtag: "AW-18123853335", conversionTag: "AW-18123853335/ocgpCLSM168cEJeckMJD",
     title: "Adwokat rozwodowy Tarchomin — kontakty z dzieckiem",
     desc:  "Adwokat rozwodowy na Tarchominie i Białołęce. Kontakty z dzieckiem i opieka naprzemienna. Bezpłatna konsultacja 30 minut. Tel. 605 089 552.",
     h1:    "Adwokat rozwodowy na Tarchominie",
