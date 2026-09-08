@@ -11,7 +11,7 @@ const DOMAIN_CONFIG = {
   "rozwodwola.pl":         { district: "Wola",      key: "wola",      accent: "#8B3A1A", light: "#C46A3C", bg: "#FDF0E9" },
   "rozwodochota.pl":       { district: "Ochota",    key: "ochota",    accent: "#1A6B5B", light: "#3CA48B", bg: "#EEFAF7" },
   "rozwodmokotow.pl":      { district: "Mokotów",   key: "mokotow",   accent: "#2D4A6B", light: "#5A7FA8", bg: "#EEF2F8" },
-  "rozwodtarchomin.pl":    { district: "Tarchomin", key: "tarchomin", accent: "#4A6B1A", light: "#7FA83C", bg: "#F2F7EE" },
+  "rozwodtarchomin.pl":    { district: "Tarchomin", key: "tarchomin", accent: "#4A6B1A", light: "#7FA83C", bg: "#F2F7EE", gtag: "AW-18123853335", conversionTag: "AW-18123853335/ocgpCLSM168cEJeckMJD" },
   "rozwodlegionowo.pl":    { district: "Legionowo", key: "legionowo", accent: "#1A5E6B", light: "#3C9AA8", bg: "#EEF8FA" },
   "rozwodlomianki.pl":     { district: "Łomianki",  key: "lomianki",  accent: "#2D6B1A", light: "#5AA83C", bg: "#EEF8EE" },
   "rozwodjablonna.pl":     { district: "Jabłonna",  key: "jablonna",  accent: "#6B5B1A", light: "#A89040", bg: "#FAF7EE" },
@@ -47,6 +47,20 @@ export default {
     if (url.pathname === "/assets/page.js") {
       return new Response(buildPageJS(cfg), {
         headers: { "Content-Type": "application/javascript; charset=utf-8", ...cacheHeaders(3600) }
+      });
+    }
+
+    // GET /opinia.html
+    if (url.pathname === "/opinia.html") {
+      return new Response(buildOpiniaHTML(cfg), {
+        headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(300) }
+      });
+    }
+
+    // GET /dziekujemy.html
+    if (url.pathname === "/dziekujemy.html") {
+      return new Response(buildDziekujemyHTML(cfg, hostname), {
+        headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(0) }
       });
     }
 
@@ -208,6 +222,14 @@ function buildHTML(cfg, hostname) {
     .hero-2col .hero-actions { flex-direction: column; }
   }
 </style>
+${cfg.gtag ? `<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=${cfg.gtag}"><\/script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '${cfg.gtag}');
+<\/script>` : ""}
 </head>
 <body>
 
@@ -1592,3 +1614,329 @@ function initFAQ() {
   });
 }
 `;
+
+function buildOpiniaHTML(cfg) {
+  const ADM_URL = SUPABASE_URL + "/functions/v1/review-admin";
+  return `<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opinie klientów | Kancelaria Idzik-Cieśla · ${cfg.district}</title>
+<meta name="robots" content="noindex, nofollow">
+<style>:root{--accent:${cfg.accent};--accent-light:${cfg.light};--accent-bg:${cfg.bg};}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .hero-star{display:inline-block;font-size:2.6rem;color:var(--accent);animation:heroSpin 1.2s ease-in-out both;filter:drop-shadow(0 0 6px var(--accent-light));}
+  @keyframes heroSpin{0%{transform:rotate(-30deg) scale(.6);opacity:0;}60%{transform:rotate(10deg) scale(1.2);}100%{transform:rotate(0deg) scale(1);opacity:1;}}
+  .star-btn{font-size:2.2rem;cursor:pointer;color:#ddd;transition:transform .15s,color .15s;user-select:none;background:none;border:none;padding:0 2px;}
+  .star-btn.lit{color:var(--accent);} .star-btn:hover{transform:scale(1.2);}
+  #review-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1.25rem;}
+  .admin-row{display:flex;align-items:flex-start;gap:1rem;padding:.75rem 0;border-bottom:1px solid rgba(0,0,0,.06);}
+  .admin-row:last-child{border-bottom:none;}
+  .admin-badge{font-size:.72rem;padding:1px 8px;border-radius:10px;background:var(--accent);color:#fff;margin-left:4px;}
+  .admin-badge.pending{background:#f59e0b;}
+  .admin-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.4rem;}
+  .admin-btn{font-size:.78rem;padding:4px 12px;border-radius:6px;border:1px solid;cursor:pointer;}
+  .admin-btn.approve{background:#16a34a;color:#fff;border-color:#16a34a;}
+  .admin-btn.reject{background:#f59e0b;color:#fff;border-color:#f59e0b;}
+  .admin-btn.del{background:#dc2626;color:#fff;border-color:#dc2626;}
+</style>
+${cfg.gtag ? `<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=${cfg.gtag}"><\/script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '${cfg.gtag}');
+<\/script>` : ""}
+</head>
+<body>
+<div class="ticker-wrap"><div class="ticker-track" id="ticker-track"></div></div>
+<header class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <span class="nav-logo-name">Kancelaria Adwokacka</span>
+      <span class="nav-logo-sub">Magdalena Idzik‑Cieśla</span>
+    </a>
+    <nav class="nav-links nav-desktop" id="nav-desktop">
+      <a href="/" class="nav-link">← Strona główna</a>
+      <a href="/#kontakt" class="btn nav-cta">Bezpłatna konsultacja</a>
+    </nav>
+    <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+<main>
+<section class="section" style="background:var(--accent-bg);border-bottom:1px solid rgba(0,0,0,.07);padding-top:clamp(3rem,6vw,5rem);padding-bottom:clamp(2rem,4vw,3.5rem);">
+  <div class="container" style="text-align:center;max-width:680px;">
+    <div style="margin-bottom:1.25rem;">
+      <span class="hero-star" style="animation-delay:.00s">★</span>
+      <span class="hero-star" style="animation-delay:.25s">★</span>
+      <span class="hero-star" style="animation-delay:.50s">★</span>
+      <span class="hero-star" style="animation-delay:.75s">★</span>
+      <span class="hero-star" style="animation-delay:1.00s">★</span>
+    </div>
+    <p class="section-label">Twoja opinia ma znaczenie</p>
+    <h1 style="font-size:clamp(1.8rem,3vw,2.6rem);margin:.5rem 0 1rem;">Podziel się <em>swoją opinią</em></h1>
+    <p style="color:var(--text-muted);font-size:1rem;line-height:1.7;max-width:520px;margin:0 auto;">Opinie naszych klientów pomagają innym znaleźć rzetelną pomoc prawną. Każda recenzja jest weryfikowana i publikowana ręcznie.</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container" style="max-width:620px;">
+    <div class="form-card">
+      <div id="form-inner">
+        <div class="form-card-title">Wystaw opinię</div>
+        <p class="form-card-sub">Twoja opinia zostanie opublikowana po weryfikacji (do 24h).</p>
+        <div style="text-align:center;margin-bottom:1.5rem;">
+          <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:.5rem;font-weight:500;">Twoja ocena</p>
+          <div id="stars-input" style="display:flex;justify-content:center;gap:.1rem;">
+            <button type="button" class="star-btn lit" data-val="1">★</button>
+            <button type="button" class="star-btn lit" data-val="2">★</button>
+            <button type="button" class="star-btn lit" data-val="3">★</button>
+            <button type="button" class="star-btn lit" data-val="4">★</button>
+            <button type="button" class="star-btn lit" data-val="5">★</button>
+          </div>
+          <input type="hidden" id="rating-val" value="5">
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label for="r-name">Imię *</label><input type="text" id="r-name" placeholder="Jan" required autocomplete="given-name"></div>
+          <div class="form-group"><label for="r-city">Miasto *</label><input type="text" id="r-city" placeholder="${cfg.district}" required autocomplete="address-level2"></div>
+        </div>
+        <div class="form-group"><label for="r-zawod">Zawód (opcjonalnie)</label><input type="text" id="r-zawod" placeholder="np. inżynier, nauczyciel…"></div>
+        <div class="form-group"><label for="r-comment">Komentarz (opcjonalnie)</label><textarea id="r-comment" placeholder="Opisz swoje doświadczenie z kancelarią…" rows="4"></textarea></div>
+        <button type="button" id="submit-btn" class="form-submit">Wyślij opinię →</button>
+        <p class="form-notice">\u{1F512} Widoczne będzie tylko Twoje imię i miasto.</p>
+        <div id="form-error" style="display:none;padding:.75rem;color:#dc2626;font-size:.9rem;background:#fef2f2;border-radius:.5rem;margin-top:.5rem;"></div>
+      </div>
+      <div id="form-success" style="display:none;text-align:center;padding:2.5rem 0;">
+        <div style="font-size:2.5rem;margin-bottom:.75rem;">\u{1F389}</div>
+        <div style="font-family:var(--serif);font-size:1.3rem;font-weight:700;color:var(--navy);margin-bottom:.4rem;">Dziękujemy!</div>
+        <p style="font-size:.9rem;color:var(--text-muted);">Twoja opinia zostanie opublikowana po weryfikacji.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section" style="background:var(--accent-bg);border-top:1px solid rgba(0,0,0,.07);">
+  <div class="container">
+    <div class="section-header section-center text-center" style="margin-bottom:2rem;">
+      <p class="section-label">Opinie klientów</p>
+      <h2 class="section-title">Co mówią <em>nasi klienci</em></h2>
+    </div>
+    <div id="review-list"><div style="text-align:center;color:var(--text-muted);padding:2rem;">Ładowanie opinii…</div></div>
+  </div>
+</section>
+</main>
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">Kancelaria Adwokacka Magdalena Idzik‑Cieśla</div>
+        <p class="footer-tagline">Dyskretna i skuteczna pomoc prawna. ${cfg.district} · Warszawa i Mazowieckie.</p>
+        <div class="footer-contact">
+          <a href="tel:+48605089552">\u{1F4DE} 605 089 552</a>
+          <a href="mailto:kancelaria@idzik.org.pl">✉ kancelaria@idzik.org.pl</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom"><div class="container"><span>© 2025 Kancelaria Adwokacka Magdalena Idzik-Cieśla. Wszelkie prawa zastrzeżone.</span></div></div>
+</footer>
+<div style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:100;">
+  <button id="admin-toggle" title="Panel admina" style="width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.1);border:none;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;">⚙</button>
+</div>
+<div id="admin-overlay" style="position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);">
+  <div style="background:#fff;border-radius:var(--radius-lg);padding:2rem;max-width:780px;width:calc(100% - 2rem);max-height:82vh;overflow-y:auto;box-shadow:var(--shadow-lg);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+      <h3 style="margin:0;font-family:var(--serif);">Panel moderacji opinii</h3>
+      <button id="admin-close" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted);">×</button>
+    </div>
+    <div id="admin-login">
+      <p style="font-size:.9rem;color:var(--text-muted);margin-bottom:1rem;">Zaloguj się jako admin:</p>
+      <div style="display:flex;flex-direction:column;gap:.5rem;">
+        <input type="email" id="admin-email" placeholder="e-mail…" style="padding:.6rem .9rem;border:1px solid #ddd;border-radius:.5rem;font-size:.9rem;">
+        <div style="display:flex;gap:.75rem;">
+          <input type="password" id="admin-pwd" placeholder="hasło…" style="flex:1;padding:.6rem .9rem;border:1px solid #ddd;border-radius:.5rem;font-size:.9rem;">
+          <button id="admin-login-btn" class="btn btn-primary" style="white-space:nowrap;">Zaloguj</button>
+        </div>
+      </div>
+      <p id="admin-err" style="color:#dc2626;font-size:.85rem;margin-top:.5rem;display:none;">Nieprawidłowe dane lub brak uprawnień</p>
+    </div>
+    <div id="admin-content" style="display:none;"><div id="admin-list"></div></div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"><\/script>
+<script src="/assets/page.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1/dist/confetti.browser.min.js"><\/script>
+<script>
+const SB_URL='${SUPABASE_URL}',SB_KEY='${SUPABASE_ANON}',ADM_URL='${ADM_URL}',PLATFORM='${cfg.district}';
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const starBtns=[...document.querySelectorAll('.star-btn')];
+const ratingInput=document.getElementById('rating-val');
+function setRating(val){ratingInput.value=val;starBtns.forEach(s=>s.classList.toggle('lit',+s.dataset.val<=val));}
+starBtns.forEach(s=>{
+  s.addEventListener('click',()=>setRating(+s.dataset.val));
+  s.addEventListener('mouseenter',()=>starBtns.forEach(x=>x.style.color=+x.dataset.val<=+s.dataset.val?'var(--accent)':'#ddd'));
+  s.addEventListener('mouseleave',()=>starBtns.forEach(x=>x.style.color=+x.dataset.val<=+ratingInput.value?'var(--accent)':'#ddd'));
+});
+document.getElementById('submit-btn').addEventListener('click',async()=>{
+  const name=document.getElementById('r-name').value.trim();
+  const city=document.getElementById('r-city').value.trim();
+  const zawod=document.getElementById('r-zawod').value.trim()||null;
+  const comment=document.getElementById('r-comment').value.trim()||null;
+  const rating=parseInt(ratingInput.value);
+  const errEl=document.getElementById('form-error');
+  if(!name||!city){errEl.textContent='Imię i miasto są wymagane.';errEl.style.display='block';return;}
+  errEl.style.display='none';
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=true;btn.textContent='Wysyłanie…';
+  try{
+    const res=await fetch(SB_URL+'/rest/v1/div_review',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({name,city,zawod,comment,rating,platform:PLATFORM})});
+    if(!res.ok)throw new Error(await res.text());
+    document.getElementById('form-inner').style.display='none';
+    document.getElementById('form-success').style.display='block';
+    fireConfetti();
+  }catch(e){errEl.textContent='Błąd zapisu. Spróbuj ponownie.';errEl.style.display='block';btn.disabled=false;btn.textContent='Wyślij opinię →';}
+});
+function fireConfetti(){const end=Date.now()+3000;(function frame(){confetti({particleCount:4,angle:60,spread:55,origin:{x:0}});confetti({particleCount:4,angle:120,spread:55,origin:{x:1}});if(Date.now()<end)requestAnimationFrame(frame);})();}
+async function loadReviews(){
+  const grid=document.getElementById('review-list');
+  try{
+    const p=new URLSearchParams({select:'name,city,rating,comment,platform,created_at',approved:'eq.true',order:'created_at.desc',limit:'50'});
+    const rows=await(await fetch(SB_URL+'/rest/v1/div_review?'+p,{headers:{apikey:SB_KEY,Accept:'application/json'}})).json();
+    if(!Array.isArray(rows)||!rows.length){grid.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:2.5rem;border:2px dashed #ddd;border-radius:1rem;">Bądź pierwszą osobą, która wystawi opinię!</div>';return;}
+    grid.innerHTML=rows.map(r=>{
+      const ini=esc(r.name).split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+      const stars='★'.repeat(r.rating)+'<span style="color:#ddd">'+'★'.repeat(5-r.rating)+'</span>';
+      const txt=r.comment?'„'+esc(r.comment)+'"':'<em style="color:var(--text-muted)">Brak komentarza</em>';
+      return '<div class="testimonial" style="display:flex;flex-direction:column;">'+
+        '<div class="t-stars" style="margin-bottom:.4rem;">'+stars+'</div>'+
+        '<p class="t-quote" style="flex:1;margin-bottom:.75rem;">'+txt+'</p>'+
+        '<div class="t-author"><div class="t-avatar">'+ini+'</div><div>'+
+        '<div class="t-name">'+esc(r.name)+'</div>'+
+        '<div class="t-meta">'+esc(r.city)+' · <span style="font-size:.72rem;background:var(--accent);color:#fff;padding:1px 7px;border-radius:10px;margin-left:3px;">'+esc(r.platform)+'</span></div>'+
+        '</div></div></div>';
+    }).join('');
+  }catch(e){grid.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:2rem;">Nie udało się załadować opinii.</div>';}
+}
+loadReviews();
+let adminToken='';
+const overlay=document.getElementById('admin-overlay');
+const loginDiv=document.getElementById('admin-login');
+const contentDiv=document.getElementById('admin-content');
+const listDiv=document.getElementById('admin-list');
+document.getElementById('admin-toggle').addEventListener('click',()=>{overlay.style.display='flex';});
+document.getElementById('admin-close').addEventListener('click',()=>{overlay.style.display='none';});
+overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.style.display='none';});
+document.getElementById('admin-pwd').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('admin-login-btn').click();});
+document.getElementById('admin-login-btn').addEventListener('click',async()=>{
+  const email=document.getElementById('admin-email').value.trim();
+  const pwd=document.getElementById('admin-pwd').value;
+  const errEl=document.getElementById('admin-err');
+  const authRes=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY},body:JSON.stringify({email,password:pwd})});
+  if(!authRes.ok){errEl.style.display='block';return;}
+  adminToken=(await authRes.json()).access_token;
+  const res=await fetch(ADM_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+adminToken},body:JSON.stringify({action:'list'})});
+  if(res.status===401||res.status===403){errEl.style.display='block';adminToken='';return;}
+  errEl.style.display='none';
+  loginDiv.style.display='none';contentDiv.style.display='block';
+  renderAdmin(await res.json());
+});
+async function adminAction(action,id){
+  await fetch(ADM_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+adminToken},body:JSON.stringify({action,id})});
+  renderAdmin(await(await fetch(ADM_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+adminToken},body:JSON.stringify({action:'list'})})).json());
+  loadReviews();
+}
+function renderAdmin(rows){
+  if(!rows.length){listDiv.innerHTML='<p style="color:var(--text-muted)">Brak opinii.</p>';return;}
+  const pending=rows.filter(r=>!r.approved),approved=rows.filter(r=>r.approved);
+  listDiv.innerHTML=
+    (pending.length?'<h4 style="margin:.5rem 0 .75rem;color:#f59e0b;">Oczekujące ('+pending.length+')</h4>'+renderRows(pending,true):'')+
+    (approved.length?'<h4 style="margin:1.5rem 0 .75rem;">Zatwierdzone ('+approved.length+')</h4>'+renderRows(approved,false):'');
+}
+function renderRows(rows,isPending){
+  return rows.map(r=>
+    '<div class="admin-row"><div style="flex:1;min-width:0;">'+
+    '<div style="font-weight:600;font-size:.9rem;">'+esc(r.name)+' · '+esc(r.city)+
+    ' <span class="admin-badge'+(isPending?' pending':'')+'">' +esc(r.platform)+'</span></div>'+
+    '<div style="font-size:.8rem;color:var(--text-muted);">'+(r.zawod?esc(r.zawod)+' · ':'')+'★'.repeat(r.rating)+' · '+new Date(r.created_at).toLocaleDateString('pl-PL')+'</div>'+
+    (r.comment?'<div style="font-size:.85rem;margin-top:.3rem;color:var(--navy);">&quot;'+esc(r.comment)+'&quot;</div>':'')+
+    '<div class="admin-actions">'+
+    (isPending
+      ?'<button class="admin-btn approve" onclick="adminAction('approve',''+r.id+'')">Zatwierdź</button>'
+      :'<button class="admin-btn reject" onclick="adminAction('reject',''+r.id+'')">Cofnij</button>')+
+    '<button class="admin-btn del" onclick="if(confirm('Usunąć?')) adminAction('delete',''+r.id+'')">Usuń</button>'+
+    '</div></div></div>'
+  ).join('');
+}
+<\/script>
+</body>
+</html>`;
+}
+
+function buildDziekujemyHTML(cfg, hostname) {
+  return `<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dziękujemy | Kancelaria Idzik-Cieśla</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="canonical" href="https://${hostname}/dziekujemy.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>:root{--accent:${cfg.accent};--accent-light:${cfg.light};--accent-bg:${cfg.bg};}</style>
+${cfg.gtag ? `<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=${cfg.gtag}"><\/script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '${cfg.gtag}');
+<\/script>` : ""}
+</head>
+<body>
+${cfg.gtag && cfg.conversionTag ? `<!-- Event snippet for Kontakt conversion page -->
+<script>
+  gtag('event', 'conversion', {'send_to': '${cfg.conversionTag}'});
+<\/script>` : ""}
+<div class="ticker-wrap"><div class="ticker-track" id="ticker-track"></div></div>
+<header class="nav">
+  <div class="nav-inner">
+    <a href="https://${hostname}/" class="nav-logo" aria-label="Strona główna">
+      <span class="nav-logo-name">Kancelaria Adwokacka</span>
+      <span class="nav-logo-sub">Magdalena Idzik‑Cieśla</span>
+    </a>
+  </div>
+</header>
+<main>
+<section class="section" style="min-height:60vh;display:flex;align-items:center;">
+  <div class="container">
+    <div style="max-width:560px;margin:0 auto;text-align:center;padding:4rem 0;">
+      <div style="font-size:3.5rem;margin-bottom:1.5rem;">&#x2705;</div>
+      <h1 style="font-size:clamp(1.8rem,3vw,2.5rem);margin-bottom:1rem;">Dziękujemy za wiadomość!</h1>
+      <p style="color:var(--text-muted);font-size:1.05rem;line-height:1.7;margin-bottom:2rem;">
+        Oddzwonimy do Ciebie w ciągu <strong>2 godzin</strong> w dni robocze (8:00–18:00).
+        Jeśli wolisz zadzwonić sam — jesteśmy dostępni pod numerem poniżej.
+      </p>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem;">
+        <a href="tel:+48605089552" class="btn btn-primary btn-lg">&#x1F4DE; 605 089 552</a>
+        <a href="https://${hostname}/" class="btn btn-outline btn-lg">← Wróć na stronę</a>
+      </div>
+      <p style="font-size:.85rem;color:var(--text-muted);">
+        Kancelaria Adwokacka Magdalena Idzik-Cieśla &nbsp;·&nbsp; ${cfg.district}
+      </p>
+    </div>
+  </div>
+</section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"><\/script>
+<script src="/assets/page.js"><\/script>
+</body>
+</html>`;
+}
