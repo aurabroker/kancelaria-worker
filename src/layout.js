@@ -73,6 +73,103 @@ const MIESZKANIE = [
     ryzyko: "wobec banku odpowiadacie solidarnie. Zaległość drugiej strony obciąża też Ciebie." },
 ];
 
+
+/* ---------- RYSUNEK: ROZGAŁĘZIENIE SPRAWY ----------
+   Dwa warianty tej samej treści, bo poziomy diagram na 360 px daje
+   tekst wielkości czterech pikseli, a pionowy na 1120 px marnuje
+   dwie trzecie szerokości. Dane są jedne, renderery dwa. */
+
+const OPIS = "Droga przez sprawę rozwodową. Wspólny początek: pierwsza rozmowa, " +
+  "przygotowanie pozwu, złożenie pozwu, odpowiedź na pozew. Przy odpowiedzi sprawa " +
+  "rozgałęzia się. Ścieżka zgodna to jedna rozprawa i wyrok w cztery do ośmiu miesięcy. " +
+  "Ścieżka sporna to świadkowie, opinia biegłych i kolejne rozprawy, łącznie od półtora roku do trzech lat.";
+
+const GROTY = `<defs>
+    <marker id="gz" viewBox="0 0 8 8" refX="5" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" fill="var(--agree)"/></marker>
+    <marker id="gs" viewBox="0 0 8 8" refX="5" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" fill="var(--dispute)"/></marker>
+  </defs>`;
+
+function diagramPoziomy() {
+  const Y = 200, X0 = 70, KROK = 170, ROZ = X0 + KROK * 3;   // rozgałęzienie
+  const pien = PIEN.map(([t, c], k) => {
+    const x = X0 + k * KROK;
+    return `<circle cx="${x}" cy="${Y}" r="7" fill="var(--paper)" stroke="var(--accent)" stroke-width="1.8"/>
+    <text x="${x}" y="${Y + 30}" text-anchor="middle" font-size="13.5" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+    <text x="${x}" y="${Y + 48}" text-anchor="middle" font-size="11.5" fill="var(--muted)">${esc(c)}</text>`;
+  }).join("\n    ");
+
+  const zg = ZGODNA.map(([t, c], k) => {
+    const x = 650 + k * 110;
+    return `<circle cx="${x}" cy="88" r="5.5" fill="var(--agree)"/>
+    <text x="${x}" y="66" text-anchor="middle" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+    <text x="${x}" y="48" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
+  }).join("\n    ");
+
+  const sp = SPORNA.map(([t, c], k) => {
+    const x = 650 + k * 130;
+    return `<circle cx="${x}" cy="312" r="5.5" fill="var(--dispute)"/>
+    <text x="${x}" y="340" text-anchor="middle" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+    <text x="${x}" y="358" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
+  }).join("\n    ");
+
+  return `<svg class="d-poziom" viewBox="0 0 1180 400" role="img" aria-label="${esc(OPIS)}" xmlns="http://www.w3.org/2000/svg">
+  ${GROTY}
+  <line x1="${X0}" y1="${Y}" x2="${ROZ}" y2="${Y}" stroke="currentColor" stroke-width="1.8" opacity=".3"/>
+  ${pien}
+
+  <text x="${ROZ}" y="${Y - 26}" text-anchor="middle" font-size="10.5" font-weight="600"
+        letter-spacing=".1em" fill="var(--muted)">TU SPRAWA SIĘ ROZDZIELA</text>
+  <path d="M${ROZ} ${Y} C ${ROZ + 40} ${Y} ${ROZ + 30} 88 ${ROZ + 80} 88 L 830 88"
+        stroke="var(--agree)" stroke-width="2.4" fill="none" marker-end="url(#gz)"/>
+  <path d="M${ROZ} ${Y} C ${ROZ + 40} ${Y} ${ROZ + 30} 312 ${ROZ + 80} 312 L 1120 312"
+        stroke="var(--dispute)" stroke-width="2.4" fill="none" marker-end="url(#gs)"/>
+  ${zg}
+  ${sp}
+  <text x="846" y="93" font-size="15" font-weight="600" fill="var(--agree)">4–8 miesięcy</text>
+  <text x="846" y="112" font-size="11.5" fill="var(--muted)">ścieżka zgodna</text>
+  <text x="1120" y="294" text-anchor="end" font-size="15" font-weight="600" fill="var(--dispute)">1,5–3 lata</text>
+  <text x="1120" y="276" text-anchor="end" font-size="11.5" fill="var(--muted)">ścieżka sporna</text>
+</svg>`;
+}
+
+function diagramPionowy() {
+  const pien = PIEN.map(([t, c], k) => {
+    const y = 34 + k * 72;
+    return `<circle cx="26" cy="${y}" r="6.5" fill="var(--paper)" stroke="var(--accent)" stroke-width="1.5"/>
+    <text x="46" y="${y - 2}" font-size="13.5" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+    <text x="46" y="${y + 14}" font-size="11.5" fill="var(--muted)">${esc(c)}</text>`;
+  }).join("\n    ");
+  const zg = ZGODNA.map(([t, c], k) => {
+    const y = 336 + k * 62;
+    return `<circle cx="26" cy="${y}" r="5" fill="var(--agree)"/>
+    <text x="44" y="${y - 2}" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+    <text x="44" y="${y + 13}" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
+  }).join("\n    ");
+  const sp = SPORNA.map(([t, c], k) => {
+    const y = 336 + k * 62;
+    return `<circle cx="214" cy="${y}" r="5" fill="var(--dispute)"/>
+    <text x="232" y="${y - 2}" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+    <text x="232" y="${y + 13}" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
+  }).join("\n    ");
+
+  return `<svg class="d-pion" viewBox="0 0 400 640" role="img" aria-label="${esc(OPIS)}" xmlns="http://www.w3.org/2000/svg">
+  ${GROTY}
+  <line x1="26" y1="34" x2="26" y2="250" stroke="currentColor" stroke-width="1.5" opacity=".3"/>
+  ${pien}
+  <text x="46" y="280" font-size="10.5" font-weight="600" letter-spacing=".1em" fill="var(--muted)">TU SPRAWA SIĘ ROZDZIELA</text>
+  <path d="M26 250 L26 300" stroke="var(--agree)" stroke-width="2.2" fill="none"/>
+  <path d="M26 250 Q26 300 96 300 L214 300" stroke="var(--dispute)" stroke-width="2.2" fill="none"/>
+  <line x1="26" y1="300" x2="26" y2="424" stroke="var(--agree)" stroke-width="2.2" marker-end="url(#gz)"/>
+  <line x1="214" y1="300" x2="214" y2="608" stroke="var(--dispute)" stroke-width="2.2" marker-end="url(#gs)"/>
+  ${zg}
+  ${sp}
+  <text x="44" y="448" font-size="14" font-weight="600" fill="var(--agree)">4–8 miesięcy</text>
+  <text x="232" y="632" font-size="14" font-weight="600" fill="var(--dispute)">1,5–3 lata</text>
+</svg>`;
+}
+
 /* ============================================================
    ARKUSZ STYLÓW
    ============================================================ */
@@ -155,12 +252,16 @@ button{font:inherit;cursor:pointer}
 .sec-desc{font-size:15.5px;line-height:1.6;color:var(--muted);margin:0}
 
 /* ── przebieg sprawy: rysunek ── */
-.rysunek{margin:0;max-width:520px}
-.rysunek svg{width:100%;height:auto;color:var(--ink)}
-.rysunek figcaption{font-size:13.5px;line-height:1.55;color:var(--muted);margin-top:14px;max-width:56ch}
-@media(min-width:900px){.rysunek{max-width:none;display:grid;
-  grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:44px;align-items:center}
-  .rysunek figcaption{margin-top:0}}
+.rysunek{margin:0}
+.rysunek svg{width:100%;height:auto;color:var(--ink);display:block}
+.rysunek .d-poziom{display:none}
+.rysunek figcaption{font-size:13.5px;line-height:1.6;color:var(--muted);
+  margin-top:18px;max-width:78ch}
+@media(min-width:900px){
+  .rysunek .d-poziom{display:block}
+  .rysunek .d-pion{display:none}
+  .rysunek figcaption{margin-top:22px}
+}
 
 /* ── stara oś (nieużywana, do usunięcia przy sprzątaniu) ── */
 .legenda{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:22px;font-size:13px;color:var(--muted)}
@@ -336,57 +437,8 @@ ${schema}
       nie obiecuję terminu, którego nie kontroluję.</p>
   </div>
   <figure class="rysunek">
-    <svg viewBox="0 0 400 620" role="img" xmlns="http://www.w3.org/2000/svg"
-         aria-label="Droga przez sprawę rozwodową. Wspólny początek: pierwsza rozmowa, przygotowanie pozwu, złożenie pozwu, odpowiedź na pozew. Potem sprawa rozgałęzia się. Ścieżka zgodna to jedna rozprawa i wyrok w cztery do ośmiu miesięcy. Ścieżka sporna to świadkowie, opinia biegłych i kolejne rozprawy, łącznie od półtora roku do trzech lat.">
-      <defs>
-        <marker id="grot-z" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-          <path d="M0 0 L8 4 L0 8 z" fill="var(--agree)"/>
-        </marker>
-        <marker id="grot-s" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-          <path d="M0 0 L8 4 L0 8 z" fill="var(--dispute)"/>
-        </marker>
-      </defs>
-
-      <!-- pień wspólny -->
-      <line x1="26" y1="34" x2="26" y2="250" stroke="currentColor" stroke-width="1.5" opacity=".35"/>
-      ${PIEN.map(([t, c], k) => {
-        const y = 34 + k * 72;
-        return `<circle cx="26" cy="${y}" r="6.5" fill="var(--paper)" stroke="var(--accent)" stroke-width="1.5"/>
-      <text x="46" y="${y - 2}" font-size="13.5" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-      <text x="46" y="${y + 14}" font-size="11.5" fill="var(--muted)">${esc(c)}</text>`;
-      }).join("\n      ")}
-
-      <!-- rozgałęzienie -->
-      <text x="46" y="278" font-size="11" font-weight="600" letter-spacing=".08em" fill="var(--muted)">TU SPRAWA SIĘ ROZDZIELA</text>
-      <path d="M26 250 L26 300" stroke="var(--agree)" stroke-width="2" fill="none"/>
-      <path d="M26 250 Q26 300 96 300 L214 300" stroke="var(--dispute)" stroke-width="2" fill="none"/>
-
-      <!-- ścieżka zgodna -->
-      <line x1="26" y1="300" x2="26" y2="428" stroke="var(--agree)" stroke-width="2"
-            marker-end="url(#grot-z)"/>
-      <text x="14" y="322" font-size="11" font-weight="600" fill="var(--agree)"
-            transform="rotate(-90 14 322)" text-anchor="end">ZGODNA</text>
-      ${ZGODNA.map(([t, c], k) => {
-        const y = 336 + k * 62;
-        return `<circle cx="26" cy="${y}" r="5" fill="var(--agree)"/>
-      <text x="44" y="${y - 2}" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-      <text x="44" y="${y + 13}" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
-      }).join("\n      ")}
-      <text x="44" y="452" font-size="13" font-weight="600" fill="var(--agree)">4–8 miesięcy</text>
-
-      <!-- ścieżka sporna -->
-      <line x1="214" y1="300" x2="214" y2="596" stroke="var(--dispute)" stroke-width="2"
-            marker-end="url(#grot-s)"/>
-      <text x="202" y="322" font-size="11" font-weight="600" fill="var(--dispute)"
-            transform="rotate(-90 202 322)" text-anchor="end">SPORNA</text>
-      ${SPORNA.map(([t, c], k) => {
-        const y = 336 + k * 62;
-        return `<circle cx="214" cy="${y}" r="5" fill="var(--dispute)"/>
-      <text x="232" y="${y - 2}" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-      <text x="232" y="${y + 13}" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
-      }).join("\n      ")}
-      <text x="232" y="614" font-size="13" font-weight="600" fill="var(--dispute)">1,5–3 lata</text>
-    </svg>
+    ${diagramPoziomy()}
+    ${diagramPionowy()}
     <figcaption>Obie ścieżki mają ten sam początek. Różnica pojawia się dopiero przy odpowiedzi
       na pozew i decyduje o tym, czy sprawa potrwa pół roku, czy kilka lat. Widełki z warszawskich
       sądów okręgowych — nie obiecuję terminu, którego nie kontroluję.</figcaption>
