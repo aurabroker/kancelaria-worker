@@ -1,5 +1,6 @@
 import worker from "../src/worker.js";
 import { DOMAIN_CONFIG, ALL_HOSTS, FIRM } from "../src/domains.js";
+import { POOLS } from "../src/faq.js";
 
 const env = {};
 const get = (host, path) => worker.fetch(new Request(`https://${host}${path}`), env);
@@ -174,5 +175,18 @@ check("fonty z kanwy w HTML", texts["rozwod.waw.pl"].includes("family=Newsreader
 const ikony = (texts["rozwod.waw.pl"].match(/class="ico"/g) || []).length;
 check("ikony na stronie", ikony >= 3, ikony);
 console.log(`  6 wartości palety · 11 akcentów · ${ikony} ikon na stronie głównej`);
+
+// 12. rozmowa wstepna opisana uczciwie
+console.log("\n=== OPIS PIERWSZEJ ROZMOWY ===");
+for (const host of ALL_HOSTS) {
+  const h = texts[host];
+  check(host+" nie obiecuje porady za darmo", !/[Bb]ezpłatn\w* konsultacj/.test(h));
+  check(host+" nazywa to rozmową", h.includes("rozmowa organizacyjna") || h.includes("rozmowę"));
+  check(host+" mówi kiedy jest porada", h.includes("po ich przeczytaniu") || h.includes("po zapoznaniu"));
+  check(host+" wpis w pierwszym ekranie", h.includes("Wpis WAW/Adw/3678"));
+}
+const faqTxt = JSON.stringify(POOLS ?? {});
+check("opis w treści meta", DOMAIN_CONFIG["rozwod.waw.pl"].desc.includes("rozmowa wstępna"));
+console.log("  11 domen bez obietnicy bezpłatnej porady prawnej");
 
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));

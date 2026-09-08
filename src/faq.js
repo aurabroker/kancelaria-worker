@@ -183,8 +183,9 @@ export const FAQ = [
   a: "Nie. Sąd zasądza zwrot kosztów zastępstwa procesowego według stawek określonych rozporządzeniem, a nie według twojej faktycznej umowy z kancelarią. Jeżeli honorarium było wyższe niż stawka minimalna, różnicę ponosisz sam." },
 { id: "k08", cat: "koszty", q: "Ile kosztuje sprawa o alimenty?",
   a: "Strona dochodząca alimentów jest zwolniona od kosztów sądowych z mocy ustawy, więc nie płaci opłaty od pozwu. Opłatę ponosi natomiast pozwany w razie przegranej, liczoną od wartości przedmiotu sporu, czyli od sumy świadczeń za rok." },
-{ id: "k09", cat: "koszty", q: "Czy pierwsza konsultacja jest płatna?",
-  a: "W tej kancelarii pierwsza konsultacja trwająca trzydzieści minut jest bezpłatna. Służy ocenie sytuacji, wskazaniu możliwych scenariuszy i oszacowaniu czasu oraz kosztu sprawy. Nie zastępuje pełnej analizy dokumentów." },
+{ id: "k09", cat: "koszty", q: "Czy pierwsza rozmowa jest płatna?",
+  a: "Pierwsza rozmowa trwa trzydzieści minut i jest bezpłatna. To rozmowa organizacyjna: ustalamy, czego dotyczy sprawa, jakie dokumenty będą potrzebne, jak wygląda dalszy tryb i ile to będzie kosztować. Nie jest to porada prawna — tej udzielamy dopiero po zapoznaniu się z dokumentami, bo bez nich każda odpowiedź byłaby zgadywaniem."
+ },
 { id: "k10", cat: "koszty", q: "Czy honorarium można rozłożyć na raty?",
   a: "Tak, kancelaria dopuszcza rozłożenie wynagrodzenia na raty powiązane z etapami sprawy: przygotowanie pozwu, postępowanie przed sądem pierwszej instancji, ewentualna apelacja. Warunki ustala się w umowie przed rozpoczęciem pracy." },
 { id: "k11", cat: "koszty", q: "Ile kosztuje apelacja od wyroku rozwodowego?",
@@ -431,8 +432,9 @@ export const FAQ = [
 /* ---------- PROCEDURA: POZEW, DOWODY, MEDIACJA (10) ---------- */
 { id: "r01", cat: "procedura", q: "Co musi zawierać pozew o rozwód?",
   a: "Oznaczenie sądu i stron, żądanie rozwiązania małżeństwa z orzeczeniem winy albo bez, wnioski dotyczące władzy rodzicielskiej, kontaktów i alimentów, uzasadnienie opisujące rozkład pożycia oraz wnioski dowodowe. Do pozwu dołącza się odpis aktu małżeństwa i odpisy aktów urodzenia dzieci." },
-{ id: "r02", cat: "procedura", q: "Jakie dokumenty przygotować na pierwszą konsultację?",
-  a: "Odpis skrócony aktu małżeństwa, odpisy aktów urodzenia dzieci, dokumenty dotyczące dochodów obu stron, informacje o nieruchomościach i kredytach oraz chronologiczny opis wydarzeń z datami. Ten opis skraca późniejszą pracę nad pozwem najbardziej." },
+{ id: "r02", cat: "procedura", q: "Jakie dokumenty przygotować na pierwszą rozmowę?",
+  a: "Odpis skrócony aktu małżeństwa, odpisy aktów urodzenia dzieci, dokumenty o dochodach obu stron, informacje o nieruchomościach i kredytach oraz chronologiczny opis wydarzeń z datami. Im więcej z tego masz na pierwszej rozmowie, tym szybciej przejdziemy od ustaleń organizacyjnych do rzeczywistej oceny sprawy."
+ },
 { id: "r03", cat: "procedura", q: "Ilu świadków warto powołać?",
   a: "Zwykle od dwóch do czterech osób mających bezpośrednią wiedzę o okolicznościach rozkładu pożycia. Liczba nie zastępuje jakości — jeden świadek relacjonujący konkretne zdarzenia waży więcej niż pięciu powtarzających zasłyszane opinie. Zbyt wielu świadków wydłuża sprawę." },
 { id: "r04", cat: "procedura", q: "Czy dziecko może zeznawać jako świadek?",

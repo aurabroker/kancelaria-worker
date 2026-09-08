@@ -319,7 +319,7 @@ ${trackingHead(cfg)}
       <a href="#adwokat" class="nav-link">Adwokat</a>
       <a href="#opinie"  class="nav-link">Opinie</a>
       <a href="#faq"     class="nav-link">FAQ</a>
-      <a href="#kontakt" class="btn nav-cta">Bezpłatna konsultacja</a>
+      <a href="#kontakt" class="btn nav-cta">Bezpłatna rozmowa</a>
     </nav>
     <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -346,15 +346,19 @@ ${trackingHead(cfg)}
         <p class="hero-sub" style="text-align:left;margin:0 0 2rem;max-width:100%;">
           ${esc(cfg.lead)}
         </p>
+        <p style="margin:-.75rem 0 1.5rem;font-size:.88rem;color:var(--text-muted);max-width:52ch;">
+          Pierwsze 30 minut bez opłaty. To rozmowa organizacyjna — ustalamy zakres sprawy,
+          potrzebne dokumenty i koszt. Porady prawnej udzielam po ich przeczytaniu.
+        </p>
         <div class="hero-actions" style="justify-content:flex-start;margin-bottom:2rem;">
-          <a href="#kontakt" class="btn btn-primary btn-lg">Umów bezpłatną konsultację →</a>
+          <a href="#kontakt" class="btn btn-primary btn-lg">Umów bezpłatną rozmowę →</a>
           <a href="tel:+48605089552" onclick="trackCall()" class="btn btn-outline btn-lg">📞 605 089 552</a>
         </div>
         <div class="hero-trust" style="justify-content:flex-start;flex-direction:column;align-items:flex-start;gap:.6rem;">
-          <span class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 3L5.5 10 2 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Bezpłatna konsultacja 30 min</span>
-          <span class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 3L5.5 10 2 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Pełna dyskrecja</span>
-          <span class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 3L5.5 10 2 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>${cfg.district} i Mazowieckie</span>
-          <span class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 3L5.5 10 2 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Konsultacje online</span>
+          <span class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 3L5.5 10 2 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Wpis ${esc(FIRM.barNumber)}, ${esc(FIRM.barCouncil)}</span>
+          <span class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 3L5.5 10 2 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Pierwsze 30 minut bez opłaty</span>
+          <span class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 3L5.5 10 2 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Wyłącznie prawo rodzinne</span>
+          <span class="hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 3L5.5 10 2 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Biura na Bemowie i Białołęce · konsultacje online</span>
         </div>
       </div>
 
@@ -450,7 +454,7 @@ ${trackingHead(cfg)}
       <p class="section-desc">Przejrzysty, przewidywalny proces — bez niespodzianek.</p>
     </div>
     <div class="process-steps">
-      <div class="process-step"><div class="step-badge">1</div><h4>Bezpłatna konsultacja</h4><p>30 minut bez zobowiązań. Słuchamy i odpowiadamy na najważniejsze pytania.</p></div>
+      <div class="process-step"><div class="step-badge">1</div><h4>Rozmowa wstępna</h4><p>30 minut bez zobowiązań i bez opłaty. Ustalamy zakres sprawy, potrzebne dokumenty i dalszy tryb. Porada prawna następuje po zapoznaniu się z dokumentami.</p></div>
       <div class="process-step"><div class="step-badge">2</div><h4>Analiza i strategia</h4><p>Analizujemy dokumenty i opracowujemy indywidualną strategię działania.</p></div>
       <div class="process-step"><div class="step-badge">3</div><h4>Reprezentacja</h4><p>Przygotowujemy pisma, negocjujemy i reprezentujemy Cię przed sądem.</p></div>
       <div class="process-step"><div class="step-badge">4</div><h4>Wyrok i nowy etap</h4><p>Prawomocny wyrok z pewnością, że kluczowe kwestie zostały zabezpieczone.</p></div>
@@ -542,12 +546,12 @@ ${trackingHead(cfg)}
 <section class="contact-section" id="kontakt">
   <div class="container">
     <div class="section-header section-center text-center">
-      <p class="section-label">Bezpłatna konsultacja</p>
+      <p class="section-label">Bezpłatna rozmowa wstępna</p>
       <h2 class="section-title">Zrób pierwszy krok<br><em>w swoim tempie</em></h2>
       <p class="section-desc">Oddzwonimy w ciągu 2 godzin w dni robocze.</p>
     </div>
     <form id="contact-form" class="form-card" onsubmit="submitLead(event)">
-      <div class="form-card-title">Umów bezpłatną konsultację</div>
+      <div class="form-card-title">Umów bezpłatną rozmowę wstępną</div>
       <p class="form-card-sub">Oddzwonimy w ciągu 2 godzin (pn–pt 8:00–18:00).</p>
       <div class="form-row">
         <div class="form-group"><label for="imie">Imię *</label><input type="text" id="imie" name="imie" required></div>
@@ -1826,7 +1830,7 @@ ${trackingHead(cfg)}
     </a>
     <nav class="nav-links nav-desktop" id="nav-desktop">
       <a href="/" class="nav-link">← Strona główna</a>
-      <a href="/#kontakt" class="btn nav-cta">Bezpłatna konsultacja</a>
+      <a href="/#kontakt" class="btn nav-cta">Bezpłatna rozmowa</a>
     </nav>
     <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -2179,7 +2183,9 @@ function buildLlms(cfg, hostname) {
 
 Adwokat: ${FIRM.attorney}, wpis nr ${FIRM.barNumber}, ${FIRM.barCouncil}.
 NIP ${FIRM.nip}. Telefon ${FIRM.phoneLabel}. E-mail ${FIRM.email}.
-Pierwsza konsultacja trwajaca 30 minut jest bezplatna.
+Pierwsza rozmowa trwajaca 30 minut jest bezplatna. To rozmowa organizacyjna:
+ustalenie zakresu sprawy, potrzebnych dokumentow i kosztow. Porada prawna
+nastepuje po zapoznaniu sie z dokumentami.
 
 ## Strony
 - [Strona glowna](https://${hostname}/): zakres pomocy, proces, kontakt
@@ -2218,7 +2224,7 @@ ${trackingHead(cfg)}
     <span class="nav-logo-name">Kancelaria Adwokacka</span>
     <span class="nav-logo-sub">Magdalena Idzik‑Cieśla</span>
   </a>
-  <nav class="nav-links nav-desktop"><a href="/#kontakt" class="btn nav-cta">Bezpłatna konsultacja</a></nav>
+  <nav class="nav-links nav-desktop"><a href="/#kontakt" class="btn nav-cta">Bezpłatna rozmowa</a></nav>
 </div></header>
 <main class="section"><div class="container">${body}</div></main>
 <footer><div class="footer-bottom"><div class="container" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
@@ -2240,10 +2246,10 @@ function buildPytaniaHTML(cfg, hostname) {
   const body = `<div class="prose">
 <p class="section-label">Baza wiedzy · ${esc(cfg.district)}</p>
 <h1>Pytania o rozwód — ${esc(cfg.district)}</h1>
-<p class="section-desc">Odpowiedzi przygotowane przez ${esc(FIRM.attorney)}. Stan prawny na ${YEAR} rok. Jeżeli nie znajdziesz swojej sytuacji, zadzwoń pod ${esc(FIRM.phoneLabel)} — pierwsza konsultacja trwa 30 minut i jest bezpłatna.</p>
+<p class="section-desc">Odpowiedzi przygotowane przez ${esc(FIRM.attorney)}. Stan prawny na ${YEAR} rok. Jeżeli nie znajdziesz swojej sytuacji, zadzwoń pod ${esc(FIRM.phoneLabel)} — pierwsza rozmowa trwa 30 minut i jest bezpłatna.</p>
 ${groups.map(g => `<h2>${esc(g.label)}</h2>
 ${g.items.map(f => `<h3 style="font-size:1rem;margin:1.2rem 0 .3rem">${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join("\n")}`).join("\n")}
-<p style="margin-top:2.5rem"><a href="/#kontakt" class="btn btn-primary">Umów bezpłatną konsultację →</a></p>
+<p style="margin-top:2.5rem"><a href="/#kontakt" class="btn btn-primary">Umów bezpłatną rozmowę →</a></p>
 </div>
 <script type="application/ld+json">${schema}<\/script>`;
   return shell(cfg, hostname, `Pytania o rozwód — ${cfg.district} | Kancelaria Idzik-Cieśla`,
