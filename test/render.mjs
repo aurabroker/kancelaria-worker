@@ -189,4 +189,18 @@ const faqTxt = JSON.stringify(POOLS ?? {});
 check("opis w treści meta", DOMAIN_CONFIG["rozwod.waw.pl"].desc.includes("rozmowa wstępna"));
 console.log("  11 domen bez obietnicy bezpłatnej porady prawnej");
 
+// 13. godziny pracy — jedna wartosc w calym serwisie
+console.log("\n=== GODZINY PRACY ===");
+check("konfiguracja 9-17", FIRM.hours === "Mo-Fr 09:00-17:00", FIRM.hours);
+for (const host of ALL_HOSTS) {
+  const h = texts[host];
+  check(host+" brak starych godzin", !h.includes("8:00–18:00") && !h.includes("08:00-18:00"));
+  check(host+" godziny w schemacie", h.includes("09:00-17:00"));
+  // Kanwa proponowala "odbieram tez po 20:00" — nieprawda, ma nigdy nie wejsc.
+  check(host+" brak obietnicy po 20", !/po 20:00|po dwudziestej/i.test(h));
+}
+const dziekPl = await (await get("rozwod.waw.pl", "/dziekujemy.html")).text();
+check("strona podziękowania 9-17", dziekPl.includes("9:00–17:00"));
+console.log("  9:00–17:00 spójnie na 11 domenach, bez obietnicy wieczornej");
+
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));

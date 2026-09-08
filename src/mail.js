@@ -73,7 +73,7 @@ ${row("Kampania", utm)}
 </table>
 ${lead.wiadomosc ? `<p style="margin:16px 0 6px;color:#57616E;font-size:13px">Opis sytuacji</p>
 <div style="white-space:pre-wrap;background:#F4F6F8;border-left:3px solid #C3CBD4;padding:10px 14px">${esc(lead.wiadomosc)}</div>` : ""}
-<p style="margin:20px 0 0;color:#7C8794;font-size:12px">Oddzwonić w ciągu 2 godzin w dni robocze (pn–pt 8:00–18:00).</p>
+<p style="margin:20px 0 0;color:#7C8794;font-size:12px">Oddzwonić w ciągu 2 godzin w dni robocze (pn–pt 9:00–17:00).</p>
 </div>`;
 
   const payload = {

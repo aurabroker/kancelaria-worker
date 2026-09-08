@@ -552,7 +552,7 @@ ${trackingHead(cfg)}
     </div>
     <form id="contact-form" class="form-card" onsubmit="submitLead(event)">
       <div class="form-card-title">Umów bezpłatną rozmowę wstępną</div>
-      <p class="form-card-sub">Oddzwonimy w ciągu 2 godzin (pn–pt 8:00–18:00).</p>
+      <p class="form-card-sub">Oddzwonimy w ciągu 2 godzin (pn–pt 9:00–17:00).</p>
       <div class="form-row">
         <div class="form-group"><label for="imie">Imię *</label><input type="text" id="imie" name="imie" required></div>
         <div class="form-group"><label for="tel">Telefon *</label><input type="tel" id="tel" name="telefon" required></div>
@@ -2081,7 +2081,7 @@ ${cfg.gtag && cfg.conversionTag ? `<!-- Event snippet for Kontakt conversion pag
       <div style="font-size:3.5rem;margin-bottom:1.5rem;">&#x2705;</div>
       <h1 style="font-size:clamp(1.8rem,3vw,2.5rem);margin-bottom:1rem;">Dziękujemy za wiadomość!</h1>
       <p style="color:var(--text-muted);font-size:1.05rem;line-height:1.7;margin-bottom:2rem;">
-        Oddzwonimy do Ciebie w ciągu <strong>2 godzin</strong> w dni robocze (8:00–18:00).
+        Oddzwonimy do Ciebie w ciągu <strong>2 godzin</strong> w dni robocze (9:00–17:00).
         Jeśli wolisz zadzwonić sam — jesteśmy dostępni pod numerem poniżej.
       </p>
       <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem;">

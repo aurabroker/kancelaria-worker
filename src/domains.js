@@ -38,7 +38,7 @@ export const FIRM = {
     { street: "ul. Ceramiczna 5E/79", postal: "03-126", city: "Warszawa" },
     { street: "ul. Bolkowska 2A/28",  postal: "01-466", city: "Warszawa" },
   ],
-  hours: "Mo-Fr 08:00-18:00",
+  hours: "Mo-Fr 09:00-17:00",   // godziny pracy kancelarii, potwierdzone
   // Portret adwokatki. Pliki osadzone w src/photo.js i serwowane
   // pod tymi adresami z rocznym cache.
   photo:   "/assets/adwokat.webp",
