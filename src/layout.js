@@ -92,81 +92,94 @@ const GROTY = `<defs>
   </defs>`;
 
 function diagramPoziomy() {
-  const Y = 200, X0 = 70, KROK = 170, ROZ = X0 + KROK * 3;   // rozgałęzienie
+  const Y = 200, X0 = 80, KROK = 168, ROZ = X0 + KROK * 3, R = 21, RB = 16;
+
+  const wezel = (x, y, r, n, wypelnienie, obwodka, kolorLiczby) =>
+    `<circle cx="${x}" cy="${y}" r="${r}" fill="${wypelnienie}" stroke="${obwodka}" stroke-width="2"/>
+    <text x="${x}" y="${y}" dy=".35em" text-anchor="middle" font-size="${r > 18 ? 15 : 13}"
+          font-weight="600" fill="${kolorLiczby}">${n}</text>`;
+
   const pien = PIEN.map(([t, c], k) => {
     const x = X0 + k * KROK;
-    return `<circle cx="${x}" cy="${Y}" r="7" fill="var(--paper)" stroke="var(--accent)" stroke-width="1.8"/>
-    <text x="${x}" y="${Y + 30}" text-anchor="middle" font-size="13.5" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-    <text x="${x}" y="${Y + 48}" text-anchor="middle" font-size="11.5" fill="var(--muted)">${esc(c)}</text>`;
+    return `${wezel(x, Y, R, k + 1, "var(--paper)", "var(--accent)", "var(--accent)")}
+    <text x="${x}" y="${Y + 46}" text-anchor="middle" font-size="13.5" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+    <text x="${x}" y="${Y + 64}" text-anchor="middle" font-size="11.5" fill="var(--muted)">${esc(c)}</text>`;
   }).join("\n    ");
 
   const zg = ZGODNA.map(([t, c], k) => {
-    const x = 650 + k * 110;
-    return `<circle cx="${x}" cy="88" r="5.5" fill="var(--agree)"/>
-    <text x="${x}" y="66" text-anchor="middle" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-    <text x="${x}" y="48" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
+    const x = 656 + k * 116;
+    return `${wezel(x, 88, RB, k + 5, "var(--agree)", "var(--agree)", "#fff")}
+    <text x="${x}" y="${88 - 34}" text-anchor="middle" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+    <text x="${x}" y="${88 - 52}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
   }).join("\n    ");
 
   const sp = SPORNA.map(([t, c], k) => {
-    const x = 650 + k * 130;
-    return `<circle cx="${x}" cy="312" r="5.5" fill="var(--dispute)"/>
-    <text x="${x}" y="340" text-anchor="middle" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-    <text x="${x}" y="358" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
+    const x = 656 + k * 128;
+    return `${wezel(x, 312, RB, k + 5, "var(--dispute)", "var(--dispute)", "#fff")}
+    <text x="${x}" y="${312 + 40}" text-anchor="middle" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+    <text x="${x}" y="${312 + 58}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
   }).join("\n    ");
 
   return `<svg class="d-poziom" viewBox="0 0 1180 400" role="img" aria-label="${esc(OPIS)}" xmlns="http://www.w3.org/2000/svg">
   ${GROTY}
-  <line x1="${X0}" y1="${Y}" x2="${ROZ}" y2="${Y}" stroke="currentColor" stroke-width="1.8" opacity=".3"/>
-  ${pien}
-
-  <text x="${ROZ}" y="${Y - 26}" text-anchor="middle" font-size="10.5" font-weight="600"
+  <line x1="${X0}" y1="${Y}" x2="${ROZ}" y2="${Y}" stroke="currentColor" stroke-width="2" opacity=".28"/>
+  <text x="${ROZ}" y="${Y - 40}" text-anchor="middle" font-size="10.5" font-weight="600"
         letter-spacing=".1em" fill="var(--muted)">TU SPRAWA SIĘ ROZDZIELA</text>
-  <path d="M${ROZ} ${Y} C ${ROZ + 40} ${Y} ${ROZ + 30} 88 ${ROZ + 80} 88 L 830 88"
-        stroke="var(--agree)" stroke-width="2.4" fill="none" marker-end="url(#gz)"/>
-  <path d="M${ROZ} ${Y} C ${ROZ + 40} ${Y} ${ROZ + 30} 312 ${ROZ + 80} 312 L 1120 312"
-        stroke="var(--dispute)" stroke-width="2.4" fill="none" marker-end="url(#gs)"/>
+  <path d="M${ROZ} ${Y} C ${ROZ + 46} ${Y} ${ROZ + 34} 88 ${ROZ + 90} 88 L 840 88"
+        stroke="var(--agree)" stroke-width="2.6" fill="none" marker-end="url(#gz)"/>
+  <path d="M${ROZ} ${Y} C ${ROZ + 46} ${Y} ${ROZ + 34} 312 ${ROZ + 90} 312 L 1112 312"
+        stroke="var(--dispute)" stroke-width="2.6" fill="none" marker-end="url(#gs)"/>
+  ${pien}
   ${zg}
   ${sp}
-  <text x="846" y="93" font-size="15" font-weight="600" fill="var(--agree)">4–8 miesięcy</text>
-  <text x="846" y="112" font-size="11.5" fill="var(--muted)">ścieżka zgodna</text>
-  <text x="1120" y="294" text-anchor="end" font-size="15" font-weight="600" fill="var(--dispute)">1,5–3 lata</text>
-  <text x="1120" y="276" text-anchor="end" font-size="11.5" fill="var(--muted)">ścieżka sporna</text>
+  <text x="856" y="84" font-size="15" font-weight="600" fill="var(--agree)">4–8 miesięcy</text>
+  <text x="856" y="103" font-size="11.5" fill="var(--muted)">ścieżka zgodna</text>
+  <text x="1112" y="276" text-anchor="end" font-size="15" font-weight="600" fill="var(--dispute)">1,5–3 lata</text>
+  <text x="1112" y="258" text-anchor="end" font-size="11.5" fill="var(--muted)">ścieżka sporna</text>
 </svg>`;
 }
 
 function diagramPionowy() {
+  const X = 34, R = 19, RB = 15;
+  const wezel = (x, y, r, n, wyp, obw, kol) =>
+    `<circle cx="${x}" cy="${y}" r="${r}" fill="${wyp}" stroke="${obw}" stroke-width="2"/>
+    <text x="${x}" y="${y}" dy=".35em" text-anchor="middle" font-size="${r > 17 ? 14 : 12.5}"
+          font-weight="600" fill="${kol}">${n}</text>`;
+
   const pien = PIEN.map(([t, c], k) => {
-    const y = 34 + k * 72;
-    return `<circle cx="26" cy="${y}" r="6.5" fill="var(--paper)" stroke="var(--accent)" stroke-width="1.5"/>
-    <text x="46" y="${y - 2}" font-size="13.5" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-    <text x="46" y="${y + 14}" font-size="11.5" fill="var(--muted)">${esc(c)}</text>`;
-  }).join("\n    ");
-  const zg = ZGODNA.map(([t, c], k) => {
-    const y = 336 + k * 62;
-    return `<circle cx="26" cy="${y}" r="5" fill="var(--agree)"/>
-    <text x="44" y="${y - 2}" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-    <text x="44" y="${y + 13}" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
-  }).join("\n    ");
-  const sp = SPORNA.map(([t, c], k) => {
-    const y = 336 + k * 62;
-    return `<circle cx="214" cy="${y}" r="5" fill="var(--dispute)"/>
-    <text x="232" y="${y - 2}" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-    <text x="232" y="${y + 13}" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
+    const y = 36 + k * 76;
+    return `${wezel(X, y, R, k + 1, "var(--paper)", "var(--accent)", "var(--accent)")}
+    <text x="66" y="${y - 3}" font-size="13.5" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+    <text x="66" y="${y + 14}" font-size="11.5" fill="var(--muted)">${esc(c)}</text>`;
   }).join("\n    ");
 
-  return `<svg class="d-pion" viewBox="0 0 400 640" role="img" aria-label="${esc(OPIS)}" xmlns="http://www.w3.org/2000/svg">
+  const zg = ZGODNA.map(([t, c], k) => {
+    const y = 356 + k * 64;
+    return `${wezel(X, y, RB, k + 5, "var(--agree)", "var(--agree)", "#fff")}
+    <text x="60" y="${y - 3}" font-size="12.5" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+    <text x="60" y="${y + 13}" font-size="10.5" fill="var(--muted)">${esc(c)}</text>`;
+  }).join("\n    ");
+
+  const sp = SPORNA.map(([t, c], k) => {
+    const y = 356 + k * 64;
+    return `${wezel(224, y, RB, k + 5, "var(--dispute)", "var(--dispute)", "#fff")}
+    <text x="250" y="${y - 3}" font-size="12.5" font-weight="500" fill="var(--ink)">${esc(t)}</text>
+    <text x="250" y="${y + 13}" font-size="10.5" fill="var(--muted)">${esc(c)}</text>`;
+  }).join("\n    ");
+
+  return `<svg class="d-pion" viewBox="0 0 400 664" role="img" aria-label="${esc(OPIS)}" xmlns="http://www.w3.org/2000/svg">
   ${GROTY}
-  <line x1="26" y1="34" x2="26" y2="250" stroke="currentColor" stroke-width="1.5" opacity=".3"/>
+  <line x1="${X}" y1="36" x2="${X}" y2="264" stroke="currentColor" stroke-width="2" opacity=".28"/>
+  <text x="66" y="298" font-size="10.5" font-weight="600" letter-spacing=".1em" fill="var(--muted)">TU SPRAWA SIĘ ROZDZIELA</text>
+  <path d="M${X} 264 L${X} 320" stroke="var(--agree)" stroke-width="2.4" fill="none"/>
+  <path d="M${X} 264 Q${X} 320 104 320 L224 320" stroke="var(--dispute)" stroke-width="2.4" fill="none"/>
+  <line x1="${X}" y1="320" x2="${X}" y2="450" stroke="var(--agree)" stroke-width="2.4" marker-end="url(#gz)"/>
+  <line x1="224" y1="320" x2="224" y2="638" stroke="var(--dispute)" stroke-width="2.4" marker-end="url(#gs)"/>
   ${pien}
-  <text x="46" y="280" font-size="10.5" font-weight="600" letter-spacing=".1em" fill="var(--muted)">TU SPRAWA SIĘ ROZDZIELA</text>
-  <path d="M26 250 L26 300" stroke="var(--agree)" stroke-width="2.2" fill="none"/>
-  <path d="M26 250 Q26 300 96 300 L214 300" stroke="var(--dispute)" stroke-width="2.2" fill="none"/>
-  <line x1="26" y1="300" x2="26" y2="424" stroke="var(--agree)" stroke-width="2.2" marker-end="url(#gz)"/>
-  <line x1="214" y1="300" x2="214" y2="608" stroke="var(--dispute)" stroke-width="2.2" marker-end="url(#gs)"/>
   ${zg}
   ${sp}
-  <text x="44" y="448" font-size="14" font-weight="600" fill="var(--agree)">4–8 miesięcy</text>
-  <text x="232" y="632" font-size="14" font-weight="600" fill="var(--dispute)">1,5–3 lata</text>
+  <text x="60" y="474" font-size="14" font-weight="600" fill="var(--agree)">4–8 miesięcy</text>
+  <text x="250" y="660" font-size="14" font-weight="600" fill="var(--dispute)">1,5–3 lata</text>
 </svg>`;
 }
 
