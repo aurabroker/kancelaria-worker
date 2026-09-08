@@ -10,6 +10,31 @@ Magdaleny Idzik-Cieśli. Jeden kod, jedenaście domen, każda z własną treści
 - `src/faq.js` — 200 pytań i odpowiedzi, rozłączne pule domenowe, rotacja tygodniowa
 - `src/mail.js` — powiadomienia o leadach przez Resend
 
+## Zakres domen — decyzja z 8 września 2026
+
+Sieć obejmuje **jedenaście domen, które są zarejestrowane i podpięte pod
+Cloudflare**. Ich lista jest w `src/domains.js` i pokrywa się ze strefami
+w koncie.
+
+Kanwa marki z Claude Design wymienia inny zestaw jedenastu dzielnic.
+Sześć z nich **nie ma zarejestrowanej domeny**: Śródmieście, Ursynów,
+Praga-Południe, Białołęka, Targówek, Wilanów. Tych stron na razie
+nie budujemy. Wrócimy do nich pojedynczo, gdy domeny zostaną kupione
+i podpięte.
+
+Nie wygaszamy żadnej z działających domen po to, żeby lista zgadzała się
+z projektem graficznym. Dotyczy to zwłaszcza:
+
+- `rozwodtarchomin.pl` — jedyna domena z żywym tagiem konwersji Google Ads;
+  jej wyłączenie urwałoby pomiar działającej kampanii,
+- `rozwod.waw.pl` — flagowa domena ogólnomiejska, na nią leci ruch płatny,
+- `rozwodochota.pl`, `rozwodlegionowo.pl`, `rozwodlomianki.pl`,
+  `rozwodjablonna.pl` — obszary spoza listy dzielnic, ale z własną treścią
+  i własną pulą pytań.
+
+Kanwa wnosi system wizualny: paletę, typografię, ikony i układy. Nie
+rozstrzyga o zasięgu sieci.
+
 ## Sekrety
 
 Klucza API nie trzymamy w repozytorium:

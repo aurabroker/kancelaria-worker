@@ -15,6 +15,16 @@
    merytorycznym widocznym dla klienta.
    ============================================================ */
 
+/* ZAKRES SIECI — decyzja z 8 września 2026
+   Poniżej jest jedenaście domen zarejestrowanych i podpiętych pod Cloudflare.
+
+   Kanwa marki wymienia inne dzielnice; sześć z nich nie ma domeny i na razie
+   ich nie budujemy: Śródmieście, Ursynów, Praga-Południe, Białołęka,
+   Targówek, Wilanów. Dokładać pojedynczo po zakupie domeny.
+
+   Żadnej z działających domen nie wygaszamy dla zgodności z projektem
+   graficznym. rozwodtarchomin.pl ma żywą kampanię Google Ads. */
+
 export const FIRM = {
   name:        "Kancelaria Adwokacka Magdalena Idzik-Cieśla",
   attorney:    "adw. Magdalena Idzik-Cieśla",
