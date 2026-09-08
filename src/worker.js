@@ -24,7 +24,7 @@ const esc = (v) => String(v ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&l
 
 const SUPABASE_URL  = "https://kukvgsjrmrqtzhkszzum.supabase.co";
 // Klucz anon — tylko INSERT na kancelaria_leads (RLS ogranicza resztę)
-const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1a3Znc2pybXJxdHpoa3N6enVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MTI0NzYsImV4cCI6MjA4ODQ4ODQ3Nn0.wOB-4CJTcRksSUY7WD7CXEccTKNxPIVF8AT8hczS5zY";
+const SUPABASE_ANON_FALLBACK = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1a3Znc2pybXJxdHpoa3N6enVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MTI0NzYsImV4cCI6MjA4ODQ4ODQ3Nn0.wOB-4CJTcRksSUY7WD7CXEccTKNxPIVF8AT8hczS5zY";
 
 // ── GŁÓWNA OBSŁUGA ─────────────────────────────────────────────────────────
 export default {
@@ -112,19 +112,27 @@ async function handleLead(request, cfg, hostname, env) {
     return jsonError(400, "Nieprawidłowy JSON");
   }
 
-  const { imie, telefon, email = "", temat = "", wiadomosc = "", utm = {} } = body;
+  const { imie, telefon, email = "", temat = "", wiadomosc = "", zgoda = false, utm = {} } = body;
+  if (zgoda !== true) {
+    return jsonError(400, "Zgoda na przetwarzanie danych jest wymagana");
+  }
 
   if (!imie?.trim() || !telefon?.trim()) {
     return jsonError(400, "Imię i telefon są wymagane");
   }
+
+  // Klucz z sekretu Workera, gdy ustawiony. Literal ponizej jest awaryjny
+  // i pochodzi z publicznego repozytorium — po rotacji ustaw SUPABASE_ANON
+  // jako sekret i usun go z kodu.
+  const anonKey = (env && env.SUPABASE_ANON) || SUPABASE_ANON_FALLBACK;
 
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/kancelaria_leads`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "apikey":        SUPABASE_ANON,
-        "Authorization": `Bearer ${SUPABASE_ANON}`,
+        "apikey":        anonKey,
+        "Authorization": `Bearer ${anonKey}`,
         "Prefer":        "return=minimal",
       },
       body: JSON.stringify({
@@ -223,6 +231,7 @@ function buildHTML(cfg, hostname, url) {
 <meta property="og:description" content="${desc}">
 <meta property="og:url" content="https://${hostname}">
 <meta property="og:type" content="website">
+<meta name="author" content="${esc(FIRM.attorney)}">
 <meta property="og:locale" content="pl_PL">
 <meta property="og:image" content="https://${hostname}${FIRM.photoOg}">
 <meta property="og:image:width" content="${PHOTO_DIMS.square.w}">
@@ -247,6 +256,7 @@ function buildHTML(cfg, hostname, url) {
   "openingHours": "${FIRM.hours}",
   "priceRange": "$$",
   "vatID": "${FIRM.nip}",
+  "dateModified": "${new Date().toISOString().slice(0,10)}",
   "image": "https://${hostname}${FIRM.photoOg}",
   "areaServed": ${JSON.stringify(cfg.areas)},
   "founder": {
@@ -350,7 +360,8 @@ ${trackingHead(cfg)}
       <!-- PRAWA: wideo rozciągnięte -->
       <div style="position:relative;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg);background:var(--navy);align-self:stretch;min-height:320px;">
         <video id="hero-video" src="https://github.com/user-attachments/assets/7c593bf7-b8ff-47d8-af33-d6ca0661c832"
-          playsinline controls preload="metadata"
+          poster="${FIRM.photo}" width="${PHOTO_DIMS.portrait.w}" height="${PHOTO_DIMS.portrait.h}"
+          playsinline controls preload="none"
           style="position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;"></video>
         <div id="video-overlay" onclick="playVideo()" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:opacity .3s;background:rgba(15,31,56,.42);z-index:1;">
           <div id="play-btn" style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.13);backdrop-filter:blur(12px);border:1.5px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;">
@@ -473,7 +484,11 @@ ${trackingHead(cfg)}
       </div>
       <div class="faq-list">
         ${faqItems.map(f => `<div class="faq-item"><button class="faq-btn">${esc(f.q)}<span class="faq-icon">+</span></button><div class="faq-body"><p>${esc(f.a)}</p></div></div>`).join("\n        ")}
-        <p style="margin-top:1.25rem;font-size:.9rem"><a href="/pytania">Zobacz wszystkie pytania i odpowiedzi \u2192</a></p>
+        <p style="margin-top:1.25rem;font-size:.82rem;color:var(--text-muted)">
+          Odpowiedzi przygotowała ${esc(FIRM.attorney)}, wpis ${esc(FIRM.barNumber)}.
+          Stan prawny na <time datetime="${new Date().toISOString().slice(0,10)}">${new Date().toISOString().slice(0,10)}</time>.
+        </p>
+        <p style="margin-top:.6rem;font-size:.9rem"><a href="/pytania">Zobacz wszystkie pytania i odpowiedzi \u2192</a></p>
       </div>
     </div>
   </div>
@@ -551,6 +566,13 @@ ${trackingHead(cfg)}
       </div>
       <div class="form-group"><label for="wiadomosc">Krótki opis sytuacji</label><textarea id="wiadomosc" name="wiadomosc"></textarea></div>
       <button type="submit" class="form-submit">Wyślij i umów konsultację →</button>
+      <div class="form-group" style="flex-direction:row;align-items:flex-start;gap:.6rem">
+        <input type="checkbox" id="zgoda" name="zgoda" required style="margin-top:.28rem;width:auto;flex:none">
+        <label for="zgoda" style="font-weight:400;font-size:.83rem;line-height:1.5">
+          Wyrażam zgodę na przetwarzanie moich danych w celu odpowiedzi na zapytanie.
+          Administratorem jest ${esc(FIRM.name)}. Szczegóły w <a href="/polityka-prywatnosci">polityce prywatności</a>. *
+        </label>
+      </div>
       <p class="form-notice">🔒 Dane są bezpieczne i chronione. Przetwarzamy je wyłącznie w celu obsługi zapytania.</p>
       <div id="form-success" style="display:none;text-align:center;padding:1.5rem 0;">
         <div style="font-size:2rem;margin-bottom:.75rem">✅</div>
@@ -645,6 +667,7 @@ async function submitLead(e) {
     email:     document.getElementById('email').value,
     temat:     document.getElementById('temat').value,
     wiadomosc: document.getElementById('wiadomosc').value,
+    zgoda:     document.getElementById('zgoda').checked,
     utm,
   };
   try {

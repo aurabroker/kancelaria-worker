@@ -23,11 +23,23 @@ formularz nadal działa — lead zapisuje się w bazie, wysyłka jest pomijana.
 
 ## Do uzupełnienia przed publikacją
 
-- `TRACKING.adsId`, `adsLeadLabel`, `adsCallLabel` w `src/worker.js` — identyfikator
-  Google Ads i etykiety konwersji dla formularza oraz kliknięcia w telefon
-- (zrobione) portret adwokatki — `src/photo.js`
-- weryfikacja przez adwokata: właściwość sądów w `src/domains.js` oraz każda
-  kwota, termin i podstawa prawna w `src/faq.js`
+Jedno pole i dwie weryfikacje:
+
+1. `TRACKING` w `src/worker.js` — identyfikator Google Ads (`AW-...`) oraz etykiety
+   konwersji dla formularza i kliknięcia w telefon. Do czasu uzupełnienia GA4
+   działa normalnie, a tag Ads po prostu się nie renderuje.
+2. Weryfikacja przez adwokata: właściwość sądów okręgowych w `src/domains.js`
+   oraz każda kwota, termin i podstawa prawna w `src/faq.js`.
+
+## Rotacja klucza Supabase
+
+Klucz `anon` jest nadal literałem w kodzie, bo pochodzi z publicznego repozytorium.
+Worker czyta najpierw sekret `SUPABASE_ANON`, a literał jest tylko awaryjny.
+Po rotacji ustaw sekret i usuń literał z `src/worker.js`.
+
+```
+wrangler secret put SUPABASE_ANON --name kancelaria-worker
+```
 
 ## Testy
 

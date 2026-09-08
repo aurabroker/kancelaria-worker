@@ -109,4 +109,30 @@ for (const host of ALL_HOSTS) {
 }
 check("HTML nie zawiera base64 obrazu", !texts["rozwod.waw.pl"].includes("data:image"));
 
+// 9. zgoda RODO, swiezosc, wideo
+console.log("\n=== ZGODA RODO I SYGNALY SWIEZOSCI ===");
+const post = (body) => worker.fetch(new Request("https://rozwod.waw.pl/api/lead", {
+  method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(body) }), env);
+
+const bezZgody = await post({ imie: "Anna", telefon: "600100200" });
+check("brak zgody -> 400", bezZgody.status === 400, bezZgody.status);
+const tresc = await bezZgody.json();
+check("komunikat o zgodzie", /[Zz]goda/.test(tresc.error || tresc.message || ""), JSON.stringify(tresc));
+console.log("  bez zgody:", bezZgody.status, JSON.stringify(tresc));
+
+const bezPol = await post({ imie: "", telefon: "", zgoda: true });
+check("brak wymaganych pol -> 400", bezPol.status === 400, bezPol.status);
+
+for (const host of ALL_HOSTS) {
+  const h = texts[host];
+  check(host+" pole zgody", h.includes('id="zgoda"') && h.includes('required'));
+  check(host+" odnosnik do polityki", h.includes('href="/polityka-prywatnosci"'));
+  check(host+" autor w meta", h.includes('name="author"'));
+  check(host+" dateModified", h.includes('"dateModified"'));
+  check(host+" podpis pod FAQ", h.includes("WAW/Adw/3678") && h.includes("<time datetime="));
+  check(host+" wideo bez preload", h.includes('preload="none"'));
+  check(host+" wideo z plakatem", h.includes('poster="/assets/adwokat.webp"'));
+}
+check("rok w stopce aktualny", texts["rozwod.waw.pl"].includes("© " + new Date().getUTCFullYear()));
+
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));
