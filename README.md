@@ -29,6 +29,21 @@ dotyka wyłącznie ikon, paska nad nagłówkiem i podkreślenia aktywnego wiersz
 Podłoże, typografia i przyciski zostają wspólne, dlatego jedenaście stron
 czyta się jak jedna kancelaria.
 
+### Czego z kanwy świadomie nie bierzemy
+
+Dwa zdania z kanwy nie weszły na stronę i nie mają wejść:
+
+- **„Odbieram też po 20:00. Jeśli nie odbieram — oddzwaniam tego samego dnia."**
+  Kancelaria pracuje 9:00–17:00 i po dwudziestej nie odbiera. Obietnica nie do
+  dotrzymania. `test/render.mjs` pilnuje, żeby nie wróciła.
+- **„Sprawy prowadzę osobiście. Na rozprawie jestem ja, nie aplikant."**
+  Zobowiązanie, którego nie potwierdzono. Odrzucone przez właściciela
+  8 września 2026.
+
+Kanwa jest źródłem systemu wizualnego, nie źródłem obietnic wobec klienta.
+Każde zdanie stamtąd, które opisuje sposób pracy albo dostępność, wymaga
+potwierdzenia, zanim trafi na stronę.
+
 ## Zakres domen — decyzja z 8 września 2026
 
 Sieć obejmuje **jedenaście domen, które są zarejestrowane i podpięte pod

@@ -198,6 +198,8 @@ for (const host of ALL_HOSTS) {
   check(host+" godziny w schemacie", h.includes("09:00-17:00"));
   // Kanwa proponowala "odbieram tez po 20:00" — nieprawda, ma nigdy nie wejsc.
   check(host+" brak obietnicy po 20", !/po 20:00|po dwudziestej/i.test(h));
+  // Odrzucone przez wlasciciela 8 wrzesnia 2026 — niepotwierdzone zobowiazanie.
+  check(host+" brak deklaracji o aplikancie", !/nie aplikant|prowadzę osobiście/i.test(h));
 }
 const dziekPl = await (await get("rozwod.waw.pl", "/dziekujemy.html")).text();
 check("strona podziękowania 9-17", dziekPl.includes("9:00–17:00"));
