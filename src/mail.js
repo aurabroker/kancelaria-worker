@@ -20,6 +20,22 @@ const RESEND_ENDPOINT = "https://api.resend.com/emails";
 const FROM = "Formularz rozwod.waw.pl <formularz@rozwod.waw.pl>";
 const AUTOREPLY = false;
 
+/**
+ * Zwraca wartosc sekretu niezaleznie od typu powiazania w Cloudflare.
+ * Powiazanie typu "Secret" daje wprost napis. Powiazanie typu
+ * "Secrets Store Secret" daje obiekt, z ktorego wartosc wyciaga sie
+ * asynchronicznie przez .get(). Obsluga obu form kosztuje trzy linie
+ * i eliminuje cala klase bledow konfiguracyjnych.
+ */
+async function readSecret(binding) {
+  if (!binding) return "";
+  if (typeof binding === "string") return binding;
+  if (typeof binding.get === "function") {
+    try { return (await binding.get()) || ""; } catch { return ""; }
+  }
+  return "";
+}
+
 function esc(s) {
   return String(s ?? "").replace(/[&<>"]/g, c =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -38,7 +54,7 @@ function row(label, value) {
  * Zwraca { sent: boolean, reason?: string }.
  */
 export async function sendLeadNotification(env, lead, firm) {
-  const key = env && env.RESEND_API_KEY;
+  const key = await readSecret(env && env.RESEND_API_KEY);
   if (!key) return { sent: false, reason: "brak RESEND_API_KEY" };
 
   const subject = `Nowe zgłoszenie: ${lead.imie || "bez imienia"} — ${lead.dzielnica || lead.zrodlo_domena}`;
