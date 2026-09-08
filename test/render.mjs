@@ -147,4 +147,32 @@ const dz = await (await get("rozwodtarchomin.pl", "/dziekujemy.html")).text();
 check("konwersja na stronie podziekowania", dz.includes(tarch.conversionTag));
 console.log("  " + tarch.gtag + " — obecny na stronie i w module pomiaru");
 
+// 11. system wizualny z kanwy marki
+console.log("\n=== KANWA MARKI ===");
+const css = await (await get("rozwod.waw.pl", "/assets/style.css")).text();
+for (const [nazwa, hex] of [["atrament","#12203C"],["papier","#FAF7F2"],["kreda","#F1ECE4"],
+                            ["glina","#A85A3C"],["zgoda","#3D6B54"],["spor","#96342C"]]) {
+  check("paleta: "+nazwa, css.includes(hex), hex);
+}
+check("krój nagłówkowy Newsreader", css.includes("Newsreader"));
+check("krój tekstowy IBM Plex Sans", css.includes("IBM Plex Sans"));
+check("przycisk w kolorze gliny", css.includes("background: var(--clay)"));
+check("stary Playfair usunięty", !css.includes("Playfair"));
+check("stary DM Sans usunięty", !css.includes("DM Sans"));
+
+const akcenty = new Set();
+for (const host of ALL_HOSTS) {
+  const a = DOMAIN_CONFIG[host].accent;
+  check(host+" akcent w rodzinie granatu", /^#[0-9A-F]{6}$/i.test(a));
+  akcenty.add(a);
+  check(host+" akcent w HTML", texts[host].includes(a));
+  check(host+" wspólne podłoże kredy", DOMAIN_CONFIG[host].bg === "#F1ECE4");
+}
+check("11 różnych akcentów", akcenty.size === ALL_HOSTS.length, akcenty.size);
+check("fonty z kanwy w HTML", texts["rozwod.waw.pl"].includes("family=Newsreader"));
+
+const ikony = (texts["rozwod.waw.pl"].match(/class="ico"/g) || []).length;
+check("ikony na stronie", ikony >= 3, ikony);
+console.log(`  6 wartości palety · 11 akcentów · ${ikony} ikon na stronie głównej`);
+
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));

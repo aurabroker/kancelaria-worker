@@ -10,6 +10,25 @@ Magdaleny Idzik-Cieśli. Jeden kod, jedenaście domen, każda z własną treści
 - `src/faq.js` — 200 pytań i odpowiedzi, rozłączne pule domenowe, rotacja tygodniowa
 - `src/mail.js` — powiadomienia o leadach przez Resend
 
+## System wizualny
+
+Pochodzi z kanwy marki (Claude Design, wrzesień 2026) i jest zaimplementowany
+w trzech miejscach:
+
+- `src/worker.js` — tokeny palety w `:root` oraz typografia
+- `src/domains.js` — akcent granatowy per domena
+- `src/icons.js` — 24 ikony z kanwy, jedna siatka 24×24, kreska 1.5
+
+Sześć wartości wspólnych dla całej sieci: atrament `#12203C`, papier `#FAF7F2`,
+kreda `#F1ECE4`, glina `#A85A3C`, zgoda `#3D6B54`, spór `#96342C`.
+Kroje: Newsreader w nagłówkach, IBM Plex Sans w tekście.
+
+Zasada z kanwy, której trzymamy się w kodzie: **glina jest jedynym kolorem
+akcji** — przycisk konsultacji, wysyłka formularza, telefon. Akcent dzielnicy
+dotyka wyłącznie ikon, paska nad nagłówkiem i podkreślenia aktywnego wiersza.
+Podłoże, typografia i przyciski zostają wspólne, dlatego jedenaście stron
+czyta się jak jedna kancelaria.
+
 ## Zakres domen — decyzja z 8 września 2026
 
 Sieć obejmuje **jedenaście domen, które są zarejestrowane i podpięte pod

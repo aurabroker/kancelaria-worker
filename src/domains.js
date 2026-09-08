@@ -58,7 +58,8 @@ export const DOMAIN_CONFIG = {
 
   "rozwod.waw.pl": {
     district: "Warszawa", key: "warszawa",
-    accent: "#8B5E1A", light: "#C49A3C", bg: "#FDF6E9",
+    // akcent z kanwy marki — paleta „Śródmieście"
+    accent: "#16264A", light: "#788196", bg: "#F1ECE4",
     title: "Adwokat rozwodowy Warszawa — Kancelaria Idzik-Cieśla",
     desc:  "Adwokat rozwodowy w Warszawie. Rozwód, podział majątku, alimenty i opieka nad dziećmi. Bezpłatna konsultacja 30 minut. Tel. 605 089 552.",
     h1:    "Adwokat rozwodowy w Warszawie",
@@ -71,7 +72,8 @@ export const DOMAIN_CONFIG = {
 
   "rozwodmokotow.pl": {
     district: "Mokotów", key: "mokotow",
-    accent: "#2D4A6B", light: "#5A7FA8", bg: "#EEF2F8",
+    // akcent z kanwy marki — paleta „Mokotów"
+    accent: "#1D3557", light: "#7C8A9E", bg: "#F1ECE4",
     title: "Adwokat rozwodowy Mokotów — podział majątku i mieszkania",
     desc:  "Adwokat rozwodowy na Mokotowie. Podział majątku, mieszkanie i kredyt hipoteczny po rozwodzie. Bezpłatna konsultacja 30 minut. Tel. 605 089 552.",
     h1:    "Adwokat rozwodowy na Mokotowie",
@@ -84,7 +86,8 @@ export const DOMAIN_CONFIG = {
 
   "rozwodwola.pl": {
     district: "Wola", key: "wola",
-    accent: "#8B3A1A", light: "#C46A3C", bg: "#FDF0E9",
+    // akcent z kanwy marki — paleta „Wola"
+    accent: "#24425E", light: "#8091A2", bg: "#F1ECE4",
     title: "Adwokat rozwodowy Wola — alimenty i koszty rozwodu",
     desc:  "Adwokat rozwodowy na Woli. Alimenty na dzieci i małżonka, koszty sprawy rozwodowej. Bezpłatna konsultacja 30 minut. Tel. 605 089 552.",
     h1:    "Adwokat rozwodowy na Woli",
@@ -97,7 +100,8 @@ export const DOMAIN_CONFIG = {
 
   "rozwodzoliborz.pl": {
     district: "Żoliborz", key: "zoliborz",
-    accent: "#5B2D8E", light: "#8B5EC1", bg: "#F3EEF9",
+    // akcent z kanwy marki — paleta „Żoliborz"
+    accent: "#4A5580", light: "#969CB5", bg: "#F1ECE4",
     title: "Adwokat rozwodowy Żoliborz — opieka i plan wychowawczy",
     desc:  "Adwokat rozwodowy na Żoliborzu. Władza rodzicielska, kontakty z dzieckiem i plan wychowawczy. Bezpłatna konsultacja 30 minut. Tel. 605 089 552.",
     h1:    "Adwokat rozwodowy na Żoliborzu",
@@ -110,7 +114,8 @@ export const DOMAIN_CONFIG = {
 
   "rozwodbielany.pl": {
     district: "Bielany", key: "bielany",
-    accent: "#1A4E8B", light: "#4A7FC1", bg: "#EEF4FB",
+    // akcent z kanwy marki — paleta „Bielany"
+    accent: "#3D5A80", light: "#8E9FB5", bg: "#F1ECE4",
     title: "Adwokat rozwodowy Bielany — przesłanki i przebieg sprawy",
     desc:  "Adwokat rozwodowy na Bielanach. Przesłanki rozwodu, przebieg sprawy i terminy. Bezpłatna konsultacja 30 minut. Tel. 605 089 552.",
     h1:    "Adwokat rozwodowy na Bielanach",
@@ -123,7 +128,8 @@ export const DOMAIN_CONFIG = {
 
   "rozwodochota.pl": {
     district: "Ochota", key: "ochota",
-    accent: "#1A6B5B", light: "#3CA48B", bg: "#EEFAF7",
+    // akcent z kanwy marki — paleta „Ursynów"
+    accent: "#2A5060", light: "#839AA3", bg: "#F1ECE4",
     title: "Adwokat rozwodowy Ochota — rozwód z orzeczeniem o winie",
     desc:  "Adwokat rozwodowy na Ochocie. Rozwód z orzeczeniem o winie i jego skutki. Bezpłatna konsultacja 30 minut. Tel. 605 089 552.",
     h1:    "Adwokat rozwodowy na Ochocie",
@@ -136,7 +142,8 @@ export const DOMAIN_CONFIG = {
 
   "rozwodbemowo.pl": {
     district: "Bemowo", key: "bemowo",
-    accent: "#7A2D4A", light: "#B05B7F", bg: "#FAEEF3",
+    // akcent z kanwy marki — paleta „Bemowo"
+    accent: "#2B3E6B", light: "#848FA9", bg: "#F1ECE4",
     title: "Adwokat rozwodowy Bemowo — pozew, dowody, mediacja",
     desc:  "Adwokat rozwodowy na Bemowie. Pozew o rozwód, dowody i mediacja. Bezpłatna konsultacja 30 minut. Tel. 605 089 552.",
     h1:    "Adwokat rozwodowy na Bemowie",
@@ -149,7 +156,8 @@ export const DOMAIN_CONFIG = {
 
   "rozwodtarchomin.pl": {
     district: "Tarchomin", key: "tarchomin",
-    accent: "#4A6B1A", light: "#7FA83C", bg: "#F2F7EE",
+    // akcent z kanwy marki — paleta „Białołęka"
+    accent: "#35566E", light: "#8A9DAB", bg: "#F1ECE4",
     // ZYWA KAMPANIA GOOGLE ADS — nie usuwac bez zgody wlasciciela konta.
     // Jedyna domena w sieci z wlasnym tagiem konwersji. Do czasu uzupelnienia
     // TRACKING.adsId te wartosci sa jedynym zrodlem pomiaru konwersji.
@@ -166,7 +174,8 @@ export const DOMAIN_CONFIG = {
 
   "rozwodlegionowo.pl": {
     district: "Legionowo", key: "legionowo",
-    accent: "#1A5E6B", light: "#3C9AA8", bg: "#EEF8FA",
+    // akcent z kanwy marki — paleta „Targówek"
+    accent: "#3A4A75", light: "#8D96AF", bg: "#F1ECE4",
     title: "Adwokat rozwodowy Legionowo — alimenty i sprawy rodzinne",
     desc:  "Adwokat rozwodowy w Legionowie. Alimenty, rozwód i sprawy rodzinne w powiecie legionowskim. Bezpłatna konsultacja 30 minut. Tel. 605 089 552.",
     h1:    "Adwokat rozwodowy w Legionowie",
@@ -179,7 +188,8 @@ export const DOMAIN_CONFIG = {
 
   "rozwodlomianki.pl": {
     district: "Łomianki", key: "lomianki",
-    accent: "#2D6B1A", light: "#5AA83C", bg: "#EEF8EE",
+    // akcent z kanwy marki — paleta „Wilanów"
+    accent: "#1F3A44", light: "#7D8D93", bg: "#F1ECE4",
     title: "Adwokat rozwodowy Łomianki — podział majątku i nieruchomości",
     desc:  "Adwokat rozwodowy w Łomiankach. Podział majątku, dom i nieruchomości po rozwodzie. Bezpłatna konsultacja 30 minut. Tel. 605 089 552.",
     h1:    "Adwokat rozwodowy w Łomiankach",
@@ -192,7 +202,8 @@ export const DOMAIN_CONFIG = {
 
   "rozwodjablonna.pl": {
     district: "Jabłonna", key: "jablonna",
-    accent: "#6B5B1A", light: "#A89040", bg: "#FAF7EE",
+    // akcent z kanwy marki — paleta „Praga-Płd."
+    accent: "#2F5B63", light: "#86A0A5", bg: "#F1ECE4",
     title: "Adwokat rozwodowy Jabłonna — separacja i sprawy zagraniczne",
     desc:  "Adwokat rozwodowy w Jabłonnie. Separacja, unieważnienie małżeństwa i sprawy z elementem zagranicznym. Bezpłatna konsultacja 30 minut. Tel. 605 089 552.",
     h1:    "Adwokat rozwodowy w Jabłonnie",

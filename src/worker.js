@@ -8,6 +8,7 @@ import { DOMAIN_CONFIG, DEFAULT_CONFIG, ALL_HOSTS, FIRM, AD_HEADLINES } from "./
 import { CATEGORIES, faqForHost, faqPoolGrouped } from "./faq.js";
 import { sendLeadNotification } from "./mail.js";
 import { photoResponse, PHOTO_DIMS } from "./photo.js";
+import { icon } from "./icons.js";
 
 /* Pomiar. GA4 wspolny dla calej sieci. Identyfikator Google Ads
    uzupelnic po otrzymaniu z panelu — do tego czasu tag Ads sie nie renderuje,
@@ -285,7 +286,7 @@ ${JSON.stringify({
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>
   :root {
@@ -433,9 +434,9 @@ ${trackingHead(cfg)}
       <p class="section-desc">Kompleksowa obsługa prawna w sprawach rodzinnych — od pierwszej rozmowy do prawomocnego wyroku.</p>
     </div>
     <div class="services-grid">
-      <div class="service-card"><div class="service-num">01</div><h3>Rozwód</h3><p>Pozew, reprezentacja przed sądem, negocjacje. Sprawy polubowne i sporne.</p><div class="service-tags"><span class="tag">Z orzekaniem o winie</span><span class="tag">Bez orzekania</span><span class="tag">Separacja</span></div></div>
-      <div class="service-card"><div class="service-num">02</div><h3>Podział majątku</h3><p>Analiza majątku wspólnego, negocjacje, reprezentacja sądowa lub notarialna.</p><div class="service-tags"><span class="tag">Nieruchomości</span><span class="tag">Firmy</span><span class="tag">Kredyty</span></div></div>
-      <div class="service-card"><div class="service-num">03</div><h3>Opieka i alimenty</h3><p>Plan wychowawczy, alimenty, prawo do kontaktów. Zmiana ustalonych warunków.</p><div class="service-tags"><span class="tag">Plan wychowawczy</span><span class="tag">Alimenty</span><span class="tag">Kontakty</span></div></div>
+      <div class="service-card"><div class="service-icon">${icon("rozwod-bez-orzekania-o-winie")}</div><h3>Rozwód</h3><p>Pozew, reprezentacja przed sądem, negocjacje. Sprawy polubowne i sporne.</p><div class="service-tags"><span class="tag">Z orzekaniem o winie</span><span class="tag">Bez orzekania</span><span class="tag">Separacja</span></div></div>
+      <div class="service-card"><div class="service-icon">${icon("podzial-majatku")}</div><h3>Podział majątku</h3><p>Analiza majątku wspólnego, negocjacje, reprezentacja sądowa lub notarialna.</p><div class="service-tags"><span class="tag">Nieruchomości</span><span class="tag">Firmy</span><span class="tag">Kredyty</span></div></div>
+      <div class="service-card"><div class="service-icon">${icon("alimenty-na-dziecko")}</div><h3>Opieka i alimenty</h3><p>Plan wychowawczy, alimenty, prawo do kontaktów. Zmiana ustalonych warunków.</p><div class="service-tags"><span class="tag">Plan wychowawczy</span><span class="tag">Alimenty</span><span class="tag">Kontakty</span></div></div>
     </div>
   </div>
 </section>
@@ -723,20 +724,31 @@ a { text-decoration: none; }
   --accent-light:  #C49A3C;
   --accent-bg:     #FDF6E9;
 
-  /* Paleta stała */
-  --navy:          #0F1F38;
-  --navy-mid:      #1A3254;
-  --white:         #FFFFFF;
-  --bg:            #F8F7F4;
-  --bg-card:       #FFFFFF;
-  --border:        rgba(15,31,56,.1);
-  --text:          #1A2435;
-  --text-muted:    #6B7A8D;
-  --text-light:    #A0AABA;
+  /* Paleta stała — kanwa marki, wrzesień 2026.
+     Sześć wartości wspólnych dla całej sieci. Akcent dzielnicy dotyka
+     wyłącznie paska nad nagłówkiem, ikon i podkreślenia aktywnego wiersza;
+     podłoże, typografia i przycisk zostają wspólne — dlatego jedenaście
+     stron czyta się jak jedna kancelaria. */
+  --ink:           #12203C;   /* atrament — typografia i nagłówki */
+  --paper:         #FAF7F2;   /* papier — podłoże, ciepła biel */
+  --chalk:         #F1ECE4;   /* kreda — sekcje wyróżnione */
+  --clay:          #A85A3C;   /* glina — JEDYNY kolor akcji */
+  --agree:         #3D6B54;   /* zgoda — ścieżka zgodna, potwierdzenie */
+  --dispute:       #96342C;   /* spór — ścieżka sporna, błąd */
 
-  /* Typografia */
-  --serif:  'Playfair Display', Georgia, serif;
-  --sans:   'DM Sans', system-ui, -apple-system, sans-serif;
+  --navy:          #12203C;
+  --navy-mid:      #1D3557;
+  --white:         #FFFFFF;
+  --bg:            #FAF7F2;
+  --bg-card:       #FFFFFF;
+  --border:        #DDD5C9;
+  --text:          #12203C;
+  --text-muted:    #46536B;
+  --text-light:    #6B6558;
+
+  /* Typografia — kanwa marki */
+  --serif:  'Newsreader', Georgia, serif;
+  --sans:   'IBM Plex Sans', system-ui, -apple-system, sans-serif;
 
   /* Spacing */
   --max-w:  1100px;
@@ -993,9 +1005,9 @@ body {
   white-space: nowrap;
 }
 .btn-primary {
-  background: var(--accent);
+  background: var(--clay);
   color: var(--white);
-  border-color: var(--accent);
+  border-color: var(--clay);
 }
 .btn-primary:hover { opacity: .88; transform: translateY(-1px); }
 .btn-outline {
@@ -1265,7 +1277,7 @@ body {
 .process-section { background: var(--navy); }
 .process-section .section-label { color: var(--accent-light); }
 .process-section .section-label::before,
-.process-section .section-label::after { background: var(--accent-light); }
+.process-section .section-label::after { background: #BE6E4E; }
 .process-section .section-title { color: var(--white); }
 .process-section .section-desc { color: rgba(255,255,255,.55); }
 .process-steps {
@@ -1364,6 +1376,9 @@ body {
   align-items: start;
 }
 .faq-sticky { position: sticky; top: 90px; }
+.service-icon { color: var(--accent); margin-bottom: .85rem; display: block; }
+.ico { width: 30px; height: 30px; display: block; }
+@media (max-width: 600px) { .ico { width: 24px; height: 24px; } }
 .faq-list { }
 .faq-item { border-bottom: 1px solid var(--border); }
 .faq-btn {
@@ -1394,8 +1409,8 @@ body {
   transition: all var(--transition);
 }
 .faq-item.open .faq-icon {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--clay);
+  border-color: var(--clay);
   color: var(--white);
   transform: rotate(45deg);
 }
@@ -1432,7 +1447,7 @@ body {
 }
 .contact-section .section-label { color: var(--accent-light); }
 .contact-section .section-label::before,
-.contact-section .section-label::after { background: var(--accent-light); }
+.contact-section .section-label::after { background: #BE6E4E; }
 .contact-section .section-title { color: var(--white); }
 .contact-section .section-desc { color: rgba(255,255,255,.6); margin: 0 auto 2.5rem; }
 
@@ -1502,7 +1517,7 @@ body {
 .form-submit {
   width: 100%;
   padding: 14px;
-  background: var(--accent);
+  background: var(--clay);
   color: var(--white);
   border: none;
   border-radius: var(--radius);
@@ -1781,7 +1796,7 @@ function buildOpiniaHTML(cfg) {
 <meta name="robots" content="noindex, nofollow">
 <style>:root{--accent:${cfg.accent};--accent-light:${cfg.light};--accent-bg:${cfg.bg};}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>
   .hero-star{display:inline-block;font-size:2.6rem;color:var(--accent);animation:heroSpin 1.2s ease-in-out both;filter:drop-shadow(0 0 6px var(--accent-light));}
@@ -2036,7 +2051,7 @@ function buildDziekujemyHTML(cfg, hostname) {
 <link rel="canonical" href="https://${hostname}/dziekujemy.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>:root{--accent:${cfg.accent};--accent-light:${cfg.light};--accent-bg:${cfg.bg};}</style>
 ${trackingHead(cfg)}
@@ -2188,7 +2203,7 @@ function shell(cfg, hostname, title, desc, body, opts = {}) {
 ${opts.noindex ? '<meta name="robots" content="noindex, follow">' : `<link rel="canonical" href="https://${hostname}${opts.path || "/"}">`}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>:root{--accent:${cfg.accent};--accent-light:${cfg.light};--accent-bg:${cfg.bg};}
 .prose{max-width:44rem;margin:0 auto}
