@@ -21,6 +21,7 @@
 
 import { FIRM } from "./domains.js";
 import { icon } from "./icons.js";
+import { WPISY } from "./blog.js";
 
 /* Sieć domen w stopce — nazwy obszarów, nie dzielnic z kanwy. */
 const SIEC = [
@@ -271,12 +272,12 @@ button{font:inherit;cursor:pointer}
 .brand{display:flex;flex-direction:column;text-decoration:none}
 .brand-name{font-family:'Newsreader',serif;font-size:18px;color:var(--ink)}
 .brand-sub{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.top-nav{display:none;gap:26px;font-size:15px}
+.top-nav{display:none;gap:20px;font-size:14.5px}
 .top-nav a{color:var(--muted);text-decoration:none}
 .top-nav a:hover{color:var(--accent)}
 .top-tel{display:flex;align-items:center;gap:8px;color:var(--accent);
   font-weight:500;font-size:15px;text-decoration:none;white-space:nowrap}
-@media(min-width:980px){.top-nav{display:flex}.brand-name{font-size:19px}.top-tel{font-size:17px}}
+@media(min-width:1040px){.top-nav{display:flex}.brand-name{font-size:19px}.top-tel{font-size:17px}}
 
 /* ── hero ── */
 .hero{padding:36px 0 44px}
@@ -471,25 +472,78 @@ footer a:hover{color:#fff;text-decoration:underline}
 .scen-nr .ico{width:17px;height:17px;flex:none}
 .dane-blok h4 .ico{width:15px;height:15px;flex:none;color:var(--accent)}
 
+/* ── blog: lista ── */
+.blog-lista{display:grid;grid-template-columns:1fr;gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.blog-karta{background:var(--paper);padding:22px 22px 20px;display:flex;flex-direction:column;gap:9px}
+.blog-karta .ico{width:24px;height:24px;color:var(--accent)}
+.blog-kat{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.blog-karta h2{font-size:20px;line-height:1.22;margin:0}
+.blog-karta h2 a{color:var(--ink);text-decoration:none}
+.blog-karta h2 a:hover{color:var(--clay)}
+.blog-karta p{font-size:14.5px;line-height:1.55;color:var(--muted);margin:0}
+.blog-meta{font-size:12.5px;color:var(--muted);margin-top:auto;padding-top:6px}
+@media(min-width:700px){.blog-lista{grid-template-columns:1fr 1fr}}
+
+/* ── blog: wpis ── */
+.okruchy{font-size:12.5px;color:var(--muted);margin:0 0 18px}
+.okruchy a{color:var(--muted)}
+.wpis{max-width:70ch}
+.wpis h1{font-size:clamp(27px,5vw,42px);line-height:1.12;margin:0 0 14px}
+.wpis-lead{font-size:clamp(16.5px,2.2vw,19px);line-height:1.55;color:var(--muted);margin:0 0 8px}
+.wpis-meta{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12.5px;color:var(--muted);
+  border-bottom:1px solid var(--rule);padding-bottom:16px;margin-bottom:26px}
+.wpis h2{font-size:clamp(20px,3vw,25px);line-height:1.22;margin:32px 0 10px}
+.wpis p{font-size:16px;line-height:1.7;margin:0 0 14px}
+.zapamietaj{background:var(--chalk);border-left:3px solid var(--accent);
+  padding:20px 22px;margin:34px 0}
+.zapamietaj h3{font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.zapamietaj ul{margin:0;padding-left:19px;display:grid;gap:8px}
+.zapamietaj li{font-size:15px;line-height:1.55}
+.wpis-cta{border:1px solid var(--rule);border-radius:3px;padding:24px;margin:34px 0 0;
+  display:flex;flex-wrap:wrap;align-items:center;gap:16px 22px}
+.wpis-cta div{flex:1 1 300px}
+.wpis-cta h3{font-size:21px;margin:0 0 5px}
+.wpis-cta p{font-size:14.5px;color:var(--muted);margin:0}
+.dalej{display:grid;grid-template-columns:1fr;gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:3px;overflow:hidden;margin-top:14px}
+.dalej a{background:var(--paper);padding:16px 18px;text-decoration:none;color:var(--ink);
+  font-size:15px;line-height:1.4;display:block}
+.dalej a:hover{background:var(--chalk)}
+.dalej span{display:block;font-size:10.5px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+@media(min-width:700px){.dalej{grid-template-columns:repeat(3,1fr)}}
+
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 `;
 
 /* ============================================================
    STRONA GŁÓWNA
    ============================================================ */
-export function buildHome({ cfg, hostname, h1, faqItems, head, schema }) {
+/* Naglowek i stopka sa wspolne dla strony glownej i wpisow bloga.
+   Na podstronach kotwice prowadza na strone glowna, bo tamtych sekcji
+   tutaj nie ma. */
+function naglowek(cfg, podstrona = false) {
   const tel = FIRM.phone, telTxt = FIRM.phoneLabel;
-  const ptak = icon("bezplatne-30-minut");
+  return podstrona ? `<div class="accent-bar"></div>
 
-  return `<!DOCTYPE html>
-<html lang="pl">
-<head>
-${head}
-${schema}
-</head>
-<body>
-
-<div class="accent-bar"></div>
+<header class="top"><div class="wrap"><div class="top-in">
+  <a class="brand" href="/">
+    <span class="brand-name">${esc(FIRM.attorney.replace(/^adw\.\s*/, ""))}</span>
+    <span class="brand-sub">Kancelaria adwokacka${cfg.district === "Warszawa" ? "" : " · " + esc(cfg.district)}</span>
+  </a>
+  <nav class="top-nav">
+    <a href="/#zakres">Zakres spraw</a>
+    <a href="/#przebieg">Przebieg sprawy</a>
+    <a href="/#koszty">Koszty</a>
+    <a href="/#mieszkanie">Mieszkanie i kredyt</a>
+    <a href="/#pytania">Pytania</a>
+    <a href="/blog">Blog</a>
+  </nav>
+  <a class="top-tel" href="tel:${tel}" onclick="trackCall()">${icon("konsultacja-telefoniczna")}${esc(telTxt)}</a>
+</div></div></header>`
+                   : `<div class="accent-bar"></div>
 
 <header class="top"><div class="wrap"><div class="top-in">
   <a class="brand" href="/">
@@ -502,9 +556,139 @@ ${schema}
     <a href="#koszty">Koszty</a>
     <a href="#mieszkanie">Mieszkanie i kredyt</a>
     <a href="#pytania">Pytania</a>
+    <a href="/blog">Blog</a>
   </nav>
   <a class="top-tel" href="tel:${tel}" onclick="trackCall()">${icon("konsultacja-telefoniczna")}${esc(telTxt)}</a>
-</div></div></header>
+</div></div></header>`;
+}
+
+function stopka(hostname) {
+  return `<footer><div class="wrap">
+  <div class="stopka-siec">
+    ${SIEC.map(([h, n]) => h === hostname
+      ? `<span style="color:#fff">${esc(n)}</span>`
+      : `<a href="https://${h}">${esc(n)}</a>`).join("\n    ")}
+  </div>
+  <p class="zastrzezenie">Treści na tej stronie mają charakter informacyjny i nie stanowią porady
+    prawnej. Ocena konkretnej sprawy wymaga zapoznania się z dokumentami.</p>
+  <div class="stopka-dol">
+    <span>© ${new Date().getUTCFullYear()} ${esc(FIRM.name)} · NIP ${esc(FIRM.nip)}</span>
+    <nav>
+      <a href="/blog">Blog</a>
+      <a href="/pytania">Pytania</a>
+      <a href="/polityka-prywatnosci">Polityka prywatności</a>
+      <a href="/rodo">Informacja RODO</a>
+    </nav>
+  </div>
+</div></footer>`;
+}
+
+/* Czas czytania liczony po 200 slow na minute — wystarczajaco dokladnie,
+   zeby czytelnik wiedzial, czy ma na to teraz chwile. */
+function minuty(w) {
+  const slow = w.sekcje.reduce((a, s) => a + s.p.join(" ").split(/\s+/).length, 0);
+  return Math.max(2, Math.round(slow / 200));
+}
+
+const DATA_PL = d => new Date(d + "T00:00:00Z").toLocaleDateString("pl-PL",
+  { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+
+export function buildBlogIndex({ cfg, hostname, head, schema }) {
+  return `<!DOCTYPE html>
+<html lang="pl">
+<head>
+${head}
+${schema}
+</head>
+<body>
+${naglowek(cfg, true)}
+<main>
+<section class="sec" style="border-top:none"><div class="wrap">
+  <p class="okruchy"><a href="/">Strona główna</a> · Blog</p>
+  <div class="sec-head">
+    <p class="eyebrow">Blog</p>
+    <h1 style="font-size:clamp(29px,5.5vw,44px);line-height:1.12;margin:0 0 12px">Wiedza o rozwodzie</h1>
+    <p class="sec-desc">Osiem tekstów o tym, co dzieje się w sprawie rozwodowej naprawdę:
+      ile trwa, ile kosztuje, co z mieszkaniem, co z dziećmi. Bez obietnic, których nikt nie kontroluje.</p>
+  </div>
+  <div class="blog-lista">
+    ${WPISY.map(w => `<article class="blog-karta">
+      ${icon(w.ikona)}
+      <p class="blog-kat">${esc(w.kategoria)}</p>
+      <h2><a href="/blog/${w.slug}">${esc(w.tytul)}</a></h2>
+      <p>${esc(w.lead)}</p>
+      <p class="blog-meta">${DATA_PL(w.data)} · ${minuty(w)} min czytania</p>
+    </article>`).join("\n    ")}
+  </div>
+</div></section>
+</main>
+${stopka(hostname)}
+<script src="/assets/page.js"><\/script>
+</body>
+</html>`;
+}
+
+export function buildBlogWpis({ cfg, hostname, wpis, head, schema }) {
+  const dalej = WPISY.filter(w => w.slug !== wpis.slug).slice(0, 3);
+  return `<!DOCTYPE html>
+<html lang="pl">
+<head>
+${head}
+${schema}
+</head>
+<body>
+${naglowek(cfg, true)}
+<main>
+<section class="sec" style="border-top:none"><div class="wrap">
+  <p class="okruchy"><a href="/">Strona główna</a> · <a href="/blog">Blog</a> · ${esc(wpis.kategoria)}</p>
+  <article class="wpis">
+    <h1>${esc(wpis.tytul)}</h1>
+    <p class="wpis-lead">${esc(wpis.lead)}</p>
+    <p class="wpis-meta"><span>${esc(wpis.kategoria)}</span><span>${DATA_PL(wpis.data)}</span>
+      <span>${minuty(wpis)} min czytania</span><span>${esc(FIRM.attorney)}</span></p>
+    ${wpis.sekcje.map(sk => `<h2>${esc(sk.h)}</h2>
+    ${sk.p.map(t => `<p>${esc(t)}</p>`).join("\n    ")}`).join("\n    ")}
+    <div class="zapamietaj">
+      <h3>Co zapamiętać</h3>
+      <ul>${wpis.zapamietaj.map(t => `<li>${esc(t)}</li>`).join("")}</ul>
+    </div>
+    <p class="tajemnica">${icon("dokumenty")}<span>Tekst ma charakter informacyjny i nie stanowi
+      porady prawnej. Ocena konkretnej sprawy wymaga zapoznania się z dokumentami.</span></p>
+    <div class="wpis-cta">
+      <div>
+        <h3>Masz pytanie do swojej sprawy?</h3>
+        <p>Pierwsze 30 minut bez opłaty. Rozmowa organizacyjna: ustalamy zakres sprawy i dokumenty.</p>
+      </div>
+      <a class="btn btn-main" href="/#kontakt">Umów bezpłatną konsultację</a>
+    </div>
+  </article>
+  <div style="max-width:70ch">
+    <h2 style="font-size:20px;margin:38px 0 0">Przeczytaj też</h2>
+    <div class="dalej">
+      ${dalej.map(w => `<a href="/blog/${w.slug}"><span>${esc(w.kategoria)}</span>${esc(w.tytul)}</a>`).join("\n      ")}
+    </div>
+  </div>
+</div></section>
+</main>
+${stopka(hostname)}
+<script src="/assets/page.js"><\/script>
+</body>
+</html>`;
+}
+
+export function buildHome({ cfg, hostname, h1, faqItems, head, schema }) {
+  const tel = FIRM.phone, telTxt = FIRM.phoneLabel;
+  const ptak = icon("bezplatne-30-minut");
+
+  return `<!DOCTYPE html>
+<html lang="pl">
+<head>
+${head}
+${schema}
+</head>
+<body>
+
+${naglowek(cfg)}
 
 <main>
 
@@ -717,23 +901,7 @@ ${schema}
 
 </main>
 
-<footer><div class="wrap">
-  <div class="stopka-siec">
-    ${SIEC.map(([h, n]) => h === hostname
-      ? `<span style="color:#fff">${esc(n)}</span>`
-      : `<a href="https://${h}">${esc(n)}</a>`).join("\n    ")}
-  </div>
-  <p class="zastrzezenie">Treści na tej stronie mają charakter informacyjny i nie stanowią porady
-    prawnej. Ocena konkretnej sprawy wymaga zapoznania się z dokumentami.</p>
-  <div class="stopka-dol">
-    <span>© ${new Date().getUTCFullYear()} ${esc(FIRM.name)} · NIP ${esc(FIRM.nip)}</span>
-    <nav>
-      <a href="/pytania">Pytania</a>
-      <a href="/polityka-prywatnosci">Polityka prywatności</a>
-      <a href="/rodo">Informacja RODO</a>
-    </nav>
-  </div>
-</div></footer>
+${stopka(hostname)}
 
 <script src="/assets/page.js"><\/script>
 </body>

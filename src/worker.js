@@ -9,7 +9,8 @@ import { CATEGORIES, faqForHost, faqPoolGrouped } from "./faq.js";
 import { sendLeadNotification } from "./mail.js";
 import { photoResponse, PHOTO_DIMS } from "./photo.js";
 import { icon } from "./icons.js";
-import { CSS as LAYOUT_CSS, buildHome } from "./layout.js";
+import { buildHome, buildBlogIndex, buildBlogWpis, CSS as LAYOUT_CSS } from "./layout.js";
+import { WPISY, BLOG_HOST } from "./blog.js";
 
 /* Pomiar. GA4 wspolny dla calej sieci. Identyfikator Google Ads
    uzupelnic po otrzymaniu z panelu — do tego czasu tag Ads sie nie renderuje,
@@ -54,6 +55,36 @@ export default {
     if (url.pathname === "/llms.txt") {
       return new Response(buildLlms(cfg, hostname), {
         headers: { "Content-Type": "text/plain; charset=utf-8", ...cacheHeaders(3600) } });
+    }
+    // GET /blog oraz /blog/<wpis> — tylko na domenie glownej
+    if (url.pathname === "/blog" || url.pathname.startsWith("/blog/")) {
+      if (hostname !== BLOG_HOST) {
+        return Response.redirect(`https://${BLOG_HOST}${url.pathname}`, 301);
+      }
+      if (url.pathname === "/blog") {
+        return new Response(buildBlogIndex({
+          cfg, hostname,
+          head: glowaBloga(cfg, hostname, {
+            tytul: "Blog — wiedza o rozwodzie | Kancelaria Idzik-Cieśla",
+            opis: "Osiem tekstów o sprawie rozwodowej: ile trwa, ile kosztuje, mieszkanie i kredyt, alimenty, opieka naprzemienna, podział majątku i pierwsza rozprawa.",
+            sciezka: "/blog",
+          }),
+          schema: schematBlogu(hostname),
+        }), { headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(600) } });
+      }
+      const slug = url.pathname.slice("/blog/".length).replace(/\/$/, "");
+      const wpis = WPISY.find(w => w.slug === slug);
+      if (wpis) {
+        return new Response(buildBlogWpis({
+          cfg, hostname, wpis,
+          head: glowaBloga(cfg, hostname, {
+            tytul: `${wpis.tytul} | Kancelaria Idzik-Cieśla`,
+            opis: wpis.opis,
+            sciezka: `/blog/${wpis.slug}`,
+          }),
+          schema: schematWpisu(hostname, wpis),
+        }), { headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(600) } });
+      }
     }
     if (url.pathname === "/pytania") {
       return new Response(buildPytaniaHTML(cfg, hostname), {
@@ -281,6 +312,81 @@ ${trackingHead(cfg)}`;
   });
 
   return buildHome({ cfg, hostname, h1, faqItems, head, schema });
+}
+
+/* ── BLOG ──────────────────────────────────────────────────────────────────
+   Blog stoi wylacznie na rozwod.waw.pl. Dziesiec pozostalych domen
+   przekierowuje na glowna, bo dziesiec kopii tego samego tekstu to
+   dokladnie ten problem, ktory audyt wskazal jako najwazniejszy. */
+
+function glowaBloga(cfg, hostname, { tytul, opis, sciezka }) {
+  const url = `https://${hostname}${sciezka}`;
+  return `<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(tytul)}</title>
+<meta name="description" content="${esc(opis)}">
+<meta name="author" content="${esc(FIRM.attorney)}">
+<link rel="canonical" href="${url}">
+<meta property="og:title" content="${esc(tytul)}">
+<meta property="og:description" content="${esc(opis)}">
+<meta property="og:url" content="${url}">
+<meta property="og:type" content="${sciezka === "/blog" ? "website" : "article"}">
+<meta property="og:locale" content="pl_PL">
+<meta property="og:image" content="https://${hostname}${FIRM.photoOg}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>:root{
+  --ink:#12203C; --paper:#FAF7F2; --chalk:#F1ECE4;
+  --clay:#A85A3C; --agree:#3D6B54; --dispute:#96342C;
+  --muted:#46536B; --rule:#DDD5C9; --rule-strong:#C9BFAF;
+  --accent:${cfg.accent}; --accent-light:${cfg.light};
+}</style>
+${trackingHead(cfg)}`;
+}
+
+const ldjson = (obj) => "<script type=\"application/ld+json\">\n" + JSON.stringify(obj) + "\n<" + "/script>";
+
+function schematBlogu(hostname) {
+  return ldjson({
+    "@context": "https://schema.org", "@type": "Blog",
+    name: "Blog kancelarii — wiedza o rozwodzie",
+    url: `https://${hostname}/blog`,
+    inLanguage: "pl-PL",
+    publisher: { "@type": "LegalService", name: FIRM.name, url: `https://${hostname}` },
+    blogPost: WPISY.map(w => ({
+      "@type": "BlogPosting", headline: w.tytul, description: w.opis,
+      url: `https://${hostname}/blog/${w.slug}`, datePublished: w.data
+    }))
+  });
+}
+
+function schematWpisu(hostname, w) {
+  return ldjson({
+    "@context": "https://schema.org", "@type": "BlogPosting",
+    headline: w.tytul, description: w.opis,
+    url: `https://${hostname}/blog/${w.slug}`,
+    mainEntityOfPage: `https://${hostname}/blog/${w.slug}`,
+    datePublished: w.data, dateModified: w.data,
+    inLanguage: "pl-PL",
+    articleSection: w.kategoria,
+    image: `https://${hostname}${FIRM.photoOg}`,
+    author: {
+      "@type": "Person", name: FIRM.attorney, jobTitle: "Adwokat",
+      identifier: FIRM.barNumber,
+      memberOf: { "@type": "Organization", name: FIRM.barCouncil }
+    },
+    publisher: { "@type": "LegalService", name: FIRM.name, url: `https://${hostname}` }
+  }) + "\n" + ldjson({
+    "@context": "https://schema.org", "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Strona główna", item: `https://${hostname}/` },
+      { "@type": "ListItem", position: 2, name: "Blog", item: `https://${hostname}/blog` },
+      { "@type": "ListItem", position: 3, name: w.tytul, item: `https://${hostname}/blog/${w.slug}` },
+    ]
+  });
 }
 
 // ── WBUDOWANY CSS (importowany z pliku style.css) ──────────────────────────
@@ -1684,7 +1790,11 @@ Sitemap: https://${hostname}/sitemap.xml
 
 function buildSitemap(hostname) {
   const today = new Date().toISOString().slice(0, 10);
-  const urls = PATHS.map(path => `  <url>
+  // Blog stoi tylko na domenie glownej, wiec tylko jej mapa go wymienia.
+  const sciezki = hostname === BLOG_HOST
+    ? [...PATHS, "/blog", ...WPISY.map(w => `/blog/${w.slug}`)]
+    : PATHS;
+  const urls = sciezki.map(path => `  <url>
     <loc>https://${hostname}${path}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>${path === "/" ? "weekly" : "monthly"}</changefreq>
@@ -1714,6 +1824,7 @@ nastepuje po zapoznaniu sie z dokumentami.
 - [Strona glowna](https://${hostname}/): zakres pomocy, proces, kontakt
 - [Pytania i odpowiedzi](https://${hostname}/pytania): baza odpowiedzi na pytania o rozwod
 - [Polityka prywatnosci](https://${hostname}/polityka-prywatnosci)
+${hostname === BLOG_HOST ? "- [Blog](https://" + hostname + "/blog): teksty o przebiegu sprawy rozwodowej\n" + WPISY.map(w => `  - [${w.tytul}](https://${hostname}/blog/${w.slug}): ${w.opis}`).join("\n") : "- [Blog](https://" + BLOG_HOST + "/blog): teksty o przebiegu sprawy rozwodowej, wspolne dla calej sieci"}
 
 ## Wybrane odpowiedzi
 ${items.map(f => `### ${f.q}\n${f.a}`).join("\n\n")}

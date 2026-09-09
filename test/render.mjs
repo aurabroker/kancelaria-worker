@@ -2,6 +2,7 @@ import worker from "../src/worker.js";
 import { DOMAIN_CONFIG, ALL_HOSTS, FIRM } from "../src/domains.js";
 import { POOLS } from "../src/faq.js";
 import { ICONS, icon } from "../src/icons.js";
+import { WPISY, BLOG_HOST } from "../src/blog.js";
 import { CSS } from "../src/layout.js";
 
 const env = {};
@@ -253,5 +254,49 @@ for (const host of ALL_HOSTS) {
 }
 check("styl dwoch kolumn pol", CSS.includes(".form-pola{display:grid") && CSS.includes("grid-template-columns:1fr 1fr}}"));
 console.log(`  ${nazwyIkon.length} ikon w uzyciu na 11 domenach · formularz w dwóch kolumnach`);
+
+// 16. blog
+// Blog zyje na jednej domenie. Dziesiec kopii tego samego tekstu to
+// dokladnie ten problem, ktory audyt wskazal jako najwazniejszy.
+console.log("\n=== BLOG ===");
+check("osiem wpisow", WPISY.length === 8, WPISY.length);
+check("unikalne adresy", new Set(WPISY.map(w => w.slug)).size === WPISY.length);
+for (const w of WPISY) {
+  check("slug bez znakow specjalnych: "+w.slug, /^[a-z0-9-]+$/.test(w.slug));
+  check("opis dla wyszukiwarki: "+w.slug, w.opis.length > 80 && w.opis.length < 200, w.opis.length);
+  check("wpis ma sekcje: "+w.slug, w.sekcje.length >= 5);
+  check("wpis ma podsumowanie: "+w.slug, w.zapamietaj.length >= 3);
+}
+const lista = await get(BLOG_HOST, "/blog");
+const listaHtml = await lista.text();
+check("lista bloga 200", lista.status === 200, lista.status);
+for (const w of WPISY) check("wpis na liscie: "+w.slug, listaHtml.includes(`/blog/${w.slug}`));
+check("lista ma schemat Blog", listaHtml.includes('"@type":"Blog"'));
+
+for (const w of WPISY) {
+  const r = await get(BLOG_HOST, "/blog/" + w.slug);
+  const h = await r.text();
+  check("wpis 200: "+w.slug, r.status === 200, r.status);
+  check("tytul w tresci: "+w.slug, h.includes(w.tytul));
+  check("schemat wpisu: "+w.slug, h.includes('"@type":"BlogPosting"') && h.includes('"@type":"BreadcrumbList"'));
+  check("kanoniczny adres: "+w.slug, h.includes(`<link rel="canonical" href="https://${BLOG_HOST}/blog/${w.slug}">`));
+  check("zastrzezenie w tekscie: "+w.slug, h.includes("nie stanowi") || h.includes("nie stanowią"));
+  check("droga powrotna: "+w.slug, h.includes('href="/blog"') && h.includes('href="/#kontakt"'));
+  for (const sekcja of w.sekcje) check("sekcja w tresci: "+w.slug, h.includes(sekcja.h));
+}
+// pozostale domeny oddaja blog domenie glownej
+for (const host of ALL_HOSTS.filter(h => h !== BLOG_HOST)) {
+  const r = await get(host, "/blog/" + WPISY[0].slug);
+  check(host+" przekierowanie bloga", r.status === 301, r.status);
+  check(host+" cel przekierowania", r.headers.get("location") === `https://${BLOG_HOST}/blog/${WPISY[0].slug}`);
+  const mapa = await (await get(host, "/sitemap.xml")).text();
+  check(host+" mapa bez bloga", !mapa.includes("/blog"));
+}
+const mapaGl = await (await get(BLOG_HOST, "/sitemap.xml")).text();
+check("mapa glownej z blogiem", (mapaGl.match(/\/blog/g) || []).length === WPISY.length + 1);
+const brak = await get(BLOG_HOST, "/blog/nie-ma-takiego-wpisu");
+check("nieznany wpis to 404", brak.status === 404, brak.status);
+for (const host of ALL_HOSTS) check(host+" link do bloga w nawigacji", texts[host].includes('href="/blog"'));
+console.log(`  ${WPISY.length} wpisów na ${BLOG_HOST} · 10 domen przekierowuje · mapa i llms.txt zaktualizowane`);
 
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));
