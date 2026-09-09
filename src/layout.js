@@ -53,19 +53,19 @@ const SPORNA = [["Świadkowie", "kilka terminów"], ["Opinia biegłych", "4–8 
 
 /* ---------- SCENARIUSZE MIESZKANIOWE ---------- */
 const MIESZKANIE = [
-  { nr: 1, tytul: "Zostaję i spłacam drugą stronę",
+  { nr: 1, ikona: "mieszkanie", tytul: "Zostaję i spłacam drugą stronę",
     cytat: "Chcę zostać w mieszkaniu z dziećmi i mam zdolność, żeby udźwignąć ratę sama.",
     kroki: ["Wycena mieszkania i ustalenie spłaty — zwykle połowa różnicy między wartością a saldem kredytu.",
             "Wniosek do banku o zwolnienie drugiego małżonka z długu. Bank bada Twoją zdolność samodzielnie.",
             "Umowa o podział majątku u notariusza albo postanowienie sądu."],
     ryzyko: "bank może odmówić. Wtedy zostajecie oboje na kredycie — scenariusz 3." },
-  { nr: 2, tytul: "Sprzedajemy i dzielimy nadwyżkę",
+  { nr: 2, ikona: "podzial-majatku", tytul: "Sprzedajemy i dzielimy nadwyżkę",
     cytat: "Żadne z nas nie chce ani nie może zostać w tym mieszkaniu samo.",
     kroki: ["Zgoda obojga na sprzedaż i wspólne ustalenie ceny minimalnej.",
             "Spłata kredytu z ceny sprzedaży, reszta dzielona według udziałów.",
             "Rozliczenie nakładów, jeśli któreś wnosiło środki osobiste."],
     ryzyko: "sprzedaż wymaga zgody obu stron. Bez niej pozostaje sprawa o zniesienie współwłasności." },
-  { nr: 3, tytul: "Zostajemy oboje na kredycie",
+  { nr: 3, ikona: "kredyt-hipoteczny", tytul: "Zostajemy oboje na kredycie",
     cytat: "Na razie nie stać nas na żadne z powyższych.",
     kroki: ["Pisemne ustalenie, kto mieszka i kto płaci ratę.",
             "Dokumentowanie wpłat — po ustaniu wspólności można żądać rozliczenia połowy.",
@@ -73,6 +73,43 @@ const MIESZKANIE = [
     ryzyko: "wobec banku odpowiadacie solidarnie. Zaległość drugiej strony obciąża też Ciebie." },
 ];
 
+
+/* ---------- ZAKRES SPRAW ----------
+   Kanwa marki dala dwadziescia cztery ikony. Ta sekcja jest ich
+   glownym miejscem pracy: jeden kafelek to jedna sprawa, ktora
+   kancelaria prowadzi, opisana jednym zdaniem. */
+const ZAKRES = [
+  ["rozwod-bez-orzekania-o-winie", "Rozwód bez orzekania o winie",
+   "Najkrótsza droga, gdy oboje chcecie zakończyć małżeństwo."],
+  ["rozwod-z-orzeczeniem-o-winie", "Rozwód z orzeczeniem o winie",
+   "Gdy wina ma znaczenie dla alimentów albo dla Ciebie samej."],
+  ["separacja", "Separacja",
+   "Rozdzielenie bez rozwiązania małżeństwa. Da się ją znieść."],
+  ["podzial-majatku", "Podział majątku",
+   "W sprawie rozwodowej albo osobno, także lata po wyroku."],
+  ["mieszkanie", "Mieszkanie",
+   "Kto zostaje, kto spłaca, kto korzysta do czasu podziału."],
+  ["kredyt-hipoteczny", "Kredyt hipoteczny",
+   "Zwolnienie z długu, sprzedaż, rozliczenie wspólnych rat."],
+  ["alimenty-na-dziecko", "Alimenty na dziecko",
+   "Liczone od potrzeb dziecka i możliwości zarobkowych rodzica."],
+  ["alimenty-na-malzonka", "Alimenty na małżonka",
+   "Po rozwodzie, gdy uzasadnia je wina albo niedostatek."],
+  ["wladza-rodzicielska", "Władza rodzicielska",
+   "Wspólna, ograniczona albo powierzona jednemu z rodziców."],
+  ["kontakty-z-dzieckiem", "Kontakty z dzieckiem",
+   "Harmonogram tygodnia, święta, wakacje, wyjazdy za granicę."],
+  ["plan-wychowawczy", "Plan wychowawczy",
+   "Porozumienie rodziców, które sąd może włączyć do wyroku."],
+  ["mediacja", "Mediacja",
+   "Ze skierowania sądu albo dobrowolnie, jeszcze przed pozwem."],
+  ["rozprawa", "Reprezentacja na rozprawie",
+   "Przygotowanie do przesłuchania i prowadzenie sprawy na sali."],
+  ["wyrok", "Po wyroku",
+   "Uzasadnienie, apelacja, wykonanie kontaktów i alimentów."],
+  ["sprawa-zagraniczna", "Sprawy z elementem zagranicznym",
+   "Gdy jedno z małżonków, ślub albo majątek są poza Polską."],
+];
 
 /* ---------- RYSUNEK: ROZGAŁĘZIENIE SPRAWY ----------
    Dwa warianty tej samej treści, bo poziomy diagram na 360 px daje
@@ -91,95 +128,112 @@ const GROTY = `<defs>
       <path d="M0 0 L8 4 L0 8 z" fill="var(--dispute)"/></marker>
   </defs>`;
 
-function diagramPoziomy() {
-  const Y = 200, X0 = 92, KROK = 168, ROZ = X0 + KROK * 3, R = 30, RB = 24;
+/* Etykieta wchodzi do srodka kola, wiec kolo musi byc na tyle duze, zeby
+   zmiescic dwie linie tekstu. Podzial jest prosty: dwa slowa to dwie
+   linie, trzy lamia sie po pierwszym slowie. Dluzszych podpisow tu nie ma. */
+function linie(t) {
+  const w = t.split(" ");
+  if (w.length < 2) return [t];
+  if (w.length === 2) return w;
+  return [w[0], w.slice(1).join(" ")];
+}
 
-  const wezel = (x, y, r, n, wyp, obw, kol, fs) =>
-    `<circle cx="${x}" cy="${y}" r="${r}" fill="${wyp}" stroke="${obw}" stroke-width="2.5"/>
-    <text x="${x}" y="${y}" dy=".35em" text-anchor="middle" font-size="${fs}"
-          font-weight="600" fill="${kol}">${n}</text>`;
+/* Kolo z etykieta w srodku. Jedna linia siada na linii bazowej
+   przesunietej o .35em, dwie ustawiaja sie symetrycznie wzgledem srodka. */
+function wezel(x, y, r, tytul, fs, wyp, obw, kol) {
+  const ls = linie(tytul), lh = Math.round(fs * 1.28);
+  const y0 = ls.length === 1 ? y + fs * 0.35 : y - lh / 2 + fs * 0.35;
+  const tekst = ls.map((l, i) =>
+    `<text x="${x}" y="${+(y0 + i * lh).toFixed(1)}" text-anchor="middle" font-size="${fs}"
+          font-weight="500" fill="${kol}">${esc(l)}</text>`).join("\n    ");
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="${wyp}" stroke="${obw}" stroke-width="2.5"/>
+    ${tekst}`;
+}
+
+function diagramPoziomy() {
+  const Y = 230, X0 = 72, KROK = 140, R = 62, RB = 46;
+  const KONIEC = X0 + KROK * 3 + R;      // prawa krawedz ostatniego wezla pnia
+  const YZ = 96, YS = 372, XG = 700;     // wysokosci galezi, pierwszy wezel za widelkami
+  const KZ = 134, KS = 112;              // odstepy na galezi zgodnej i spornej
+  const START = XG - RB;                 // tu zaczynaja sie proste odcinki galezi
 
   const pien = PIEN.map(([t, c], k) => {
     const x = X0 + k * KROK;
-    return `${wezel(x, Y, R, k + 1, "var(--paper)", "var(--accent)", "var(--accent)", 20)}
-    <text x="${x}" y="${Y + 56}" text-anchor="middle" font-size="13.5" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-    <text x="${x}" y="${Y + 74}" text-anchor="middle" font-size="11.5" fill="var(--muted)">${esc(c)}</text>`;
+    return `${wezel(x, Y, R, t, 14, "var(--paper)", "var(--accent)", "var(--ink)")}
+    <text x="${x}" y="${Y + R + 26}" text-anchor="middle" font-size="11.5" fill="var(--muted)">${esc(c)}</text>`;
   }).join("\n    ");
 
   const zg = ZGODNA.map(([t, c], k) => {
-    const x = 664 + k * 120;
-    return `${wezel(x, 92, RB, k + 5, "var(--agree)", "var(--agree)", "#fff", 17)}
-    <text x="${x}" y="42" text-anchor="middle" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-    <text x="${x}" y="24" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
+    const x = XG + k * KZ;
+    return `${wezel(x, YZ, RB, t, 13, "var(--agree)", "var(--agree)", "#fff")}
+    <text x="${x}" y="${YZ - RB - 16}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
   }).join("\n    ");
 
   const sp = SPORNA.map(([t, c], k) => {
-    const x = 664 + k * 126;
-    return `${wezel(x, 316, RB, k + 5, "var(--dispute)", "var(--dispute)", "#fff", 17)}
-    <text x="${x}" y="364" text-anchor="middle" font-size="13" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-    <text x="${x}" y="382" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
+    const x = XG + k * KS;
+    return `${wezel(x, YS, RB, t, 13, "var(--dispute)", "var(--dispute)", "#fff")}
+    <text x="${x}" y="${YS + RB + 26}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(c)}</text>`;
   }).join("\n    ");
 
-  return `<svg class="d-poziom" viewBox="0 0 1180 400" role="img" aria-label="${esc(OPIS)}" xmlns="http://www.w3.org/2000/svg">
+  return `<svg class="d-poziom" viewBox="0 0 1180 460" role="img" aria-label="${esc(OPIS)}" xmlns="http://www.w3.org/2000/svg">
   ${GROTY}
-  <line x1="${X0}" y1="${Y}" x2="${ROZ}" y2="${Y}" stroke="currentColor" stroke-width="2.5" opacity=".26"/>
-  <text x="${ROZ + 6}" y="${Y - 52}" text-anchor="middle" font-size="10.5" font-weight="600"
+  <line x1="${X0}" y1="${Y}" x2="${KONIEC}" y2="${Y}" stroke="currentColor" stroke-width="2.5" opacity=".26"/>
+  <text x="466" y="150" text-anchor="middle" font-size="10.5" font-weight="600"
         letter-spacing=".1em" fill="var(--muted)">TU SPRAWA SIĘ ROZDZIELA</text>
-  <path d="M${ROZ} ${Y} C ${ROZ + 50} ${Y} ${ROZ + 36} 92 ${ROZ + 96} 92 L 856 92"
-        stroke="var(--agree)" stroke-width="3" fill="none" marker-end="url(#gz)"/>
-  <path d="M${ROZ} ${Y} C ${ROZ + 50} ${Y} ${ROZ + 36} 316 ${ROZ + 96} 316 L 1104 316"
-        stroke="var(--dispute)" stroke-width="3" fill="none" marker-end="url(#gs)"/>
+  <path d="M${KONIEC} ${Y} C ${KONIEC + 46} ${Y} ${START - 52} ${YZ} ${START} ${YZ}"
+        stroke="var(--agree)" stroke-width="3" fill="none"/>
+  <path d="M${KONIEC} ${Y} C ${KONIEC + 46} ${Y} ${START - 52} ${YS} ${START} ${YS}"
+        stroke="var(--dispute)" stroke-width="3" fill="none"/>
+  <line x1="${START}" y1="${YZ}" x2="${XG + KZ + RB + 32}" y2="${YZ}"
+        stroke="var(--agree)" stroke-width="3" marker-end="url(#gz)"/>
+  <line x1="${START}" y1="${YS}" x2="${XG + KS * 3 + RB + 32}" y2="${YS}"
+        stroke="var(--dispute)" stroke-width="3" marker-end="url(#gs)"/>
   ${pien}
   ${zg}
   ${sp}
-  <text x="872" y="88" font-size="15.5" font-weight="600" fill="var(--agree)">4–8 miesięcy</text>
-  <text x="872" y="107" font-size="11.5" fill="var(--muted)">ścieżka zgodna</text>
-  <text x="1104" y="266" text-anchor="end" font-size="15.5" font-weight="600" fill="var(--dispute)">1,5–3 lata</text>
-  <text x="1104" y="248" text-anchor="end" font-size="11.5" fill="var(--muted)">ścieżka sporna</text>
+  <text x="${XG + KZ + RB + 44}" y="${YZ - 4}" font-size="16" font-weight="600" fill="var(--agree)">4–8 miesięcy</text>
+  <text x="${XG + KZ + RB + 44}" y="${YZ + 16}" font-size="11.5" fill="var(--muted)">ścieżka zgodna</text>
+  <text x="1176" y="${YS - 28}" text-anchor="end" font-size="16" font-weight="600" fill="var(--dispute)">1,5–3 lata</text>
+  <text x="1176" y="${YS - 46}" text-anchor="end" font-size="11.5" fill="var(--muted)">ścieżka sporna</text>
 </svg>`;
 }
 
 function diagramPionowy() {
-  const X = 42, R = 26, RB = 21;
-  const wezel = (x, y, r, n, wyp, obw, kol, fs) =>
-    `<circle cx="${x}" cy="${y}" r="${r}" fill="${wyp}" stroke="${obw}" stroke-width="2.5"/>
-    <text x="${x}" y="${y}" dy=".35em" text-anchor="middle" font-size="${fs}"
-          font-weight="600" fill="${kol}">${n}</text>`;
+  const X = 200, R = 58, KROK = 146, Y0 = 66;
+  const XZ = 102, XS = 298, RB = 42, KROKB = 110, YB = 748;
+  // Podpisy leza na liniach laczacych, wiec dostaja obwodke w kolorze tla.
+  const podpis = (x, y, t) =>
+    `<text x="${x}" y="${y}" text-anchor="middle" font-size="10.5" fill="var(--muted)"
+          stroke="var(--paper)" stroke-width="4" paint-order="stroke">${esc(t)}</text>`;
 
   const pien = PIEN.map(([t, c], k) => {
-    const y = 42 + k * 86;
-    return `${wezel(X, y, R, k + 1, "var(--paper)", "var(--accent)", "var(--accent)", 17)}
-    <text x="84" y="${y - 3}" font-size="13.5" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-    <text x="84" y="${y + 14}" font-size="11.5" fill="var(--muted)">${esc(c)}</text>`;
+    const y = Y0 + k * KROK;
+    return `${wezel(X, y, R, t, 13, "var(--paper)", "var(--accent)", "var(--ink)")}
+    ${podpis(X, y + R + 20, c)}`;
   }).join("\n    ");
 
-  const zg = ZGODNA.map(([t, c], k) => {
-    const y = 396 + k * 74;
-    return `${wezel(X, y, RB, k + 5, "var(--agree)", "var(--agree)", "#fff", 14)}
-    <text x="76" y="${y - 3}" font-size="12.5" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-    <text x="76" y="${y + 13}" font-size="10.5" fill="var(--muted)">${esc(c)}</text>`;
+  const galaz = (dane, x, kolor) => dane.map(([t, c], k) => {
+    const y = YB + k * KROKB;
+    return `${wezel(x, y, RB, t, 12, kolor, kolor, "#fff")}
+    ${podpis(x, y + RB + 18, c)}`;
   }).join("\n    ");
 
-  const sp = SPORNA.map(([t, c], k) => {
-    const y = 396 + k * 74;
-    return `${wezel(236, y, RB, k + 5, "var(--dispute)", "var(--dispute)", "#fff", 14)}
-    <text x="270" y="${y - 3}" font-size="12.5" font-weight="500" fill="var(--ink)">${esc(t)}</text>
-    <text x="270" y="${y + 13}" font-size="10.5" fill="var(--muted)">${esc(c)}</text>`;
-  }).join("\n    ");
-
-  return `<svg class="d-pion" viewBox="0 0 400 736" role="img" aria-label="${esc(OPIS)}" xmlns="http://www.w3.org/2000/svg">
+  return `<svg class="d-pion" viewBox="0 0 400 1225" role="img" aria-label="${esc(OPIS)}" xmlns="http://www.w3.org/2000/svg">
   ${GROTY}
-  <line x1="${X}" y1="42" x2="${X}" y2="300" stroke="currentColor" stroke-width="2.5" opacity=".26"/>
-  <text x="84" y="336" font-size="10.5" font-weight="600" letter-spacing=".1em" fill="var(--muted)">TU SPRAWA SIĘ ROZDZIELA</text>
-  <path d="M${X} 300 L${X} 360" stroke="var(--agree)" stroke-width="2.8" fill="none"/>
-  <path d="M${X} 300 Q${X} 360 118 360 L236 360" stroke="var(--dispute)" stroke-width="2.8" fill="none"/>
-  <line x1="${X}" y1="360" x2="${X}" y2="502" stroke="var(--agree)" stroke-width="2.8" marker-end="url(#gz)"/>
-  <line x1="236" y1="360" x2="236" y2="708" stroke="var(--dispute)" stroke-width="2.8" marker-end="url(#gs)"/>
+  <line x1="${X}" y1="${Y0}" x2="${X}" y2="596" stroke="currentColor" stroke-width="2.5" opacity=".26"/>
+  <text x="${X}" y="624" text-anchor="middle" font-size="10.5" font-weight="600"
+        letter-spacing=".1em" fill="var(--muted)">TU SPRAWA SIĘ ROZDZIELA</text>
+  <path d="M${X} 640 C ${X} 686 ${XZ} 668 ${XZ} 706" stroke="var(--agree)" stroke-width="3" fill="none"/>
+  <path d="M${X} 640 C ${X} 686 ${XS} 668 ${XS} 706" stroke="var(--dispute)" stroke-width="3" fill="none"/>
+  <line x1="${XZ}" y1="706" x2="${XZ}" y2="940" stroke="var(--agree)" stroke-width="3" marker-end="url(#gz)"/>
+  <line x1="${XS}" y1="706" x2="${XS}" y2="1160" stroke="var(--dispute)" stroke-width="3" marker-end="url(#gs)"/>
   ${pien}
-  ${zg}
-  ${sp}
-  <text x="76" y="528" font-size="14.5" font-weight="600" fill="var(--agree)">4–8 miesięcy</text>
-  <text x="270" y="732" font-size="14.5" font-weight="600" fill="var(--dispute)">1,5–3 lata</text>
+  ${galaz(ZGODNA, XZ, "var(--agree)")}
+  ${galaz(SPORNA, XS, "var(--dispute)")}
+  <text x="${XZ}" y="984" text-anchor="middle" font-size="14.5" font-weight="600" fill="var(--agree)">4–8 miesięcy</text>
+  <text x="${XZ}" y="1002" text-anchor="middle" font-size="10.5" fill="var(--muted)">ścieżka zgodna</text>
+  <text x="${XS}" y="1196" text-anchor="middle" font-size="14.5" font-weight="600" fill="var(--dispute)">1,5–3 lata</text>
+  <text x="${XS}" y="1214" text-anchor="middle" font-size="10.5" fill="var(--muted)">ścieżka sporna</text>
 </svg>`;
 }
 
@@ -381,6 +435,42 @@ footer a:hover{color:#fff;text-decoration:underline}
 .stopka-dol nav{display:flex;flex-wrap:wrap;gap:16px}
 .zastrzezenie{font-size:12.5px;line-height:1.6;color:#8B97AC;margin:16px 0 0;max-width:72ch}
 
+/* ── zakres spraw ── */
+.zakres{display:grid;grid-template-columns:1fr;gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.zakres>div{background:var(--paper);padding:16px 18px;display:flex;gap:12px;align-items:flex-start}
+.zakres .ico{width:22px;height:22px;flex:none;color:var(--accent);margin-top:2px}
+.zakres h3{font-family:'IBM Plex Sans',sans-serif;font-size:14.5px;font-weight:600;
+  line-height:1.3;margin:0 0 3px}
+.zakres p{font-size:13px;line-height:1.5;color:var(--muted);margin:0}
+@media(min-width:560px){.zakres{grid-template-columns:1fr 1fr}}
+@media(min-width:900px){.zakres{grid-template-columns:repeat(3,1fr)}}
+
+/* ── obietnice nad formularzem ── */
+.obietnice{display:grid;grid-template-columns:1fr;gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:3px;overflow:hidden;list-style:none;margin:0 0 22px;padding:0}
+.obietnice li{background:var(--paper);padding:15px 17px;display:flex;gap:11px;
+  align-items:flex-start;font-size:14px;line-height:1.45}
+.obietnice .ico{width:19px;height:19px;flex:none;color:var(--accent);margin-top:1px}
+.obietnice strong{font-weight:600}
+@media(min-width:640px){.obietnice{grid-template-columns:1fr 1fr}}
+@media(min-width:1000px){.obietnice{grid-template-columns:repeat(4,1fr)}}
+
+/* ── formularz na całej szerokości, pola w dwóch kolumnach ── */
+.form-pola{display:grid;grid-template-columns:1fr;gap:0 26px}
+@media(min-width:760px){.form-pola{grid-template-columns:1fr 1fr}}
+.pole-szer{grid-column:1/-1}
+.form-stopka{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;
+  border-top:1px solid var(--rule);padding-top:18px}
+.form-stopka .wyslij{width:auto;min-width:250px}
+.form-stopka .tajemnica{margin:0;flex:1 1 240px}
+
+/* ── ikony w nagłówkach kosztów, scenariuszy i biur ── */
+.koszt-top h3,.scen-nr,.dane-blok h4{display:flex;align-items:center;gap:8px}
+.koszt-top .ico{width:18px;height:18px;flex:none;color:var(--accent)}
+.scen-nr .ico{width:17px;height:17px;flex:none}
+.dane-blok h4 .ico{width:15px;height:15px;flex:none;color:var(--accent)}
+
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 `;
 
@@ -407,6 +497,7 @@ ${schema}
     <span class="brand-sub">Kancelaria adwokacka${cfg.district === "Warszawa" ? "" : " · " + esc(cfg.district)}</span>
   </a>
   <nav class="top-nav">
+    <a href="#zakres">Zakres spraw</a>
     <a href="#przebieg">Przebieg sprawy</a>
     <a href="#koszty">Koszty</a>
     <a href="#mieszkanie">Mieszkanie i kredyt</a>
@@ -439,6 +530,19 @@ ${schema}
   </figure></div>
 </div></div></section>
 
+<section class="sec sec-alt" id="zakres"><div class="wrap">
+  <div class="sec-head">
+    <p class="eyebrow">Zakres spraw</p>
+    <h2>Czym się zajmuję</h2>
+    <p class="sec-desc">Wyłącznie prawo rodzinne. Poniżej sprawy, które prowadzę najczęściej —
+      od pierwszego pozwu po wykonanie wyroku.</p>
+  </div>
+  <div class="zakres">
+    ${ZAKRES.map(([ik, t, o]) => `<div>${icon(ik)}<div>
+      <h3>${esc(t)}</h3><p>${esc(o)}</p></div></div>`).join("\n    ")}
+  </div>
+</div></section>
+
 <section class="sec" id="przebieg"><div class="wrap">
   <div class="sec-head">
     <p class="eyebrow">Przebieg sprawy</p>
@@ -465,12 +569,12 @@ ${schema}
   <p class="tag tag-stale">Stałe — wiesz z góry</p>
   <div class="koszt" style="margin-bottom:26px">
     <div class="koszt-poz">
-      <div class="koszt-top"><h3>Opłata sądowa od pozwu</h3><span class="koszt-kwota">600 zł</span></div>
+      <div class="koszt-top"><h3>${icon("pozew")}Opłata sądowa od pozwu</h3><span class="koszt-kwota">600 zł</span></div>
       <p>Płatna przy złożeniu pozwu. Przy rozwodzie bez orzekania o winie sąd zwraca 300 zł po
          uprawomocnieniu. Przy trudnej sytuacji finansowej można wnioskować o zwolnienie od kosztów.</p>
     </div>
     <div class="koszt-poz">
-      <div class="koszt-top"><h3>Honorarium kancelarii</h3><span class="koszt-kwota">wycena na rozmowie</span></div>
+      <div class="koszt-top"><h3>${icon("dokumenty")}Honorarium kancelarii</h3><span class="koszt-kwota">wycena na rozmowie</span></div>
       <p>Ryczałt za prowadzenie sprawy w instancji, ustalany indywidualnie i zapisany w umowie.
          Pełną kwotę poznajesz przed podpisaniem. Liczba rozpraw jej nie zmienia.</p>
     </div>
@@ -478,12 +582,12 @@ ${schema}
   <p class="tag tag-zmienne">Zależne od sprawy — nie u każdego</p>
   <div class="koszt">
     <div class="koszt-poz">
-      <div class="koszt-top"><h3>Mediacja</h3><span class="koszt-kwota">wg rozporządzenia</span></div>
+      <div class="koszt-top"><h3>${icon("mediacja")}Mediacja</h3><span class="koszt-kwota">wg rozporządzenia</span></div>
       <p>Przy skierowaniu przez sąd wynagrodzenie mediatora jest określone przepisami i dzielone
          zwykle po połowie. Udana mediacja zwykle oszczędza więcej, niż kosztuje.</p>
     </div>
     <div class="koszt-poz">
-      <div class="koszt-top"><h3>Opinia biegłych</h3><span class="koszt-kwota">zaliczka sądowa</span></div>
+      <div class="koszt-top"><h3>${icon("dowody")}Opinia biegłych</h3><span class="koszt-kwota">zaliczka sądowa</span></div>
       <p>Pojawia się przy sporze o dzieci albo przy wycenie nieruchomości. Badanie w zespole
          sądowych specjalistów jest dla stron nieodpłatne; opinia rzeczoznawcy jest płatna zaliczkowo.</p>
     </div>
@@ -499,7 +603,7 @@ ${schema}
   </div>
   <div class="scen">
     ${MIESZKANIE.map(s => `<article class="scen-karta">
-      <span class="scen-nr">Scenariusz ${s.nr}</span>
+      <span class="scen-nr">${icon(s.ikona)}Scenariusz ${s.nr}</span>
       <h3>${esc(s.tytul)}</h3>
       <p class="scen-cytat">${esc(s.cytat)}</p>
       <ol>${s.kroki.map(k => `<li>${esc(k)}</li>`).join("")}</ol>
@@ -523,40 +627,55 @@ ${schema}
   </p>
 </div></section>
 
-<section class="sec" id="kontakt"><div class="wrap"><div class="form-grid">
-  <div class="sec-head" style="margin:0">
+<section class="sec" id="kontakt"><div class="wrap">
+  <div class="sec-head">
     <p class="eyebrow">Kontakt</p>
     <h2>Umów bezpłatne 30 minut</h2>
     <p class="sec-desc">Oddzwaniam w ciągu 2 godzin w dni robocze. Wystarczy imię i telefon —
       resztę ustalimy w rozmowie.</p>
   </div>
+  <ul class="obietnice">
+    <li>${icon("bezplatne-30-minut")}<span><strong>Pierwsze 30 minut bez opłaty.</strong>
+      Rozmowa organizacyjna, nie porada prawna.</span></li>
+    <li>${icon("termin")}<span><strong>Oddzwaniam w 2 godziny</strong> w dni robocze,
+      w godzinach 9:00–17:00.</span></li>
+    <li>${icon("konsultacja-online")}<span><strong>Online albo w biurze.</strong>
+      Konsultacje zdalne dla całej Polski.</span></li>
+    <li>${icon("dyskrecja")}<span><strong>Tajemnica adwokacka</strong> obejmuje
+      już pierwszą wiadomość.</span></li>
+  </ul>
   <div class="form-karta">
     <form id="contact-form" onsubmit="submitLead(event)">
-      <div class="pole"><label for="imie">Imię *</label>
-        <input type="text" id="imie" name="imie" required placeholder="Jak mam się do Ciebie zwracać"></div>
-      <div class="pole"><label for="tel">Telefon *</label>
-        <input type="tel" id="tel" name="telefon" required placeholder="600 000 000"></div>
-      <div class="pole"><label for="email">E-mail <span>jeśli wolisz kontakt pisemny</span></label>
-        <input type="email" id="email" name="email"></div>
-      <div class="pole"><label for="temat">Czego dotyczy sprawa</label>
-        <select id="temat" name="temat">
-          <option value="" disabled selected>Wybierz temat</option>
-          <option>Rozwód bez orzekania o winie</option>
-          <option>Rozwód z orzeczeniem o winie</option>
-          <option>Podział majątku wspólnego</option>
-          <option>Opieka nad dziećmi i alimenty</option>
-          <option>Separacja</option>
-          <option>Inne</option>
-        </select></div>
-      <div class="pole"><label for="wiadomosc">Krótki opis <span>kilka zdań wystarczy</span></label>
-        <textarea id="wiadomosc" name="wiadomosc" placeholder="Nie musisz opisywać wszystkiego."></textarea></div>
-      <div class="zgoda">
-        <input type="checkbox" id="zgoda" name="zgoda" required>
-        <label for="zgoda">Zgadzam się na kontakt w sprawie mojego zapytania. Administratorem danych jest
-          ${esc(FIRM.name)}. <a href="/rodo">Pełna informacja RODO</a>. *</label>
+      <div class="form-pola">
+        <div class="pole"><label for="imie">Imię *</label>
+          <input type="text" id="imie" name="imie" required placeholder="Jak mam się do Ciebie zwracać"></div>
+        <div class="pole"><label for="tel">Telefon *</label>
+          <input type="tel" id="tel" name="telefon" required placeholder="600 000 000"></div>
+        <div class="pole"><label for="email">E-mail <span>jeśli wolisz kontakt pisemny</span></label>
+          <input type="email" id="email" name="email"></div>
+        <div class="pole"><label for="temat">Czego dotyczy sprawa</label>
+          <select id="temat" name="temat">
+            <option value="" disabled selected>Wybierz temat</option>
+            <option>Rozwód bez orzekania o winie</option>
+            <option>Rozwód z orzeczeniem o winie</option>
+            <option>Podział majątku wspólnego</option>
+            <option>Opieka nad dziećmi i alimenty</option>
+            <option>Separacja</option>
+            <option>Inne</option>
+          </select></div>
+        <div class="pole pole-szer"><label for="wiadomosc">Krótki opis <span>kilka zdań wystarczy</span></label>
+          <textarea id="wiadomosc" name="wiadomosc" placeholder="Nie musisz opisywać wszystkiego."></textarea></div>
+        <div class="zgoda pole-szer">
+          <input type="checkbox" id="zgoda" name="zgoda" required>
+          <label for="zgoda">Zgadzam się na kontakt w sprawie mojego zapytania. Administratorem danych jest
+            ${esc(FIRM.name)}. <a href="/rodo">Pełna informacja RODO</a>. *</label>
+        </div>
       </div>
-      <button type="submit" class="wyslij">Poproś o telefon</button>
-      <p class="tajemnica">${icon("dyskrecja")}<span>Objęte tajemnicą adwokacką od pierwszej wiadomości.</span></p>
+      <div class="form-stopka">
+        <button type="submit" class="wyslij">Poproś o telefon</button>
+        <p class="tajemnica">${icon("dokumenty")}<span>Dane trafiają wyłącznie do kancelarii.
+          Gwiazdką oznaczono pola wymagane.</span></p>
+      </div>
     </form>
     <div class="ok" id="form-success">
       <div class="ok-znak">${icon("bezplatne-30-minut")}</div>
@@ -564,7 +683,7 @@ ${schema}
       <p>Oddzwonię w ciągu 2 godzin w dni robocze (9:00–17:00).</p>
     </div>
   </div>
-</div></div></section>
+</div></section>
 
 <section class="sec sec-alt"><div class="wrap"><div class="dane">
   <div class="dane-foto">
@@ -588,7 +707,7 @@ ${schema}
           Konsultacje online i telefoniczne dla całej Polski.</p>
       </div>
       ${FIRM.offices.map((o, i) => `<div class="dane-blok">
-        <h4>Biuro ${esc(o.district)}</h4>
+        <h4>${icon("dojazd-do-sadu")}Biuro ${esc(o.district)}</h4>
         <p>${esc(o.street)}</p><p>${esc(o.postal)} ${esc(o.city)}</p>
         <p class="drobne">pon.–pt. 9:00–17:00${i ? ", po umówieniu" : ""}</p>
       </div>`).join("\n      ")}

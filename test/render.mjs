@@ -1,6 +1,8 @@
 import worker from "../src/worker.js";
 import { DOMAIN_CONFIG, ALL_HOSTS, FIRM } from "../src/domains.js";
 import { POOLS } from "../src/faq.js";
+import { ICONS, icon } from "../src/icons.js";
+import { CSS } from "../src/layout.js";
 
 const env = {};
 const get = (host, path) => worker.fetch(new Request(`https://${host}${path}`), env);
@@ -234,5 +236,22 @@ for (const host of ALL_HOSTS) {
   check(host+" numer w naglowku", h.includes(`href="tel:${FIRM.phone}"`));
 }
 console.log("  Białołęka i Bemowo podpisane zgodnie z ulicami · pierwszy ekran bez numeru");
+
+// 15. ikony z kanwy i uklad formularza
+// Kanwa dala 24 ikony. Zadna nie moze lezec w pliku nieuzywana.
+console.log("\n=== IKONY I FORMULARZ ===");
+const nazwyIkon = Object.keys(ICONS);
+for (const host of ALL_HOSTS) {
+  const h = texts[host];
+  const brak = nazwyIkon.filter(n => !h.includes(icon(n)));
+  check(host+" wszystkie ikony w uzyciu", brak.length === 0, brak.join(", "));
+  check(host+" sekcja zakresu spraw", h.includes('id="zakres"') && h.includes("Czym się zajmuję"));
+  // Formularz idzie przez cala szerokosc sekcji, a pola stoja w dwoch kolumnach.
+  check(host+" formularz bez kolumny opisowej", !h.includes('id="kontakt"><div class="wrap"><div class="form-grid"'));
+  check(host+" pola w siatce", h.includes('class="form-pola"') && h.includes("pole-szer"));
+  check(host+" obietnice przy formularzu", h.includes('class="obietnice"'));
+}
+check("styl dwoch kolumn pol", CSS.includes(".form-pola{display:grid") && CSS.includes("grid-template-columns:1fr 1fr}}"));
+console.log(`  ${nazwyIkon.length} ikon w uzyciu na 11 domenach · formularz w dwóch kolumnach`);
 
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));
