@@ -1772,7 +1772,7 @@ function buildPytaniaHTML(cfg, hostname) {
 <p class="section-desc">Odpowiedzi przygotowane przez ${esc(FIRM.attorney)}. Stan prawny na ${YEAR} rok. Jeżeli nie znajdziesz swojej sytuacji, zadzwoń pod ${esc(FIRM.phoneLabel)} — pierwsza rozmowa trwa 30 minut i jest bezpłatna.</p>
 ${groups.map(g => `<h2>${esc(g.label)}</h2>
 ${g.items.map(f => `<h3 style="font-size:1rem;margin:1.2rem 0 .3rem">${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join("\n")}`).join("\n")}
-<p style="margin-top:2.5rem"><a href="/#kontakt" class="btn btn-primary">Umów bezpłatną rozmowę →</a></p>
+<p style="margin-top:2.5rem"><a href="/#kontakt" class="btn btn-primary">Umów bezpłatną konsultację →</a></p>
 </div>
 <script type="application/ld+json">${schema}<\/script>`;
   return shell(cfg, hostname, `Pytania o rozwód — ${cfg.district} | Kancelaria Idzik-Cieśla`,

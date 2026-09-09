@@ -244,7 +244,8 @@ button{font:inherit;cursor:pointer}
   font-size:14.5px;line-height:1.45}
 .trust .ico{width:19px;height:19px;flex:none;color:var(--accent);margin-top:1px}
 .trust strong{font-weight:500}
-@media(min-width:560px){.trust{grid-template-columns:1fr 1fr}}
+@media(min-width:560px){.trust{grid-template-columns:1fr 1fr}
+  .trust div:last-child:nth-child(odd){grid-column:1/-1}}
 @media(min-width:980px){.hero-grid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:56px;align-items:center}
   .hero{padding:48px 0 40px}}
 
@@ -421,21 +422,20 @@ ${schema}
     <h1>${esc(h1)}</h1>
     <p class="hero-lead">${esc(cfg.lead)}</p>
     <div class="hero-cta">
-      <a class="btn btn-main" href="#kontakt">Umów bezpłatną rozmowę</a>
+      <a class="btn btn-main" href="#kontakt">Umów bezpłatną konsultację</a>
     </div>
-    <p class="hero-note">Pierwsze 30 minut bez opłaty. To rozmowa organizacyjna — ustalamy zakres sprawy,
-      potrzebne dokumenty i koszt. Porady prawnej udzielam po ich przeczytaniu.</p>
+    <p class="hero-note">To rozmowa organizacyjna — ustalamy zakres sprawy, potrzebne dokumenty.
+      Po analizie dokumentów ustalamy koszt porady prawnej lub prowadzenia procesu.</p>
     <div class="trust">
       <div>${ptak}<span>Wpis <strong>${esc(FIRM.barNumber)}</strong>, ${esc(FIRM.barCouncil)}</span></div>
       <div>${ptak}<span>Pierwsze <strong>30 minut</strong> bez opłaty</span></div>
-      <div>${ptak}<span>Wyłącznie <strong>prawo rodzinne</strong></span></div>
       <div>${ptak}<span>Biura <strong>Bemowo</strong> i <strong>Białołęka</strong> · online</span></div>
     </div>
   </div>
   <div class="hero-foto"><figure>
     <img src="${FIRM.photo}" width="560" height="747" decoding="async"
          alt="${esc(FIRM.attorney)}, adwokat prowadzący sprawy rozwodowe ${esc(cfg.locative)}">
-    <figcaption>${esc(FIRM.attorney)} · ${esc(cfg.court.name)}</figcaption>
+    <figcaption>${esc(FIRM.attorney)}</figcaption>
   </figure></div>
 </div></div></section>
 

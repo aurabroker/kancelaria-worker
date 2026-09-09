@@ -19,7 +19,10 @@ for (const host of ALL_HOSTS) {
   check(host+" wlasny h1", h.includes(cfg.h1), cfg.h1);
   check(host+" wlasny title", h.includes(cfg.title));
   check(host+" wlasny lead", h.includes(cfg.lead.slice(0,40)));
-  check(host+" sad wlasciwy", h.includes(cfg.court.name));
+  // Sad nazywa notka w danych kancelarii. Podpis pod zdjeciem juz go nie
+  // powtarza — wlasciciel skasowal go 9 wrzesnia 2026.
+  check(host+" sad wlasciwy", h.includes(cfg.courtNote));
+  check(host+" notka nazywa sad", /Sąd(u|em)? Okręgow/.test(cfg.courtNote));
   check(host+" NIP", h.includes(FIRM.nip));
   check(host+" wpis", h.includes(FIRM.barNumber));
   check(host+" izba", h.includes(FIRM.barCouncil));
@@ -185,7 +188,7 @@ for (const host of ALL_HOSTS) {
   const h = texts[host];
   check(host+" nie obiecuje porady za darmo", !/[Bb]ezpłatn\w* konsultacj/.test(h));
   check(host+" nazywa to rozmową", h.includes("rozmowa organizacyjna") || h.includes("rozmowę"));
-  check(host+" mówi kiedy jest porada", h.includes("po ich przeczytaniu") || h.includes("po zapoznaniu"));
+  check(host+" mówi kiedy jest porada", h.includes("Po analizie dokumentów") || h.includes("po zapoznaniu"));
   check(host+" wpis w pierwszym ekranie", h.includes(FIRM.barNumber));
 }
 const faqTxt = JSON.stringify(POOLS ?? {});
