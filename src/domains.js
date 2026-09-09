@@ -34,9 +34,11 @@ export const FIRM = {
   phone:       "+48605089552",
   phoneLabel:  "605 089 552",
   email:       "kancelaria@idzik.org.pl",
+  // Dzielnica jest czescia wpisu, a nie kolejnosci na liscie. Ceramiczna
+  // lezy na Bialolece, Bolkowska na Bemowie — podpisy nie moga sie rozjechac.
   offices: [
-    { street: "ul. Ceramiczna 5E/79", postal: "03-126", city: "Warszawa" },
-    { street: "ul. Bolkowska 2A/28",  postal: "01-466", city: "Warszawa" },
+    { district: "Białołęka", street: "ul. Ceramiczna 5E/79", postal: "03-126", city: "Warszawa" },
+    { district: "Bemowo",    street: "ul. Bolkowska 2A/28",  postal: "01-466", city: "Warszawa" },
   ],
   hours: "Mo-Fr 09:00-17:00",   // godziny pracy kancelarii, potwierdzone
   // Portret adwokatki. Pliki osadzone w src/photo.js i serwowane

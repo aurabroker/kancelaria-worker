@@ -236,8 +236,6 @@ button{font:inherit;cursor:pointer}
   text-decoration:none;border:1.5px solid transparent;transition:.18s}
 .btn-main{background:var(--clay);color:#fff;border-color:var(--clay)}
 .btn-main:hover{background:#8E4931;color:#fff}
-.btn-tel{border-color:var(--accent);color:var(--accent);background:transparent}
-.btn-tel:hover{background:var(--accent);color:var(--paper)}
 .hero-note{font-size:13.5px;line-height:1.5;color:var(--muted);max-width:52ch;margin:0 0 24px}
 
 .trust{display:grid;grid-template-columns:1fr;gap:1px;background:var(--rule);
@@ -424,7 +422,6 @@ ${schema}
     <p class="hero-lead">${esc(cfg.lead)}</p>
     <div class="hero-cta">
       <a class="btn btn-main" href="#kontakt">Umów bezpłatną rozmowę</a>
-      <a class="btn btn-tel" href="tel:${tel}" onclick="trackCall()">${icon("konsultacja-telefoniczna")}${esc(telTxt)}</a>
     </div>
     <p class="hero-note">Pierwsze 30 minut bez opłaty. To rozmowa organizacyjna — ustalamy zakres sprawy,
       potrzebne dokumenty i koszt. Porady prawnej udzielam po ich przeczytaniu.</p>
@@ -591,7 +588,7 @@ ${schema}
           Konsultacje online i telefoniczne dla całej Polski.</p>
       </div>
       ${FIRM.offices.map((o, i) => `<div class="dane-blok">
-        <h4>${i === 0 ? "Biuro Bemowo" : "Biuro Białołęka"}</h4>
+        <h4>Biuro ${esc(o.district)}</h4>
         <p>${esc(o.street)}</p><p>${esc(o.postal)} ${esc(o.city)}</p>
         <p class="drobne">pon.–pt. 9:00–17:00${i ? ", po umówieniu" : ""}</p>
       </div>`).join("\n      ")}

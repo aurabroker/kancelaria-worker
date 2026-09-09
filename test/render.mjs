@@ -208,4 +208,28 @@ const dziekPl = await (await get("rozwod.waw.pl", "/dziekujemy.html")).text();
 check("strona podziękowania 9-17", dziekPl.includes("9:00–17:00"));
 console.log("  9:00–17:00 spójnie na 11 domenach, bez obietnicy wieczornej");
 
+// 14. adresy biur i pierwszy ekran
+// Podpisy dzielnic byly zamienione: Ceramiczna to Bialoleka, Bolkowska Bemowo.
+console.log("\n=== ADRESY BIUR ===");
+const wgUlicy = { "ul. Ceramiczna 5E/79": "Białołęka", "ul. Bolkowska 2A/28": "Bemowo" };
+for (const o of FIRM.offices) {
+  check("dzielnica dla "+o.street, o.district === wgUlicy[o.street], o.district);
+}
+for (const host of ALL_HOSTS) {
+  const h = texts[host];
+  for (const o of FIRM.offices) {
+    // Ulica pada najpierw w schemacie w naglowku; blok widoczny jest ostatni.
+    const i = h.lastIndexOf(o.street);
+    check(host+" adres "+o.street, i > 0);
+    // Podpis stoi tuz nad adresem, w tym samym bloku danych.
+    check(host+" podpis przy "+o.street, h.slice(Math.max(0, i-220), i).includes("Biuro "+o.district));
+  }
+  // Wlasciciel 9 wrzesnia 2026: w pierwszym ekranie numer jest zbedny,
+  // zostaje w naglowku i w danych kancelarii.
+  const hero = h.slice(h.indexOf('<section class="hero"'), h.indexOf('id="przebieg"'));
+  check(host+" hero bez numeru", !hero.includes(FIRM.phoneLabel) && !hero.includes("tel:"));
+  check(host+" numer w naglowku", h.includes(`href="tel:${FIRM.phone}"`));
+}
+console.log("  Białołęka i Bemowo podpisane zgodnie z ulicami · pierwszy ekran bez numeru");
+
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));
