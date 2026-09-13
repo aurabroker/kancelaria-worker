@@ -525,6 +525,15 @@ export function isoWeek(date = new Date()) {
  * Okno przesuwa się cyklicznie, więc w kolejnych tygodniach
  * widoczny jest inny wycinek tej samej puli.
  */
+/* Pytanie, ktore na stronie glownej stoi zawsze pierwsze, niezaleznie od
+   tygodniowej rotacji. Wynika z danych kampanii: pada czesto, a strona
+   dotad na nie nie odpowiadala. */
+export const PIN = {
+  id: "pin1", cat: "podstawy",
+  q: "Czy do rozwodu potrzebny jest adwokat?",
+  a: "Nie ma przymusu adwokackiego — pozew o rozwód możesz złożyć i prowadzić sprawę samodzielnie. W rozwodzie zgodnym, bez małoletnich dzieci i bez sporu o winę, wiele osób tak robi i kończy na jednej rozprawie. Pełnomocnik zmienia sytuację tam, gdzie pojawia się spór: o winę, o opiekę nad dziećmi, o alimenty albo o majątek. Wtedy sprawa przestaje być formalnością, a staje się postępowaniem dowodowym, w którym liczy się, co i jak zostanie wykazane. Na pierwszej rozmowie, która jest bezpłatna i trwa trzydzieści minut, mówię wprost, do której z tych dwóch sytuacji należy Twoja sprawa.",
+};
+
 export function faqForHost(host, count = 8, date = new Date()) {
   const pool = POOLS[host] || POOLS["rozwod.waw.pl"];
   if (!pool.length) return [];

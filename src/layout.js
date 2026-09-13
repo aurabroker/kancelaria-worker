@@ -22,6 +22,7 @@
 import { FIRM } from "./domains.js";
 import { icon } from "./icons.js";
 import { WPISY } from "./blog.js";
+import { STRONY, miasto } from "./kampanie.js";
 
 /* Sieć domen w stopce — nazwy obszarów, nie dzielnic z kanwy. */
 const SIEC = [
@@ -85,21 +86,21 @@ const ZAKRES = [
   ["rozwod-z-orzeczeniem-o-winie", "Rozwód z orzeczeniem o winie",
    "Gdy wina ma znaczenie dla alimentów albo dla Ciebie samej."],
   ["separacja", "Separacja",
-   "Rozdzielenie bez rozwiązania małżeństwa. Da się ją znieść."],
+   "Rozdzielenie bez rozwiązania małżeństwa. Da się ją znieść.", "/separacja"],
   ["podzial-majatku", "Podział majątku",
-   "W sprawie rozwodowej albo osobno, także lata po wyroku."],
+   "W sprawie rozwodowej albo osobno, także lata po wyroku.", "/podzial-majatku"],
   ["mieszkanie", "Mieszkanie",
    "Kto zostaje, kto spłaca, kto korzysta do czasu podziału."],
   ["kredyt-hipoteczny", "Kredyt hipoteczny",
    "Zwolnienie z długu, sprzedaż, rozliczenie wspólnych rat."],
   ["alimenty-na-dziecko", "Alimenty na dziecko",
-   "Liczone od potrzeb dziecka i możliwości zarobkowych rodzica."],
+   "Liczone od potrzeb dziecka i możliwości zarobkowych rodzica.", "/alimenty"],
   ["alimenty-na-malzonka", "Alimenty na małżonka",
    "Po rozwodzie, gdy uzasadnia je wina albo niedostatek."],
   ["wladza-rodzicielska", "Władza rodzicielska",
    "Wspólna, ograniczona albo powierzona jednemu z rodziców."],
   ["kontakty-z-dzieckiem", "Kontakty z dzieckiem",
-   "Harmonogram tygodnia, święta, wakacje, wyjazdy za granicę."],
+   "Harmonogram tygodnia, święta, wakacje, wyjazdy za granicę.", "/opieka-nad-dzieckiem"],
   ["plan-wychowawczy", "Plan wychowawczy",
    "Porozumienie rodziców, które sąd może włączyć do wyroku."],
   ["mediacja", "Mediacja",
@@ -330,7 +331,7 @@ button{font:inherit;cursor:pointer}
   .rysunek figcaption{margin-top:22px}
 }
 
-/* ── stara oś (nieużywana, do usunięcia przy sprzątaniu) ── */
+/* ── oś kroków: używana na stronach docelowych kampanii ── */
 .legenda{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:22px;font-size:13px;color:var(--muted)}
 .legenda span{display:flex;align-items:center;gap:7px}
 .kropka{width:9px;height:9px;border-radius:50%;flex:none}
@@ -444,6 +445,8 @@ footer a:hover{color:#fff;text-decoration:underline}
 .zakres h3{font-family:'IBM Plex Sans',sans-serif;font-size:14.5px;font-weight:600;
   line-height:1.3;margin:0 0 3px}
 .zakres p{font-size:13px;line-height:1.5;color:var(--muted);margin:0}
+.zakres h3 a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--rule-strong)}
+.zakres h3 a:hover{color:var(--clay);border-color:var(--clay)}
 @media(min-width:560px){.zakres{grid-template-columns:1fr 1fr}}
 @media(min-width:900px){.zakres{grid-template-columns:repeat(3,1fr)}}
 
@@ -514,6 +517,37 @@ footer a:hover{color:#fff;text-decoration:underline}
 .dalej span{display:block;font-size:10.5px;font-weight:600;letter-spacing:.12em;
   text-transform:uppercase;color:var(--muted);margin-bottom:5px}
 @media(min-width:700px){.dalej{grid-template-columns:repeat(3,1fr)}}
+
+/* ── strony docelowe kampanii ── */
+.kam-hero{padding:40px 0 34px}
+.kam-hero h1{font-size:clamp(28px,5.2vw,46px);line-height:1.1;max-width:18ch;margin:0 0 16px}
+.kam-lead p{font-size:clamp(16px,2.1vw,18.5px);line-height:1.6;color:var(--muted);max-width:58ch;margin:0 0 14px}
+.kam-cta{display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px;margin:22px 0 26px}
+.kam-tel{display:inline-flex;align-items:center;gap:9px;font-size:17px;font-weight:500;
+  color:var(--accent);text-decoration:none;white-space:nowrap}
+.kam-tel .ico{width:20px;height:20px}
+.kam-tel:hover{color:var(--clay)}
+.kam-cena{background:var(--chalk);border-left:3px solid var(--accent);padding:18px 20px;
+  margin:0 0 24px;font-size:15.5px;line-height:1.6;max-width:72ch}
+.czynniki{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:10px;max-width:72ch}
+.czynniki li{display:flex;gap:11px;align-items:flex-start;font-size:14.5px;line-height:1.5;color:var(--muted)}
+.czynniki .ico{width:18px;height:18px;flex:none;color:var(--accent);margin-top:1px}
+.kam-dlaczego{max-width:70ch;font-size:15.5px;line-height:1.7;margin:0 0 22px}
+.kam-linki{display:grid;grid-template-columns:1fr;gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.kam-linki a{background:var(--paper);padding:15px 17px;color:var(--ink);text-decoration:none;
+  font-size:14.5px;line-height:1.4}
+.kam-linki a:hover{background:var(--chalk);color:var(--clay)}
+@media(min-width:700px){.kam-linki{grid-template-columns:1fr 1fr}}
+
+/* ── porównanie kosztu z winą i bez ── */
+.porownanie{display:grid;grid-template-columns:1fr;gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:3px;overflow:hidden;margin-bottom:6px}
+.porownanie>div{background:var(--paper);padding:20px}
+.porownanie dl{margin:0;display:grid;gap:9px 14px;grid-template-columns:auto 1fr}
+.porownanie dt{font-size:13px;color:var(--muted)}
+.porownanie dd{margin:0;font-size:14px;line-height:1.45}
+@media(min-width:760px){.porownanie{grid-template-columns:1fr 1fr}}
 
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 `;
@@ -676,142 +710,11 @@ ${stopka(hostname)}
 </html>`;
 }
 
-export function buildHome({ cfg, hostname, h1, faqItems, head, schema }) {
-  const tel = FIRM.phone, telTxt = FIRM.phoneLabel;
-  const ptak = icon("bezplatne-30-minut");
-
-  return `<!DOCTYPE html>
-<html lang="pl">
-<head>
-${head}
-${schema}
-</head>
-<body>
-
-${naglowek(cfg)}
-
-<main>
-
-<section class="hero"><div class="wrap"><div class="hero-grid">
-  <div>
-    <h1>${esc(h1)}</h1>
-    <p class="hero-lead">${esc(cfg.lead)}</p>
-    <div class="hero-cta">
-      <a class="btn btn-main" href="#kontakt">Umów bezpłatną konsultację</a>
-    </div>
-    <p class="hero-note">To rozmowa organizacyjna — ustalamy zakres sprawy, potrzebne dokumenty.
-      Po analizie dokumentów ustalamy koszt porady prawnej lub prowadzenia procesu.</p>
-    <div class="trust">
-      <div>${ptak}<span>Wpis <strong>${esc(FIRM.barNumber)}</strong>, ${esc(FIRM.barCouncil)}</span></div>
-      <div>${ptak}<span>Pierwsze <strong>30 minut</strong> bez opłaty</span></div>
-      <div>${ptak}<span>Biura <strong>Bemowo</strong> i <strong>Białołęka</strong> · online</span></div>
-    </div>
-  </div>
-  <div class="hero-foto"><figure>
-    <img src="${FIRM.photo}" width="560" height="747" decoding="async"
-         alt="${esc(FIRM.attorney)}, adwokat prowadzący sprawy rozwodowe ${esc(cfg.locative)}">
-    <figcaption>${esc(FIRM.attorney)}</figcaption>
-  </figure></div>
-</div></div></section>
-
-<section class="sec sec-alt" id="zakres"><div class="wrap">
-  <div class="sec-head">
-    <p class="eyebrow">Zakres spraw</p>
-    <h2>Czym się zajmuję</h2>
-    <p class="sec-desc">Wyłącznie prawo rodzinne. Poniżej sprawy, które prowadzę najczęściej —
-      od pierwszego pozwu po wykonanie wyroku.</p>
-  </div>
-  <div class="zakres">
-    ${ZAKRES.map(([ik, t, o]) => `<div>${icon(ik)}<div>
-      <h3>${esc(t)}</h3><p>${esc(o)}</p></div></div>`).join("\n    ")}
-  </div>
-</div></section>
-
-<section class="sec" id="przebieg"><div class="wrap">
-  <div class="sec-head">
-    <p class="eyebrow">Przebieg sprawy</p>
-    <h2>Od pierwszej rozmowy do prawomocnego wyroku</h2>
-    <p class="sec-desc">Widełki z warszawskich sądów okręgowych. Twoja sprawa może być szybsza —
-      nie obiecuję terminu, którego nie kontroluję.</p>
-  </div>
-  <figure class="rysunek">
-    ${diagramPoziomy()}
-    ${diagramPionowy()}
-    <figcaption>Obie ścieżki mają ten sam początek. Różnica pojawia się dopiero przy odpowiedzi
-      na pozew i decyduje o tym, czy sprawa potrwa pół roku, czy kilka lat. Widełki z warszawskich
-      sądów okręgowych — nie obiecuję terminu, którego nie kontroluję.</figcaption>
-  </figure>
-</div></section>
-
-<section class="sec sec-alt" id="koszty"><div class="wrap">
-  <div class="sec-head">
-    <p class="eyebrow">Koszty</p>
-    <h2>Z czego składa się koszt rozwodu</h2>
-    <p class="sec-desc">Cztery pozycje. Dwie są takie same dla każdego, dwie zależą od tego,
-      jak potoczy się sprawa.</p>
-  </div>
-  <p class="tag tag-stale">Stałe — wiesz z góry</p>
-  <div class="koszt" style="margin-bottom:26px">
-    <div class="koszt-poz">
-      <div class="koszt-top"><h3>${icon("pozew")}Opłata sądowa od pozwu</h3><span class="koszt-kwota">600 zł</span></div>
-      <p>Płatna przy złożeniu pozwu. Przy rozwodzie bez orzekania o winie sąd zwraca 300 zł po
-         uprawomocnieniu. Przy trudnej sytuacji finansowej można wnioskować o zwolnienie od kosztów.</p>
-    </div>
-    <div class="koszt-poz">
-      <div class="koszt-top"><h3>${icon("dokumenty")}Honorarium kancelarii</h3><span class="koszt-kwota">wycena na rozmowie</span></div>
-      <p>Ryczałt za prowadzenie sprawy w instancji, ustalany indywidualnie i zapisany w umowie.
-         Pełną kwotę poznajesz przed podpisaniem. Liczba rozpraw jej nie zmienia.</p>
-    </div>
-  </div>
-  <p class="tag tag-zmienne">Zależne od sprawy — nie u każdego</p>
-  <div class="koszt">
-    <div class="koszt-poz">
-      <div class="koszt-top"><h3>${icon("mediacja")}Mediacja</h3><span class="koszt-kwota">wg rozporządzenia</span></div>
-      <p>Przy skierowaniu przez sąd wynagrodzenie mediatora jest określone przepisami i dzielone
-         zwykle po połowie. Udana mediacja zwykle oszczędza więcej, niż kosztuje.</p>
-    </div>
-    <div class="koszt-poz">
-      <div class="koszt-top"><h3>${icon("dowody")}Opinia biegłych</h3><span class="koszt-kwota">zaliczka sądowa</span></div>
-      <p>Pojawia się przy sporze o dzieci albo przy wycenie nieruchomości. Badanie w zespole
-         sądowych specjalistów jest dla stron nieodpłatne; opinia rzeczoznawcy jest płatna zaliczkowo.</p>
-    </div>
-  </div>
-</div></section>
-
-<section class="sec" id="mieszkanie"><div class="wrap">
-  <div class="sec-head">
-    <p class="eyebrow">Mieszkanie i kredyt</p>
-    <h2>Co się stanie z mieszkaniem i kredytem</h2>
-    <p class="sec-desc">Rozwód nie rusza kredytu — dla banku dalej jesteście dwoma dłużnikami.
-      Wyjścia są trzy. Przeczytaj pierwsze zdanie każdego i znajdź swoje.</p>
-  </div>
-  <div class="scen">
-    ${MIESZKANIE.map(s => `<article class="scen-karta">
-      <span class="scen-nr">${icon(s.ikona)}Scenariusz ${s.nr}</span>
-      <h3>${esc(s.tytul)}</h3>
-      <p class="scen-cytat">${esc(s.cytat)}</p>
-      <ol>${s.kroki.map(k => `<li>${esc(k)}</li>`).join("")}</ol>
-      <p class="scen-ryzyko"><b>Ryzyko:</b> ${esc(s.ryzyko)}</p>
-    </article>`).join("\n    ")}
-  </div>
-</div></section>
-
-<section class="sec sec-alt" id="pytania"><div class="wrap">
-  <div class="sec-head">
-    <p class="eyebrow">Pytania</p>
-    <h2>Pytania, które słyszę najczęściej</h2>
-  </div>
-  <div class="faq">
-    ${faqItems.map(f => `<details><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join("\n    ")}
-  </div>
-  <p class="faq-more"><a href="/pytania">Zobacz wszystkie pytania i odpowiedzi →</a></p>
-  <p class="sec-desc" style="margin-top:16px;font-size:13.5px">
-    Odpowiedzi przygotowała ${esc(FIRM.attorney)}, wpis ${esc(FIRM.barNumber)}.
-    Stan prawny na <time datetime="${new Date().toISOString().slice(0, 10)}">${new Date().toISOString().slice(0, 10)}</time>.
-  </p>
-</div></section>
-
-<section class="sec" id="kontakt"><div class="wrap">
+/* Sekcja kontaktu jest jedna dla strony glownej i stron kampanii.
+   Formularz w dwoch miejscach musi byc tym samym formularzem, bo inaczej
+   jedna kopia zawsze zostaje w tyle. */
+function blokKontaktu(cfg) {
+  return `<section class="sec" id="kontakt"><div class="wrap">
   <div class="sec-head">
     <p class="eyebrow">Kontakt</p>
     <h2>Umów bezpłatne 30 minut</h2>
@@ -867,7 +770,298 @@ ${naglowek(cfg)}
       <p>Oddzwonię w ciągu 2 godzin w dni robocze (9:00–17:00).</p>
     </div>
   </div>
+</div></section>`;
+}
+
+/* Strona docelowa reklamy nie ma nawigacji. Kazdy link, ktory nie prowadzi
+   do formularza albo do telefonu, jest wyciekiem oplaconego kliku. */
+function naglowekProsty(cfg) {
+  const tel = FIRM.phone, telTxt = FIRM.phoneLabel;
+  return `<div class="accent-bar"></div>
+<header class="top"><div class="wrap"><div class="top-in">
+  <span class="brand">
+    <span class="brand-name">${esc(FIRM.attorney.replace(/^adw\.\s*/, ""))}</span>
+    <span class="brand-sub">Kancelaria adwokacka${cfg.district === "Warszawa" ? "" : " · " + esc(cfg.district)}</span>
+  </span>
+  <a class="top-tel" href="tel:${tel}" onclick="trackCall()">${icon("konsultacja-telefoniczna")}${esc(telTxt)}</a>
+</div></div></header>`;
+}
+
+function stopkaProsta() {
+  return `<footer><div class="wrap">
+  <p class="zastrzezenie">Treści na tej stronie mają charakter informacyjny i nie stanowią porady
+    prawnej. Ocena konkretnej sprawy wymaga zapoznania się z dokumentami.</p>
+  <div class="stopka-dol">
+    <span>© ${new Date().getUTCFullYear()} ${esc(FIRM.name)} · NIP ${esc(FIRM.nip)} · Wpis ${esc(FIRM.barNumber)}</span>
+    <nav>
+      <a href="/polityka-prywatnosci">Polityka prywatności</a>
+      <a href="/rodo">Informacja RODO</a>
+    </nav>
+  </div>
+</div></footer>`;
+}
+
+/* Strona docelowa grupy reklam. Kolejnosc sekcji wynika z danych:
+   pytanie o cene pada najczesciej, wiec koszty stoja zaraz pod zajawka,
+   przed opisem przebiegu sprawy. */
+export function buildKampania({ cfg, hostname, strona, head, schema }) {
+  const tel = FIRM.phone, telTxt = FIRM.phoneLabel;
+  const ptak = icon("bezplatne-30-minut");
+  return `<!DOCTYPE html>
+<html lang="pl">
+<head>
+${head}
+${schema}
+</head>
+<body>
+${naglowekProsty(cfg)}
+<main>
+
+<section class="kam-hero"><div class="wrap">
+  <p class="eyebrow">${esc(strona.grupa.charAt(0).toUpperCase() + strona.grupa.slice(1))}</p>
+  <h1>${esc(strona.h1(cfg))}</h1>
+  <div class="kam-lead">${strona.lead.map(t => `<p>${esc(t)}</p>`).join("\n    ")}</div>
+  <div class="kam-cta">
+    <a class="btn btn-main" href="#kontakt">Umów bezpłatną konsultację</a>
+    <a class="kam-tel" href="tel:${tel}" onclick="trackCall()">${icon("konsultacja-telefoniczna")}${esc(telTxt)}</a>
+  </div>
+  <div class="trust">
+    <div>${ptak}<span>Wpis <strong>${esc(FIRM.barNumber)}</strong>, ${esc(FIRM.barCouncil)}</span></div>
+    <div>${ptak}<span>Pierwsze <strong>30 minut</strong> bez opłaty</span></div>
+    <div>${ptak}<span>Wyłącznie <strong>sprawy rodzinne</strong></span></div>
+    <div>${ptak}<span>Biura <strong>Bemowo</strong> i <strong>Białołęka</strong> · online</span></div>
+  </div>
 </div></section>
+
+<section class="sec sec-alt"><div class="wrap">
+  <div class="sec-head">
+    <p class="eyebrow">Koszty</p>
+    <h2>Ile to kosztuje?</h2>
+  </div>
+  <p class="kam-cena">${esc(strona.kosztWstep)}</p>
+  <div class="koszt">
+    ${strona.pozycje.map(([n, k, o]) => `<div class="koszt-poz">
+      <div class="koszt-top"><h3>${esc(n)}</h3><span class="koszt-kwota">${esc(k)}</span></div>
+      <p>${esc(o)}</p>
+    </div>`).join("\n    ")}
+  </div>
+  <ul class="czynniki">
+    <li style="color:var(--ink);font-weight:500">Co wpływa na wysokość wyceny:</li>
+    ${strona.czynniki.map(t => `<li>${ptak}<span>${esc(t)}</span></li>`).join("\n    ")}
+  </ul>
+</div></section>
+
+<section class="sec"><div class="wrap">
+  <div class="sec-head">
+    <p class="eyebrow">Przebieg</p>
+    <h2>Jak wygląda sprawa krok po kroku</h2>
+  </div>
+  <div style="max-width:72ch">
+    ${strona.kroki.map(([t, c, o], i) => `<div class="krok">
+      <div class="krok-nr">${i + 1}</div>
+      <div><h3>${esc(t)}</h3><p class="krok-czas">${esc(c)}</p><p>${esc(o)}</p></div>
+    </div>`).join("\n    ")}
+  </div>
+</div></section>
+
+<section class="sec sec-alt"><div class="wrap">
+  <div class="sec-head">
+    <p class="eyebrow">Pytania</p>
+    <h2>Najczęstsze pytania</h2>
+  </div>
+  <div class="faq">
+    ${strona.faq.map(([q, a]) => `<details>
+      <summary>${esc(q)}</summary>
+      <p>${esc(a)}</p>
+    </details>`).join("\n    ")}
+  </div>
+</div></section>
+
+${blokKontaktu(cfg)}
+
+<section class="sec sec-alt"><div class="wrap">
+  <div class="sec-head">
+    <p class="eyebrow">Dlaczego my</p>
+    <h2>${esc(FIRM.attorney)}</h2>
+  </div>
+  <p class="kam-dlaczego">${esc(strona.dlaczego)}</p>
+  <p class="kam-dlaczego" style="color:var(--muted);font-size:14.5px">Wpis ${esc(FIRM.barNumber)} w ${esc(FIRM.barCouncil)}.
+    Biura przy ${esc(FIRM.offices[0].street)} i ${esc(FIRM.offices[1].street)} w Warszawie.
+    Konsultacje online dla całej Polski. Telefon ${esc(telTxt)}, e-mail ${esc(FIRM.email)}.</p>
+  <div class="kam-linki">
+    ${strona.linki.map(([u, t]) => `<a href="${u}">${esc(t)}</a>`).join("\n    ")}
+  </div>
+</div></section>
+
+</main>
+${stopkaProsta()}
+<script src="/assets/page.js"><\/script>
+</body>
+</html>`;
+}
+
+export function buildHome({ cfg, hostname, h1, faqItems, head, schema }) {
+  const tel = FIRM.phone, telTxt = FIRM.phoneLabel;
+  const ptak = icon("bezplatne-30-minut");
+
+  return `<!DOCTYPE html>
+<html lang="pl">
+<head>
+${head}
+${schema}
+</head>
+<body>
+
+${naglowek(cfg)}
+
+<main>
+
+<section class="hero"><div class="wrap"><div class="hero-grid">
+  <div>
+    <h1>${esc(h1)}</h1>
+    <p class="hero-lead">${esc(cfg.lead)}</p>
+    <div class="hero-cta">
+      <a class="btn btn-main" href="#kontakt">Umów bezpłatną konsultację</a>
+    </div>
+    <p class="hero-note">To rozmowa organizacyjna — ustalamy zakres sprawy, potrzebne dokumenty.
+      Po analizie dokumentów ustalamy koszt porady prawnej lub prowadzenia procesu.</p>
+    <div class="trust">
+      <div>${ptak}<span>Wpis <strong>${esc(FIRM.barNumber)}</strong>, ${esc(FIRM.barCouncil)}</span></div>
+      <div>${ptak}<span>Pierwsze <strong>30 minut</strong> bez opłaty</span></div>
+      <div>${ptak}<span>Biura <strong>Bemowo</strong> i <strong>Białołęka</strong> · online</span></div>
+    </div>
+  </div>
+  <div class="hero-foto"><figure>
+    <img src="${FIRM.photo}" width="560" height="747" decoding="async"
+         alt="${esc(FIRM.attorney)}, adwokat prowadzący sprawy rozwodowe ${esc(cfg.locative)}">
+    <figcaption>${esc(FIRM.attorney)}</figcaption>
+  </figure></div>
+</div></div></section>
+
+<section class="sec sec-alt" id="zakres"><div class="wrap">
+  <div class="sec-head">
+    <p class="eyebrow">Zakres spraw</p>
+    <h2>Czym się zajmuję</h2>
+    <p class="sec-desc">Wyłącznie prawo rodzinne. Poniżej sprawy, które prowadzę najczęściej —
+      od pierwszego pozwu po wykonanie wyroku.</p>
+  </div>
+  <div class="zakres">
+    ${ZAKRES.map(([ik, t, o, url]) => `<div>${icon(ik)}<div>
+      <h3>${url ? `<a href="${url}">${esc(t)}</a>` : esc(t)}</h3><p>${esc(o)}</p></div></div>`).join("\n    ")}
+  </div>
+</div></section>
+
+<section class="sec" id="przebieg"><div class="wrap">
+  <div class="sec-head">
+    <p class="eyebrow">Przebieg sprawy</p>
+    <h2>Od pierwszej rozmowy do prawomocnego wyroku</h2>
+    <p class="sec-desc">Widełki z warszawskich sądów okręgowych. Twoja sprawa może być szybsza —
+      nie obiecuję terminu, którego nie kontroluję.</p>
+  </div>
+  <figure class="rysunek">
+    ${diagramPoziomy()}
+    ${diagramPionowy()}
+    <figcaption>Obie ścieżki mają ten sam początek. Różnica pojawia się dopiero przy odpowiedzi
+      na pozew i decyduje o tym, czy sprawa potrwa pół roku, czy kilka lat. Widełki z warszawskich
+      sądów okręgowych — nie obiecuję terminu, którego nie kontroluję.</figcaption>
+  </figure>
+</div></section>
+
+<section class="sec sec-alt" id="koszty"><div class="wrap">
+  <div class="sec-head">
+    <p class="eyebrow">Koszty</p>
+    <h2>Z czego składa się koszt rozwodu</h2>
+    <p class="sec-desc">Cztery pozycje. Dwie są takie same dla każdego, dwie zależą od tego,
+      jak potoczy się sprawa.</p>
+  </div>
+  <p class="tag tag-stale">Stałe — wiesz z góry</p>
+  <div class="koszt" style="margin-bottom:26px">
+    <div class="koszt-poz">
+      <div class="koszt-top"><h3>${icon("pozew")}Opłata sądowa od pozwu</h3><span class="koszt-kwota">600 zł</span></div>
+      <p>Płatna przy złożeniu pozwu. Przy rozwodzie bez orzekania o winie sąd zwraca 300 zł po
+         uprawomocnieniu. Przy trudnej sytuacji finansowej można wnioskować o zwolnienie od kosztów.</p>
+    </div>
+    <div class="koszt-poz">
+      <div class="koszt-top"><h3>${icon("dokumenty")}Honorarium kancelarii</h3><span class="koszt-kwota">wycena na rozmowie</span></div>
+      <p>Ryczałt za prowadzenie sprawy w instancji, ustalany indywidualnie i zapisany w umowie.
+         Pełną kwotę poznajesz przed podpisaniem. Liczba rozpraw jej nie zmienia.</p>
+    </div>
+  </div>
+  <div class="porownanie">
+    <div>
+      <p class="tag tag-stale" style="margin-bottom:10px">Bez orzekania o winie</p>
+      <dl>
+        <dt>Opłata od pozwu</dt><dd>600 zł, z czego <strong>300 zł wraca</strong></dd>
+        <dt>Postępowanie dowodowe</dt><dd>zwykle żadne — sąd nie bada, kto zawinił</dd>
+        <dt>Liczba rozpraw</dt><dd>najczęściej jedna</dd>
+        <dt>Czas do wyroku</dt><dd>4–8 miesięcy</dd>
+        <dt>Honorarium</dt><dd>najniższe z możliwych w tej sprawie</dd>
+      </dl>
+    </div>
+    <div>
+      <p class="tag tag-zmienne" style="margin-bottom:10px">Z orzeczeniem o winie</p>
+      <dl>
+        <dt>Opłata od pozwu</dt><dd>600 zł, <strong>bez zwrotu</strong></dd>
+        <dt>Postępowanie dowodowe</dt><dd>świadkowie, dokumenty, czasem opinia</dd>
+        <dt>Liczba rozpraw</dt><dd>kilka, wyznaczanych co 2–4 miesiące</dd>
+        <dt>Czas do wyroku</dt><dd>1,5–3 lata</dd>
+        <dt>Honorarium</dt><dd>wyższe — więcej terminów i pracy dowodowej</dd>
+      </dl>
+    </div>
+  </div>
+  <p class="sec-desc" style="margin:14px 0 26px;max-width:72ch">Wina ma jeden wymierny skutek:
+    alimenty między byłymi małżonkami. Nie przesądza o dzieciach ani, co do zasady, o podziale
+    majątku. <a href="/blog/rozwod-z-wina-czy-bez-orzekania">Kiedy walka o winę się opłaca</a>.</p>
+
+  <p class="tag tag-zmienne">Zależne od sprawy — nie u każdego</p>
+  <div class="koszt">
+    <div class="koszt-poz">
+      <div class="koszt-top"><h3>${icon("mediacja")}Mediacja</h3><span class="koszt-kwota">wg rozporządzenia</span></div>
+      <p>Przy skierowaniu przez sąd wynagrodzenie mediatora jest określone przepisami i dzielone
+         zwykle po połowie. Udana mediacja zwykle oszczędza więcej, niż kosztuje.</p>
+    </div>
+    <div class="koszt-poz">
+      <div class="koszt-top"><h3>${icon("dowody")}Opinia biegłych</h3><span class="koszt-kwota">zaliczka sądowa</span></div>
+      <p>Pojawia się przy sporze o dzieci albo przy wycenie nieruchomości. Badanie w zespole
+         sądowych specjalistów jest dla stron nieodpłatne; opinia rzeczoznawcy jest płatna zaliczkowo.</p>
+    </div>
+  </div>
+</div></section>
+
+<section class="sec" id="mieszkanie"><div class="wrap">
+  <div class="sec-head">
+    <p class="eyebrow">Mieszkanie i kredyt</p>
+    <h2>Co się stanie z mieszkaniem i kredytem</h2>
+    <p class="sec-desc">Rozwód nie rusza kredytu — dla banku dalej jesteście dwoma dłużnikami.
+      Wyjścia są trzy. Przeczytaj pierwsze zdanie każdego i znajdź swoje.</p>
+  </div>
+  <div class="scen">
+    ${MIESZKANIE.map(s => `<article class="scen-karta">
+      <span class="scen-nr">${icon(s.ikona)}Scenariusz ${s.nr}</span>
+      <h3>${esc(s.tytul)}</h3>
+      <p class="scen-cytat">${esc(s.cytat)}</p>
+      <ol>${s.kroki.map(k => `<li>${esc(k)}</li>`).join("")}</ol>
+      <p class="scen-ryzyko"><b>Ryzyko:</b> ${esc(s.ryzyko)}</p>
+    </article>`).join("\n    ")}
+  </div>
+</div></section>
+
+<section class="sec sec-alt" id="pytania"><div class="wrap">
+  <div class="sec-head">
+    <p class="eyebrow">Pytania</p>
+    <h2>Pytania, które słyszę najczęściej</h2>
+  </div>
+  <div class="faq">
+    ${faqItems.map(f => `<details><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join("\n    ")}
+  </div>
+  <p class="faq-more"><a href="/pytania">Zobacz wszystkie pytania i odpowiedzi →</a></p>
+  <p class="sec-desc" style="margin-top:16px;font-size:13.5px">
+    Odpowiedzi przygotowała ${esc(FIRM.attorney)}, wpis ${esc(FIRM.barNumber)}.
+    Stan prawny na <time datetime="${new Date().toISOString().slice(0, 10)}">${new Date().toISOString().slice(0, 10)}</time>.
+  </p>
+</div></section>
+
+${blokKontaktu(cfg)}
 
 <section class="sec sec-alt"><div class="wrap"><div class="dane">
   <div class="dane-foto">
@@ -890,10 +1084,10 @@ ${naglowek(cfg)}
         <p class="drobne">Wiadomości odczytuję do 2 godzin w dni robocze.
           Konsultacje online i telefoniczne dla całej Polski.</p>
       </div>
-      ${FIRM.offices.map((o, i) => `<div class="dane-blok">
+      ${FIRM.offices.map(o => `<div class="dane-blok">
         <h4>${icon("dojazd-do-sadu")}Biuro ${esc(o.district)}</h4>
         <p>${esc(o.street)}</p><p>${esc(o.postal)} ${esc(o.city)}</p>
-        <p class="drobne">pon.–pt. 9:00–17:00${i ? ", po umówieniu" : ""}</p>
+        <p class="drobne">pon.–pt. 9:00–17:00${o.naUmowienie ? ", po umówieniu" : ""}</p>
       </div>`).join("\n      ")}
     </div>
   </div>

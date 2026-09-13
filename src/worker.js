@@ -5,12 +5,13 @@
 
 // ── KONFIGURACJA DOMEN ─────────────────────────────────────────────────────
 import { DOMAIN_CONFIG, DEFAULT_CONFIG, ALL_HOSTS, FIRM, AD_HEADLINES } from "./domains.js";
-import { CATEGORIES, faqForHost, faqPoolGrouped } from "./faq.js";
+import { CATEGORIES, faqForHost, faqPoolGrouped , PIN } from "./faq.js";
 import { sendLeadNotification } from "./mail.js";
 import { photoResponse, PHOTO_DIMS } from "./photo.js";
 import { icon } from "./icons.js";
-import { buildHome, buildBlogIndex, buildBlogWpis, CSS as LAYOUT_CSS } from "./layout.js";
+import { buildHome, buildBlogIndex, buildBlogWpis, buildKampania, CSS as LAYOUT_CSS } from "./layout.js";
 import { WPISY, BLOG_HOST } from "./blog.js";
+import { STRONY, KAMPANIE_HOST } from "./kampanie.js";
 
 /* Pomiar. GA4 wspolny dla calej sieci. Identyfikator Google Ads
    uzupelnic po otrzymaniu z panelu — do tego czasu tag Ads sie nie renderuje,
@@ -56,6 +57,16 @@ export default {
       return new Response(buildLlms(cfg, hostname), {
         headers: { "Content-Type": "text/plain; charset=utf-8", ...cacheHeaders(3600) } });
     }
+    // GET /alimenty, /podzial-majatku, /separacja, /opieka-nad-dzieckiem
+    const kampania = STRONY.find(k => url.pathname === "/" + k.slug);
+    if (kampania) {
+      return new Response(buildKampania({
+        cfg, hostname, strona: kampania,
+        head: glowaKampanii(cfg, hostname, kampania),
+        schema: schematKampanii(cfg, hostname, kampania),
+      }), { headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(600) } });
+    }
+
     // GET /blog oraz /blog/<wpis> — tylko na domenie glownej
     if (url.pathname === "/blog" || url.pathname.startsWith("/blog/")) {
       if (hostname !== BLOG_HOST) {
@@ -247,7 +258,8 @@ ${PAGE_JS}`;
 function buildHTML(cfg, hostname, url) {
   const adGroup = url && url.searchParams ? url.searchParams.get("utm_content") : null;
   const h1 = (AD_HEADLINES[adGroup] && AD_HEADLINES[adGroup](cfg)) || cfg.h1;
-  const faqItems = faqForHost(hostname, 8);
+  // Pytanie o potrzebe adwokata stoi zawsze pierwsze — reszta rotuje tygodniowo.
+  const faqItems = [PIN, ...faqForHost(hostname, 7)];
   const dzis = new Date().toISOString().slice(0, 10);
 
   const head = `<meta charset="UTF-8">
@@ -385,6 +397,78 @@ function schematWpisu(hostname, w) {
       { "@type": "ListItem", position: 1, name: "Strona główna", item: `https://${hostname}/` },
       { "@type": "ListItem", position: 2, name: "Blog", item: `https://${hostname}/blog` },
       { "@type": "ListItem", position: 3, name: w.tytul, item: `https://${hostname}/blog/${w.slug}` },
+    ]
+  });
+}
+
+/* ── STRONY DOCELOWE KAMPANII ──────────────────────────────────────────────
+   Stoja na kazdej domenie, bo reklama musi ladowac na tej samej domenie,
+   z ktorej pochodzi adres wyswietlany — przekierowanie miedzy domenami
+   wywraca zatwierdzenie reklamy. Duplikaty rozwiazuje adres kanoniczny
+   wskazujacy domene glowna i mapa witryny, ktora wymienia je tylko tam. */
+
+function glowaKampanii(cfg, hostname, strona) {
+  const kanoniczny = `https://${KAMPANIE_HOST}/${strona.slug}`;
+  return `<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(strona.title(cfg))}</title>
+<meta name="description" content="${esc(strona.desc(cfg))}">
+<meta name="author" content="${esc(FIRM.attorney)}">
+<link rel="canonical" href="${kanoniczny}">
+<meta property="og:title" content="${esc(strona.title(cfg))}">
+<meta property="og:description" content="${esc(strona.desc(cfg))}">
+<meta property="og:url" content="${kanoniczny}">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pl_PL">
+<meta property="og:image" content="https://${hostname}${FIRM.photoOg}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>:root{
+  --ink:#12203C; --paper:#FAF7F2; --chalk:#F1ECE4;
+  --clay:#A85A3C; --agree:#3D6B54; --dispute:#96342C;
+  --muted:#46536B; --rule:#DDD5C9; --rule-strong:#C9BFAF;
+  --accent:${cfg.accent}; --accent-light:${cfg.light};
+}</style>
+${trackingHead(cfg)}`;
+}
+
+function schematKampanii(cfg, hostname, strona) {
+  const adres = `https://${hostname}/${strona.slug}`;
+  return ldjson({
+    "@context": "https://schema.org", "@type": "FAQPage",
+    mainEntity: strona.faq.map(([q, a]) => ({
+      "@type": "Question", name: q,
+      acceptedAnswer: { "@type": "Answer", text: a }
+    }))
+  }) + "\n" + ldjson({
+    "@context": "https://schema.org", "@type": "Service",
+    name: strona.h1(cfg),
+    serviceType: strona.grupa,
+    description: strona.desc(cfg),
+    url: adres,
+    areaServed: cfg.areas,
+    provider: {
+      "@type": "LegalService", name: FIRM.name, url: `https://${hostname}`,
+      telephone: FIRM.phone, email: FIRM.email, vatID: FIRM.nip,
+      openingHours: FIRM.hours,
+      address: FIRM.offices.map(o => ({
+        "@type": "PostalAddress", streetAddress: o.street,
+        addressLocality: o.city, postalCode: o.postal, addressCountry: "PL"
+      })),
+      founder: {
+        "@type": "Person", name: FIRM.attorney, jobTitle: "Adwokat",
+        identifier: FIRM.barNumber,
+        memberOf: { "@type": "Organization", name: FIRM.barCouncil }
+      }
+    }
+  }) + "\n" + ldjson({
+    "@context": "https://schema.org", "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Strona główna", item: `https://${hostname}/` },
+      { "@type": "ListItem", position: 2, name: strona.h1(cfg), item: adres },
     ]
   });
 }
@@ -1792,7 +1876,7 @@ function buildSitemap(hostname) {
   const today = new Date().toISOString().slice(0, 10);
   // Blog stoi tylko na domenie glownej, wiec tylko jej mapa go wymienia.
   const sciezki = hostname === BLOG_HOST
-    ? [...PATHS, "/blog", ...WPISY.map(w => `/blog/${w.slug}`)]
+    ? [...PATHS, ...STRONY.map(k => `/${k.slug}`), "/blog", ...WPISY.map(w => `/blog/${w.slug}`)]
     : PATHS;
   const urls = sciezki.map(path => `  <url>
     <loc>https://${hostname}${path}</loc>
@@ -1823,6 +1907,7 @@ nastepuje po zapoznaniu sie z dokumentami.
 ## Strony
 - [Strona glowna](https://${hostname}/): zakres pomocy, proces, kontakt
 - [Pytania i odpowiedzi](https://${hostname}/pytania): baza odpowiedzi na pytania o rozwod
+${STRONY.map(k => `- [${k.grupa}](https://${hostname}/${k.slug}): ${k.desc(cfg)}`).join("\n")}
 - [Polityka prywatnosci](https://${hostname}/polityka-prywatnosci)
 ${hostname === BLOG_HOST ? "- [Blog](https://" + hostname + "/blog): teksty o przebiegu sprawy rozwodowej\n" + WPISY.map(w => `  - [${w.tytul}](https://${hostname}/blog/${w.slug}): ${w.opis}`).join("\n") : "- [Blog](https://" + BLOG_HOST + "/blog): teksty o przebiegu sprawy rozwodowej, wspolne dla calej sieci"}
 

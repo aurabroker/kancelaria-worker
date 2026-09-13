@@ -3,6 +3,7 @@ import { DOMAIN_CONFIG, ALL_HOSTS, FIRM } from "../src/domains.js";
 import { POOLS } from "../src/faq.js";
 import { ICONS, icon } from "../src/icons.js";
 import { WPISY, BLOG_HOST } from "../src/blog.js";
+import { STRONY, KAMPANIE_HOST, miasto } from "../src/kampanie.js";
 import { CSS } from "../src/layout.js";
 
 const env = {};
@@ -189,7 +190,9 @@ console.log(`  6 wartości palety · 11 akcentów · ${ikony} ikon na stronie g�
 console.log("\n=== OPIS PIERWSZEJ ROZMOWY ===");
 for (const host of ALL_HOSTS) {
   const h = texts[host];
-  check(host+" nie obiecuje porady za darmo", !/[Bb]ezpłatn\w* konsultacj/.test(h));
+  // Zakazana jest obietnica DARMOWEJ PORADY PRAWNEJ. Samo haslo "bezpłatna
+  // konsultacja" wlasciciel zatwierdzil jako tekst przycisku 9 wrzesnia 2026.
+  check(host+" nie obiecuje porady za darmo", !/(bezpłatn|darmow|za darmo)[^.]{0,30}porad/i.test(h));
   check(host+" nazywa to rozmową", h.includes("rozmowa organizacyjna") || h.includes("rozmowę"));
   check(host+" mówi kiedy jest porada", h.includes("Po analizie dokumentów") || h.includes("po zapoznaniu"));
   check(host+" wpis w pierwszym ekranie", h.includes(FIRM.barNumber));
@@ -221,6 +224,10 @@ const wgUlicy = { "ul. Ceramiczna 5E/79": "Białołęka", "ul. Bolkowska 2A/28":
 for (const o of FIRM.offices) {
   check("dzielnica dla "+o.street, o.district === wgUlicy[o.street], o.district);
 }
+// Wlasciciel 10 wrzesnia 2026: po umowieniu przyjmuje Bemowo, nie Bialoleka.
+const umowienie = FIRM.offices.filter(o => o.naUmowienie);
+check("jedno biuro na umowienie", umowienie.length === 1, umowienie.length);
+check("na umowienie jest Bemowo", umowienie[0] && umowienie[0].district === "Bemowo");
 for (const host of ALL_HOSTS) {
   const h = texts[host];
   for (const o of FIRM.offices) {
@@ -229,6 +236,9 @@ for (const host of ALL_HOSTS) {
     check(host+" adres "+o.street, i > 0);
     // Podpis stoi tuz nad adresem, w tym samym bloku danych.
     check(host+" podpis przy "+o.street, h.slice(Math.max(0, i-220), i).includes("Biuro "+o.district));
+    // Dopisek o umowieniu stoi pod adresem wlasciwego biura.
+    const blok = h.slice(i, i + 220);
+    check(host+" umowienie przy "+o.district, blok.includes("po umówieniu") === !!o.naUmowienie);
   }
   // Wlasciciel 9 wrzesnia 2026: w pierwszym ekranie numer jest zbedny,
   // zostaje w naglowku i w danych kancelarii.
@@ -298,5 +308,66 @@ const brak = await get(BLOG_HOST, "/blog/nie-ma-takiego-wpisu");
 check("nieznany wpis to 404", brak.status === 404, brak.status);
 for (const host of ALL_HOSTS) check(host+" link do bloga w nawigacji", texts[host].includes('href="/blog"'));
 console.log(`  ${WPISY.length} wpisów na ${BLOG_HOST} · 10 domen przekierowuje · mapa i llms.txt zaktualizowane`);
+
+// 17. strony docelowe kampanii
+// Audyt: caly ruch szedl na strone glowna, zero potwierdzonych konwersji.
+// Kazda grupa reklam ma teraz wlasny adres, wlasny tytul i wlasna cene.
+console.log("\n=== STRONY KAMPANII ===");
+check("cztery strony", STRONY.length === 4, STRONY.length);
+const adresy = ["alimenty", "podzial-majatku", "separacja", "opieka-nad-dzieckiem"];
+check("adresy zgodne z kampania", adresy.every(a => STRONY.some(k => k.slug === a)));
+
+for (const host of ALL_HOSTS) {
+  const cfg = DOMAIN_CONFIG[host];
+  for (const k of STRONY) {
+    const r = await get(host, "/" + k.slug);
+    const h = await r.text();
+    check(`${host}/${k.slug} 200`, r.status === 200, r.status);
+    // Reklama musi ladowac na tej samej domenie, z ktorej idzie klik.
+    check(`${host}/${k.slug} bez przekierowania`, r.status !== 301);
+    check(`${host}/${k.slug} kanoniczny na glowna`,
+      h.includes(`<link rel="canonical" href="https://${KAMPANIE_HOST}/${k.slug}">`));
+    check(`${host}/${k.slug} tytul <=60`, k.title(cfg).length <= 60, k.title(cfg).length);
+    check(`${host}/${k.slug} opis <=155`, k.desc(cfg).length <= 155, k.desc(cfg).length);
+    check(`${host}/${k.slug} tytul zaczyna sie od frazy`,
+      h.includes(`<title>${k.title(cfg)}</title>`));
+    check(`${host}/${k.slug} jeden H1`, (h.match(/<h1[\s>]/g) || []).length === 1);
+    check(`${host}/${k.slug} miasto w H1`, k.h1(cfg).includes(miasto(cfg).slice(0, 6)));
+    // Cena musi byc wysoko: sekcja kosztow przed opisem przebiegu sprawy.
+    check(`${host}/${k.slug} koszty przed przebiegiem`,
+      h.indexOf("Ile to kosztuje?") > 0 && h.indexOf("Ile to kosztuje?") < h.indexOf("krok po kroku"));
+    check(`${host}/${k.slug} widoczna cena`, k.pozycje.some(([, kw]) => h.includes(kw)));
+    // Konwersje: formularz i klik w numer.
+    check(`${host}/${k.slug} formularz`, h.includes('id="contact-form"') && h.includes("submitLead"));
+    check(`${host}/${k.slug} numer jako tel:`, h.includes(`href="tel:${FIRM.phone}"`) && h.includes("trackCall()"));
+    check(`${host}/${k.slug} jedno glowne wezwanie`,
+      (h.match(/Umów bezpłatną konsultację/g) || []).length >= 1);
+    // Pytania widoczne i w schemacie jednoczesnie.
+    check(`${host}/${k.slug} schemat pytan`, h.includes('"@type":"FAQPage"'));
+    for (const [q] of k.faq) {
+      check(`${host}/${k.slug} pytanie widoczne`, h.includes(q));
+      check(`${host}/${k.slug} pytanie w schemacie`, h.includes(JSON.stringify(q).slice(1, -1)));
+    }
+    // Linkowanie wewnetrzne.
+    check(`${host}/${k.slug} link do strony glownej`, h.includes('href="/"'));
+    for (const [u] of k.linki) check(`${host}/${k.slug} link ${u}`, h.includes(`href="${u}"`));
+    // Strona docelowa nie ma nawigacji, ktora wyprowadza z lejka.
+    check(`${host}/${k.slug} bez nawigacji`, !h.includes('class="top-nav"'));
+  }
+}
+// Mapa witryny wymienia je tylko na domenie glownej.
+const mapaK = await (await get(KAMPANIE_HOST, "/sitemap.xml")).text();
+for (const k of STRONY) check("mapa glownej zawiera /"+k.slug, mapaK.includes(`/${k.slug}</loc>`));
+const mapaInna = await (await get("rozwodwola.pl", "/sitemap.xml")).text();
+for (const k of STRONY) check("mapa dzielnicy bez /"+k.slug, !mapaInna.includes(`/${k.slug}</loc>`));
+
+// Strona glowna: rozroznienie kosztu winy i pytanie o potrzebe adwokata.
+for (const host of ALL_HOSTS) {
+  const h = texts[host];
+  check(host+" porownanie kosztu winy", h.includes("Bez orzekania o winie") && h.includes("Z orzeczeniem o winie"));
+  check(host+" pytanie o adwokata", h.includes("Czy do rozwodu potrzebny jest adwokat?"));
+  for (const k of STRONY) check(host+" link do /"+k.slug, h.includes(`href="/${k.slug}"`));
+}
+console.log(`  ${STRONY.length} strony docelowe na ${ALL_HOSTS.length} domenach · kanoniczne na ${KAMPANIE_HOST}`);
 
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));
