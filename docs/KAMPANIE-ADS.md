@@ -40,16 +40,26 @@ Obie akcje na każdej ze stron wysyłają zdarzenie:
 | Wysłanie formularza | `generate_lead` | `adsLeadLabel` w `src/worker.js` |
 | Kliknięcie w numer telefonu | `contact` (method: telefon) | `adsCallLabel` w `src/worker.js` |
 
-**Do uzupełnienia.** W `src/worker.js`, w stałej `TRACKING`, pola `adsId`,
-`adsLeadLabel` i `adsCallLabel` są puste. Bez nich konwersje idą tylko do GA4,
-a Google Ads ich nie zobaczy i optymalizacja stawek nie ruszy. Identyfikator
-konta ma postać `AW-XXXXXXXXX`, a etykieta `AW-XXXXXXXXX/xxxxxxxxxxxxxxxxxx`.
-Znajdziesz je w Google Ads: Cele → Konwersje → wybierz akcję → Konfiguracja
-tagu → Zainstaluj samodzielnie.
+**Stan pomiaru.** Konto `AW-18123853335` jest wpisane w `src/worker.js`
+w stałej `TRACKING` i ładuje się na wszystkich jedenastu domenach, na czterech
+stronach kampanii i na blogu. Do 13 września 2026 tag miała tylko jedna domena,
+więc dziesięć pozostałych nie mierzyło niczego.
 
-Kampania na `rozwodtarchomin.pl` ma własny, działający tag `AW-18123853335`
-z etykietą konwersji. Jest wpisany w `src/domains.js` i **nie wolno go usuwać**
-bez zgody właściciela konta — pilnuje tego osobny test.
+Formularz raportuje konwersję pod akcją `Kontakt`, tą samą, której używa żywa
+kampania na `rozwodtarchomin.pl`. Dzięki temu leady z całej sieci trafiają do
+jednej akcji konwersji, zamiast ginąć. Jeżeli kancelaria chce mierzyć domeny
+osobno, wystarczy założyć osobne akcje konwersji i wpisać ich etykiety w
+`src/domains.js` przy konkretnych domenach — wpis domeny ma pierwszeństwo
+przed ustawieniem sieciowym.
+
+**Czego wciąż brakuje: etykiety kliknięcia w numer.** Pole `adsCallLabel` jest
+puste, bo w koncie nie ma jeszcze takiej akcji konwersji. Kliknięcia w numer
+lecą do GA4 jako zdarzenie `contact`, ale Google Ads ich nie policzy.
+Utworzenie: Cele → Konwersje → Nowa akcja → Witryna → zdarzenie własne;
+potem skopiuj etykietę w postaci `AW-18123853335/xxxxxxxxxxxxxxxxxx`.
+
+Tag żywej kampanii w `src/domains.js` **nie wolno usuwać** bez zgody
+właściciela konta — pilnują tego dwa testy.
 
 ## Czego jeszcze brakuje do pełnej skuteczności
 

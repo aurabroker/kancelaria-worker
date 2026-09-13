@@ -1,4 +1,4 @@
-import worker from "../src/worker.js";
+import worker, { TRACKING } from "../src/worker.js";
 import { DOMAIN_CONFIG, ALL_HOSTS, FIRM } from "../src/domains.js";
 import { POOLS } from "../src/faq.js";
 import { ICONS, icon } from "../src/icons.js";
@@ -369,5 +369,33 @@ for (const host of ALL_HOSTS) {
   for (const k of STRONY) check(host+" link do /"+k.slug, h.includes(`href="/${k.slug}"`));
 }
 console.log(`  ${STRONY.length} strony docelowe na ${ALL_HOSTS.length} domenach · kanoniczne na ${KAMPANIE_HOST}`);
+
+// 18. tag Google Ads na calej sieci
+// Wlasciciel podal identyfikator konta 13 wrzesnia 2026. Do tego dnia
+// dziesiec domen nie mierzylo niczego — tylko tarchomin mial wlasny wpis.
+console.log("\n=== TAG GOOGLE ADS ===");
+const KONTO = "AW-18123853335";
+check("identyfikator w konfiguracji", TRACKING.adsId === KONTO, TRACKING.adsId);
+check("etykieta leada z tego samego konta", TRACKING.adsLeadLabel.indexOf(KONTO + "/") === 0);
+for (const host of ALL_HOSTS) {
+  const strony = [texts[host]];
+  for (const k of STRONY) strony.push(await (await get(host, "/" + k.slug)).text());
+  if (host === BLOG_HOST) {
+    strony.push(await (await get(host, "/blog")).text());
+    strony.push(await (await get(host, "/blog/" + WPISY[0].slug)).text());
+  }
+  for (const h of strony) {
+    check(host+" konto Ads w kodzie", h.includes(`gtag('config', '${KONTO}')`));
+    check(host+" etykieta leada", h.includes("window.ADS_LEAD = '" + TRACKING.adsLeadLabel + "'"));
+    check(host+" GA4 obok Ads", h.includes(TRACKING.ga4));
+    check(host+" konwersja przy formularzu", h.includes("window.ADS_LEAD") || h.includes("/assets/page.js"));
+  }
+}
+// Zywa kampania zostaje przy swojej akcji konwersji.
+const tar = DOMAIN_CONFIG["rozwodtarchomin.pl"];
+check("tarchomin ma wlasny wpis", tar.gtag === KONTO && tar.conversionTag.indexOf(KONTO + "/") === 0);
+check("wpis domeny ma pierwszenstwo",
+  texts["rozwodtarchomin.pl"].includes("window.ADS_LEAD = '" + tar.conversionTag + "'"));
+console.log(`  ${KONTO} na ${ALL_HOSTS.length} domenach, stronach kampanii i blogu`);
 
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));

@@ -13,14 +13,22 @@ import { buildHome, buildBlogIndex, buildBlogWpis, buildKampania, CSS as LAYOUT_
 import { WPISY, BLOG_HOST } from "./blog.js";
 import { STRONY, KAMPANIE_HOST } from "./kampanie.js";
 
-/* Pomiar. GA4 wspolny dla calej sieci. Identyfikator Google Ads
-   uzupelnic po otrzymaniu z panelu — do tego czasu tag Ads sie nie renderuje,
-   a rozwodtarchomin.pl korzysta z wlasnego wpisu w konfiguracji domeny. */
+/* Pomiar. GA4 i konto Google Ads sa wspolne dla calej sieci.
+   Identyfikator konta podal wlasciciel 13 wrzesnia 2026. Etykieta leada to
+   ta sama akcja konwersji "Kontakt", ktorej uzywa zywa kampania na
+   rozwodtarchomin.pl — dzieki temu formularz mierzy sie na wszystkich
+   jedenastu domenach, a nie tylko na jednej. Jesli kancelaria zalozy
+   osobne akcje konwersji per domena, wpisy w DOMAIN_CONFIG maja
+   pierwszenstwo przed tymi wartosciami (patrz adsFor).
+
+   Etykieta klikniecia w numer jest pusta, bo takiej akcji konwersji
+   jeszcze nie ma w koncie. Do jej utworzenia: Cele -> Konwersje ->
+   Nowa akcja -> Witryna -> zdarzenie wlasne. */
 export const TRACKING = {
   ga4:          "G-9QQRN32R64",
-  adsId:        "",   // AW-XXXXXXXXX
-  adsLeadLabel: "",   // AW-XXXXXXXXX/etykieta-formularz
-  adsCallLabel: "",   // AW-XXXXXXXXX/etykieta-telefon
+  adsId:        "AW-18123853335",
+  adsLeadLabel: "AW-18123853335/ocgpCLSM168cEJeckMJD",
+  adsCallLabel: "",   // AW-18123853335/etykieta-telefon — do uzupelnienia
 };
 
 const YEAR = new Date().getUTCFullYear();
@@ -1817,9 +1825,11 @@ ${cfg.gtag && cfg.conversionTag ? `<!-- Event snippet for Kontakt conversion pag
 
 // ── POMIAR ─────────────────────────────────────────────────────────────────
 function adsFor(cfg) {
-  const id   = TRACKING.adsId || cfg.gtag || "";
-  const lead = TRACKING.adsLeadLabel || cfg.conversionTag || "";
-  const call = TRACKING.adsCallLabel || "";
+  // Wpis domeny wygrywa z ustawieniem sieciowym: zywa kampania ma zostac
+  // przy swojej akcji konwersji, nawet gdy siec dostanie inna.
+  const id   = cfg.gtag || TRACKING.adsId || "";
+  const lead = cfg.conversionTag || TRACKING.adsLeadLabel || "";
+  const call = cfg.callTag || TRACKING.adsCallLabel || "";
   return { id, lead, call };
 }
 
