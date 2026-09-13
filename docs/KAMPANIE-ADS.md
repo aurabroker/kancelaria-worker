@@ -59,3 +59,63 @@ bez zgody właściciela konta — pilnuje tego osobny test.
 2. **Opinie klientów.** Nie wymyślamy cytatów. Jeżeli kancelaria ma opinie
    w wizytówce Google, podlinkujemy je i pokażemy ocenę.
 3. **Weryfikacja prawna treści.** Patrz `STRONY-KAMPANII-do-weryfikacji.md`.
+
+---
+
+# Skrypt porządkujący kampanie
+
+Plik: `ads/porzadkowanie-kampanii.js`. Wklej go w Google Ads:
+**Narzędzia → Operacje zbiorcze → Skrypty → +**, autoryzuj, zapisz.
+
+## Pierwsze uruchomienie
+
+1. Nie zmieniaj nic w ustawieniach. `trybProbny` jest ustawiony na `true`.
+2. Kliknij **Podgląd**. To sprawdza, czy nazwy metod zgadzają się z Twoją
+   wersją API — czego lokalna próba sprawdzić nie może.
+3. Przeczytaj log. Zobaczysz, co skrypt *by* zrobił.
+4. Popraw listy w sekcji `USTAWIENIA`, zwłaszcza `wykluczenia`.
+5. Dopiero teraz ustaw `trybProbny: false` i uruchom.
+
+Trzy najbardziej inwazyjne działania są domyślnie wyłączone:
+wstrzymywanie słów, harmonogram wyświetlania i sufiks UTM. Włączaj je
+pojedynczo, każde po osobnym przebiegu w trybie próbnym.
+
+## Co skrypt robi
+
+| Sekcja | Działanie | Domyślnie |
+| --- | --- | --- |
+| 1 | Raport zdrowia pomiaru konwersji | włączone |
+| 2 | Podział zapytań na intencje: cena, usługa, informacja | włączone |
+| 3 | Dopisanie wykluczeń bezspornie niesprzedażowych | włączone |
+| 4 | Raport: zapytanie w grupie reklam o innym temacie | włączone |
+| 5 | Wstrzymanie słów bez konwersji powyżej progu kosztu | **wyłączone** |
+| 6 | Harmonogram wyświetlania pod godziny pracy | **wyłączone** |
+| 7 | Sufiks adresu z parametrami UTM | **wyłączone** |
+
+Skrypt **nie dotyka adresów docelowych reklam** — te zmieniamy osobno,
+po wdrożeniu podstron. Nie usuwa słów kluczowych, nie podnosi budżetów
+i nie rusza ustawień konwersji.
+
+## Czego skrypt nie naprawi
+
+Sekcja 5 opiera się na konwersjach. Dopóki konto ich nie mierzy, każde
+słowo wygląda na nierentowne i skrypt wstrzymałby cały ruch. Dlatego to
+działanie jest wyłączone i takie ma zostać, dopóki w `src/worker.js` nie
+pojawi się identyfikator `AW-` z etykietami.
+
+## Harmonogram — ważne zastrzeżenie
+
+Kampania bez harmonogramu wyświetla się całą dobę. Po dodaniu choćby
+jednej pozycji wyświetla się **wyłącznie** w podanych oknach. Dlatego
+tabela w skrypcie pokrywa pełną dobę i siedem dni, a nie tylko godziny
+pracy: telefon odbieramy 9:00–17:00, ale formularz działa non stop,
+więc noc dostaje niższą stawkę zamiast wyłączenia.
+
+Skrypt pomija kampanie, które już mają własny harmonogram.
+
+## Próba lokalna
+
+`node ads/proba-lokalna.js` uruchamia skrypt na wymyślonych danych, poza
+Google Ads. Sprawdza, czy kod się wykonuje i czy liczby się zgadzają —
+nie sprawdza, czy nazwy metod Google Ads są aktualne. Od tego jest
+przycisk **Podgląd** w edytorze skryptów.
