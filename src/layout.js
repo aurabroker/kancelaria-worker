@@ -20,7 +20,7 @@
    ============================================================ */
 
 import { FIRM } from "./domains.js";
-import { icon } from "./icons.js";
+import { icon, ZNAK } from "./icons.js";
 import { WPISY } from "./blog.js";
 import { STRONY, miasto } from "./kampanie.js";
 
@@ -270,15 +270,22 @@ button{font:inherit;cursor:pointer}
   position:sticky;top:0;z-index:50}
 .top-in{display:flex;align-items:center;justify-content:space-between;
   gap:16px;padding:14px 0}
-.brand{display:flex;flex-direction:column;text-decoration:none}
-.brand-name{font-family:'Newsreader',serif;font-size:18px;color:var(--ink)}
-.brand-sub{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+/* Znak kancelarii: monogram, pionowa kreska, nazwisko. Układ z logo. */
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none}
+.znak{width:30px;height:30px;flex:none;color:var(--ink);display:block}
+.brand-txt{display:flex;flex-direction:column;justify-content:center;
+  padding-left:11px;border-left:1px solid var(--rule-strong)}
+.brand-name{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:13px;
+  line-height:1.14;letter-spacing:.015em;text-transform:uppercase;color:var(--ink)}
+.brand-sub{font-size:9px;line-height:1;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--muted);margin-top:4px}
 .top-nav{display:none;gap:20px;font-size:14.5px}
 .top-nav a{color:var(--muted);text-decoration:none}
 .top-nav a:hover{color:var(--accent)}
 .top-tel{display:flex;align-items:center;gap:8px;color:var(--accent);
   font-weight:500;font-size:15px;text-decoration:none;white-space:nowrap}
-@media(min-width:1040px){.top-nav{display:flex}.brand-name{font-size:19px}.top-tel{font-size:17px}}
+@media(min-width:1040px){.top-nav{display:flex}.top-tel{font-size:17px}
+  .znak{width:34px;height:34px}.brand-name{font-size:14px}.brand-sub{font-size:9.5px}}
 
 /* ── hero ── */
 .hero{padding:36px 0 44px}
@@ -430,6 +437,9 @@ button{font:inherit;cursor:pointer}
 footer{background:var(--ink);color:#C6CEDC;padding:36px 0 26px;margin-top:0}
 footer a{color:#C6CEDC;text-decoration:none}
 footer a:hover{color:#fff;text-decoration:underline}
+.stopka-znak{display:flex;align-items:center;gap:12px;padding-bottom:20px;color:#C6CEDC}
+.stopka-znak .znak{width:30px;height:30px;flex:none}
+.stopka-znak span{font-size:13px;letter-spacing:.02em}
 .stopka-siec{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;
   padding-bottom:20px;border-bottom:1px solid #26314B}
 .stopka-dol{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;
@@ -564,8 +574,11 @@ function naglowek(cfg, podstrona = false) {
 
 <header class="top"><div class="wrap"><div class="top-in">
   <a class="brand" href="/">
-    <span class="brand-name">${esc(FIRM.attorney.replace(/^adw\.\s*/, ""))}</span>
-    <span class="brand-sub">Kancelaria adwokacka${cfg.district === "Warszawa" ? "" : " · " + esc(cfg.district)}</span>
+    ${ZNAK}
+    <span class="brand-txt">
+      <span class="brand-name">${esc(FIRM.attorney.replace(/^adw\.\s*/, ""))}</span>
+      <span class="brand-sub">Adwokat${cfg.district === "Warszawa" ? "" : " · " + esc(cfg.district)}</span>
+    </span>
   </a>
   <nav class="top-nav">
     <a href="/#zakres">Zakres spraw</a>
@@ -581,8 +594,11 @@ function naglowek(cfg, podstrona = false) {
 
 <header class="top"><div class="wrap"><div class="top-in">
   <a class="brand" href="/">
-    <span class="brand-name">${esc(FIRM.attorney.replace(/^adw\.\s*/, ""))}</span>
-    <span class="brand-sub">Kancelaria adwokacka${cfg.district === "Warszawa" ? "" : " · " + esc(cfg.district)}</span>
+    ${ZNAK}
+    <span class="brand-txt">
+      <span class="brand-name">${esc(FIRM.attorney.replace(/^adw\.\s*/, ""))}</span>
+      <span class="brand-sub">Adwokat${cfg.district === "Warszawa" ? "" : " · " + esc(cfg.district)}</span>
+    </span>
   </a>
   <nav class="top-nav">
     <a href="#zakres">Zakres spraw</a>
@@ -598,6 +614,7 @@ function naglowek(cfg, podstrona = false) {
 
 function stopka(hostname) {
   return `<footer><div class="wrap">
+  <div class="stopka-znak">${ZNAK}<span>${esc(FIRM.name)}</span></div>
   <div class="stopka-siec">
     ${SIEC.map(([h, n]) => h === hostname
       ? `<span style="color:#fff">${esc(n)}</span>`
@@ -780,8 +797,11 @@ function naglowekProsty(cfg) {
   return `<div class="accent-bar"></div>
 <header class="top"><div class="wrap"><div class="top-in">
   <span class="brand">
-    <span class="brand-name">${esc(FIRM.attorney.replace(/^adw\.\s*/, ""))}</span>
-    <span class="brand-sub">Kancelaria adwokacka${cfg.district === "Warszawa" ? "" : " · " + esc(cfg.district)}</span>
+    ${ZNAK}
+    <span class="brand-txt">
+      <span class="brand-name">${esc(FIRM.attorney.replace(/^adw\.\s*/, ""))}</span>
+      <span class="brand-sub">Adwokat${cfg.district === "Warszawa" ? "" : " · " + esc(cfg.district)}</span>
+    </span>
   </span>
   <a class="top-tel" href="tel:${tel}" onclick="trackCall()">${icon("konsultacja-telefoniczna")}${esc(telTxt)}</a>
 </div></div></header>`;

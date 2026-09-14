@@ -1,7 +1,7 @@
 import worker, { TRACKING } from "../src/worker.js";
 import { DOMAIN_CONFIG, ALL_HOSTS, FIRM } from "../src/domains.js";
 import { POOLS } from "../src/faq.js";
-import { ICONS, icon } from "../src/icons.js";
+import { ICONS, icon, ZNAK } from "../src/icons.js";
 import { WPISY, BLOG_HOST } from "../src/blog.js";
 import { STRONY, KAMPANIE_HOST, miasto } from "../src/kampanie.js";
 import { CSS } from "../src/layout.js";
@@ -397,5 +397,26 @@ check("tarchomin ma wlasny wpis", tar.gtag === KONTO && tar.conversionTag.indexO
 check("wpis domeny ma pierwszenstwo",
   texts["rozwodtarchomin.pl"].includes("window.ADS_LEAD = '" + tar.conversionTag + "'"));
 console.log(`  ${KONTO} na ${ALL_HOSTS.length} domenach, stronach kampanii i blogu`);
+
+// 19. znak kancelarii
+// Wlasciciel 14 wrzesnia 2026: logo bylo przekazane, a strona go nie miala.
+console.log("\n=== ZNAK KANCELARII ===");
+check("znak to grafika wektorowa", ZNAK.indexOf("<svg") === 0 && ZNAK.indexOf("<path") > 0);
+check("znak dziedziczy kolor", ZNAK.includes('stroke="currentColor"'));
+check("znak ukryty przed czytnikiem", ZNAK.includes('aria-hidden="true"'));
+for (const host of ALL_HOSTS) {
+  const h = texts[host];
+  check(host+" znak w naglowku", h.indexOf('class="brand"') < h.indexOf('class="znak"'));
+  check(host+" znak w stopce", h.includes('class="stopka-znak"'));
+  check(host+" nazwisko przy znaku", h.includes('class="brand-name"'));
+  check(host+" podpis Adwokat", h.includes('class="brand-sub">Adwokat'));
+  for (const k of STRONY) {
+    const s2 = await (await get(host, "/" + k.slug)).text();
+    check(`${host}/${k.slug} znak`, s2.includes('class="znak"'));
+  }
+}
+const bl = await (await get(BLOG_HOST, "/blog")).text();
+check("znak na blogu", bl.includes('class="znak"'));
+console.log("  monogram w nagłówku i stopce na 11 domenach, stronach kampanii i blogu");
 
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));
