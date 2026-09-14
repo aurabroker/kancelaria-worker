@@ -534,7 +534,9 @@ console.log("  tryb zgody v2, baner na wszystkich stronach, polityka zgodna z ko
 // sprawdzenia i nie jest chroniona — ten test pilnuje, zeby taka luka
 // nigdy nie powstala po cichu.
 console.log("\n=== TURNSTILE ===");
-const LUKI_ZNANE = ["rozwodmokotow.pl"];   // czeka na drugi widget w panelu
+// Od 14 wrzesnia 2026 kazda domena ma widget. Lista ma zostac pusta:
+// nowa domena bez wpisu w Turnstile ma wywalic testy, a nie przejsc cicho.
+const LUKI_ZNANE = [];
 const luki = domenyBezWidgetu(ALL_HOSTS);
 check("luki sa tylko te znane", JSON.stringify(luki) === JSON.stringify(LUKI_ZNANE), luki.join(","));
 for (const w of WIDGETY) {
@@ -634,7 +636,9 @@ check("awaria sieci przepuszcza", w.ok, w.powod);
 w = await sprawdzTurnstile("zeton", {}, "rozwod.waw.pl");
 check("brak klucza pomija sprawdzenie", w.ok && w.powod === "brak klucza", w.powod);
 // Domena bez widgetu nie moze odrzucac zgloszen, bo nie ma czego sprawdzac.
-w = await sprawdzTurnstile("", { TURNSTILE_SECRET: zMagazynu }, "rozwodmokotow.pl");
+// Uzywamy nazwy spoza sieci: gdyby ktos dolozyl domene i zapomnial o Turnstile,
+// formularz ma dzialac, a nie zwracac odmowe.
+w = await sprawdzTurnstile("", { TURNSTILE_SECRET: zMagazynu }, "rozwod-nowa-domena.pl");
 check("domena bez widgetu przepuszcza", w.ok && w.powod === "brak widgetu", w.powod);
 // Kazdy widget siega po wlasne powiazanie.
 udajCloudflare({ success: true, action: TURNSTILE_ACTION, hostname: "rozwod.waw.pl" });
@@ -648,8 +652,12 @@ globalThis.fetch = prawdziwyFetch;
 
 // Powiazanie musi byc zadeklarowane, bo wrangler wysyla tylko to, co widzi.
 const toml = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
-check("powiazanie w wrangler.toml", toml.includes('binding     = "TURNSTILE_SECRET"'));
-check("nazwa sekretu w wrangler.toml", toml.includes('secret_name = "TURNSTILE_SECRET"'));
+for (const w of WIDGETY) {
+  check(`powiazanie ${w.powiazanie} w wrangler.toml`,
+    toml.includes(`binding     = "${w.powiazanie}"`), w.powiazanie);
+  check(`sekret ${w.powiazanie} w wrangler.toml`,
+    toml.includes(`secret_name = "${w.powiazanie}"`), w.powiazanie);
+}
 console.log("  sekret z magazynu rozpakowany, host i działanie sprawdzane, awaria przepuszcza");
 
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));

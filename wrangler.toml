@@ -22,3 +22,10 @@ secret_name = "RESEND_API_KEY"
 binding     = "TURNSTILE_SECRET"
 store_id    = "15030d8ca051490e96bd866168384aa9"
 secret_name = "TURNSTILE_SECRET"
+
+# Drugi widget Turnstile: limit dziesieciu nazw hosta na widget zmusil
+# do rozbicia jedenastu domen na dwa widgety, kazdy z wlasnym sekretem.
+[[secrets_store_secrets]]
+binding     = "TURNSTILE_SECRET_2"
+store_id    = "15030d8ca051490e96bd866168384aa9"
+secret_name = "TURNSTILE_SECRET_2"

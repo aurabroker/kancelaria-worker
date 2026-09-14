@@ -35,11 +35,8 @@ export const WIDGETY = [
     ],
   },
   {
-    // DO UZUPELNIENIA. Zaloz w panelu widget rozwod_formularz_2 z jedna
-    // domena rozwodmokotow.pl, wklej tu jego klucz witryny i dodaj sekret
-    // do magazynu pod nazwa TURNSTILE_SECRET_2.
     nazwa: "rozwod_formularz_2",
-    sitekey: "",
+    sitekey: "0x4AAAAAAE0i-X-1nNVNd64e",
     powiazanie: "TURNSTILE_SECRET_2",
     domeny: ["rozwodmokotow.pl"],
   },

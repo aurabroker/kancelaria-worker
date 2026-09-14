@@ -2,30 +2,23 @@
 
 Kolejność ma znaczenie. Punkty 1–3 muszą być zrobione **przed** przepięciem.
 
-## 1. Drugi widget Turnstile
+## 1. Drugi widget Turnstile — ZROBIONE
 
-Plan bezpłatny pozwala na **dziesięć nazw hosta w jednym widgecie**, a sieć
-ma jedenaście domen. Widget `rozwod_formularz` jest pełny i brakuje w nim
-`rozwodmokotow.pl`. Subdomeny liczą się automatycznie, więc nie da się tego
-obejść jednym wpisem. Rozwiązaniem jest drugi widget — konto ma ich już
-pięć, więc liczba widgetów nie jest ograniczeniem.
+Plan bezpłatny pozwala na dziesięć nazw hosta w jednym widgecie, a sieć ma
+jedenaście domen, więc widgety są dwa:
 
-Do zrobienia w panelu:
+| Widget | Domeny | Powiązanie z sekretem |
+| --- | --- | --- |
+| `rozwod_formularz` | 10 domen | `TURNSTILE_SECRET` |
+| `rozwod_formularz_2` | `rozwodmokotow.pl` | `TURNSTILE_SECRET_2` |
 
-1. Cloudflare → Turnstile → **Add widget**
-2. Nazwa: `rozwod_formularz_2`, tryb **Managed**
-3. Hostname: `rozwodmokotow.pl`
-4. Po zapisaniu skopiuj **klucz witryny** i przyślij mi go — wpiszę go
-   w `src/turnstile.js`, w drugim wpisie tablicy `WIDGETY`.
-5. **Klucz tajny** dodaj do tego samego magazynu sekretów co pozostałe,
-   pod nazwą `TURNSTILE_SECRET_2`, i powiąż go z Workerem.
+Wszystkie jedenaście domen jest chronionych. Oba powiązania są w Workerze
+i oba są zadeklarowane w `wrangler.toml`.
 
-Do tego czasu formularz na `rozwodmokotow.pl` działa normalnie, tylko bez
-sprawdzenia. Kod nie pokazuje tam pustego okienka i nie odrzuca zgłoszeń —
-świadomie, bo brak ochrony ma kosztować spam, a nie utracone sprawy.
-
-Test `test/render.mjs` pilnuje, żeby lista domen bez widgetu nigdy nie
-urosła po cichu. Po dodaniu drugiego widgetu lista ma być pusta.
+**Dokładasz domenę?** Dopisz ją do widgetu w panelu Cloudflare i do tablicy
+`WIDGETY` w `src/turnstile.js`. Gdy widget jest pełny, załóż kolejny i dodaj
+dla niego sekret pod nową nazwą. Test pilnuje, żeby żadna domena nie została
+bez ochrony po cichu.
 
 ## 2. Klucz tajny Turnstile — ZROBIONE
 
