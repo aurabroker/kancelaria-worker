@@ -12,7 +12,7 @@ import { icon } from "./icons.js";
 import { buildHome, buildBlogIndex, buildBlogWpis, buildKampania, CSS as LAYOUT_CSS } from "./layout.js";
 import { WPISY, BLOG_HOST } from "./blog.js";
 import { STRONY, KAMPANIE_HOST } from "./kampanie.js";
-import { sprawdzTurnstile, TURNSTILE_SITEKEY, TURNSTILE_ACTION } from "./turnstile.js";
+import { sprawdzTurnstile } from "./turnstile.js";
 
 /* Pomiar. GA4 i konto Google Ads sa wspolne dla calej sieci.
    Identyfikator konta podal wlasciciel 13 wrzesnia 2026. Etykieta leada to

@@ -2,13 +2,30 @@
 
 Kolejność ma znaczenie. Punkty 1–3 muszą być zrobione **przed** przepięciem.
 
-## 1. Domena w widgecie Turnstile
+## 1. Drugi widget Turnstile
 
-Widget `rozwod_formularz` ma dziesięć domen. **Brakuje `rozwodmokotow.pl`.**
-Bez niej formularz na tej domenie zwróci odmowę i zgłoszenie przepadnie.
+Plan bezpłatny pozwala na **dziesięć nazw hosta w jednym widgecie**, a sieć
+ma jedenaście domen. Widget `rozwod_formularz` jest pełny i brakuje w nim
+`rozwodmokotow.pl`. Subdomeny liczą się automatycznie, więc nie da się tego
+obejść jednym wpisem. Rozwiązaniem jest drugi widget — konto ma ich już
+pięć, więc liczba widgetów nie jest ograniczeniem.
 
-Cloudflare → Turnstile → `rozwod_formularz` → Settings → Hostname Management
-→ dodaj `rozwodmokotow.pl` → Save.
+Do zrobienia w panelu:
+
+1. Cloudflare → Turnstile → **Add widget**
+2. Nazwa: `rozwod_formularz_2`, tryb **Managed**
+3. Hostname: `rozwodmokotow.pl`
+4. Po zapisaniu skopiuj **klucz witryny** i przyślij mi go — wpiszę go
+   w `src/turnstile.js`, w drugim wpisie tablicy `WIDGETY`.
+5. **Klucz tajny** dodaj do tego samego magazynu sekretów co pozostałe,
+   pod nazwą `TURNSTILE_SECRET_2`, i powiąż go z Workerem.
+
+Do tego czasu formularz na `rozwodmokotow.pl` działa normalnie, tylko bez
+sprawdzenia. Kod nie pokazuje tam pustego okienka i nie odrzuca zgłoszeń —
+świadomie, bo brak ochrony ma kosztować spam, a nie utracone sprawy.
+
+Test `test/render.mjs` pilnuje, żeby lista domen bez widgetu nigdy nie
+urosła po cichu. Po dodaniu drugiego widgetu lista ma być pusta.
 
 ## 2. Klucz tajny Turnstile — ZROBIONE
 

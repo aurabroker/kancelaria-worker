@@ -14,8 +14,46 @@
    do logow Workera.
    ============================================================ */
 
-export const TURNSTILE_SITEKEY = "0x4AAAAAAE0dkaYqWjSNBY_Q";
 export const TURNSTILE_ACTION = "lead";
+
+/* Plan bezplatny pozwala na dziesiec nazw hosta w jednym widgecie, a siec
+   ma jedenascie domen. Stad dwa widgety. Klucz witryny jest publiczny
+   i moze lezec w repozytorium; klucz tajny idzie do magazynu sekretow
+   pod nazwa z pola "powiazanie".
+
+   DODAJESZ DOMENE? Dopisz ja do widgetu w panelu Cloudflare i tutaj.
+   Test pilnuje, zeby zadna domena nie zostala bez ochrony po cichu. */
+export const WIDGETY = [
+  {
+    nazwa: "rozwod_formularz",
+    sitekey: "0x4AAAAAAE0dkaYqWjSNBY_Q",
+    powiazanie: "TURNSTILE_SECRET",
+    domeny: [
+      "rozwod.waw.pl", "rozwodbemowo.pl", "rozwodbielany.pl", "rozwodjablonna.pl",
+      "rozwodlegionowo.pl", "rozwodlomianki.pl", "rozwodochota.pl",
+      "rozwodtarchomin.pl", "rozwodwola.pl", "rozwodzoliborz.pl",
+    ],
+  },
+  {
+    // DO UZUPELNIENIA. Zaloz w panelu widget rozwod_formularz_2 z jedna
+    // domena rozwodmokotow.pl, wklej tu jego klucz witryny i dodaj sekret
+    // do magazynu pod nazwa TURNSTILE_SECRET_2.
+    nazwa: "rozwod_formularz_2",
+    sitekey: "",
+    powiazanie: "TURNSTILE_SECRET_2",
+    domeny: ["rozwodmokotow.pl"],
+  },
+];
+
+/** Widget obslugujacy dana domene albo null, gdy jeszcze go nie ma. */
+export function widgetDla(hostname) {
+  return WIDGETY.find(w => w.sitekey && w.domeny.includes(hostname)) || null;
+}
+
+/** Domeny, ktore nie maja jeszcze widgetu — formularz na nich nie jest chroniony. */
+export function domenyBezWidgetu(hosty) {
+  return hosty.filter(h => !widgetDla(h));
+}
 
 const ENDPOINT = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
@@ -39,9 +77,16 @@ async function czytajSekret(binding) {
 }
 
 export async function sprawdzTurnstile(token, env, hostname, ip) {
-  const secret = await czytajSekret(env && env.TURNSTILE_SECRET);
+  const widget = widgetDla(hostname);
+  if (!widget) {
+    // Domena bez widgetu: formularz nie pokazuje sprawdzenia, wiec nie ma
+    // czego weryfikowac. Przepuszczamy, zeby zgloszenia nie przepadaly.
+    console.error(`turnstile: brak widgetu dla ${hostname} — sprawdzenie pominiete`);
+    return { ok: true, powod: "brak widgetu" };
+  }
+  const secret = await czytajSekret(env && env[widget.powiazanie]);
   if (!secret) {
-    console.error("turnstile: brak TURNSTILE_SECRET — sprawdzenie pominiete");
+    console.error(`turnstile: brak ${widget.powiazanie} — sprawdzenie pominiete`);
     return { ok: true, powod: "brak klucza" };
   }
   if (!token) return { ok: false, powod: "brak zetonu" };

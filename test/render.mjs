@@ -5,7 +5,7 @@ import { POOLS } from "../src/faq.js";
 import { ICONS, icon } from "../src/icons.js";
 import { WPISY, BLOG_HOST } from "../src/blog.js";
 import { STRONY, KAMPANIE_HOST, miasto } from "../src/kampanie.js";
-import { TURNSTILE_SITEKEY, TURNSTILE_ACTION, sprawdzTurnstile } from "../src/turnstile.js";
+import { TURNSTILE_ACTION, sprawdzTurnstile, WIDGETY, widgetDla, domenyBezWidgetu } from "../src/turnstile.js";
 import { CSS } from "../src/layout.js";
 
 const env = {};
@@ -529,26 +529,45 @@ for (const sciezka of ["/polityka-prywatnosci", "/rodo"]) {
 console.log("  tryb zgody v2, baner na wszystkich stronach, polityka zgodna z kodem");
 
 // 23. Turnstile
+// Plan bezplatny pozwala na dziesiec nazw hosta w widgecie, a siec ma
+// jedenascie domen, wiec widgety sa dwa. Domena bez widgetu nie pokazuje
+// sprawdzenia i nie jest chroniona — ten test pilnuje, zeby taka luka
+// nigdy nie powstala po cichu.
 console.log("\n=== TURNSTILE ===");
+const LUKI_ZNANE = ["rozwodmokotow.pl"];   // czeka na drugi widget w panelu
+const luki = domenyBezWidgetu(ALL_HOSTS);
+check("luki sa tylko te znane", JSON.stringify(luki) === JSON.stringify(LUKI_ZNANE), luki.join(","));
+for (const w of WIDGETY) {
+  check(`widget ${w.nazwa} do dziesieciu domen`, w.domeny.length <= 10, w.domeny.length);
+  check(`widget ${w.nazwa} ma wlasne powiazanie`, !!w.powiazanie);
+}
+const wszystkieDomeny = WIDGETY.flatMap(w => w.domeny);
+check("zadna domena w dwoch widgetach", new Set(wszystkieDomeny).size === wszystkieDomeny.length);
+for (const host of ALL_HOSTS) check("domena opisana w widgecie: "+host, wszystkieDomeny.includes(host));
+
 const zFormularzem = ["/", ...STRONY.map(k => "/" + k.slug)];
 for (const host of ALL_HOSTS) {
+  const w = widgetDla(host);
   for (const sciezka of zFormularzem) {
     const h = sciezka === "/" ? texts[host] : await (await get(host, sciezka)).text();
-    check(`${host}${sciezka} widget`, h.includes('class="cf-turnstile"'));
-    check(`${host}${sciezka} klucz witryny`, h.includes(`data-sitekey="${TURNSTILE_SITEKEY}"`));
-    check(`${host}${sciezka} dzialanie`, h.includes(`data-action="${TURNSTILE_ACTION}"`));
-    check(`${host}${sciezka} skrypt widgetu`,
-      h.includes("challenges.cloudflare.com/turnstile/v0/api.js") && h.includes("async defer"));
+    check(`${host}${sciezka} formularz jest`, h.includes('id="contact-form"'));
+    if (w) {
+      check(`${host}${sciezka} widget`, h.includes('class="cf-turnstile"'));
+      check(`${host}${sciezka} klucz witryny`, h.includes(`data-sitekey="${w.sitekey}"`));
+      check(`${host}${sciezka} dzialanie`, h.includes(`data-action="${TURNSTILE_ACTION}"`));
+      check(`${host}${sciezka} skrypt widgetu`,
+        h.includes("challenges.cloudflare.com/turnstile/v0/api.js") && h.includes("async defer"));
+    } else {
+      // Bez widgetu nie ciagniemy skryptu — pusty kontener tylko myli.
+      check(`${host}${sciezka} bez widgetu`, !h.includes("cf-turnstile"));
+      check(`${host}${sciezka} bez skryptu`, !h.includes("challenges.cloudflare.com"));
+    }
   }
-  // Strony bez formularza nie ciagna skryptu.
   const bezFormularza = await (await get(host, "/pytania")).text();
   check(host+"/pytania bez widgetu", !bezFormularza.includes("cf-turnstile"));
 }
 check("zeton wysylany z formularza", skryptStrony.includes("cf-turnstile-response"));
 check("zeton odnawiany po bledzie", skryptStrony.includes("turnstile.reset()"));
-// Klucz tajny nie moze byc w repozytorium.
-check("brak klucza tajnego w kodzie", !CSS.includes("0x4AAAAAAA") &&
-      !JSON.stringify(TURNSTILE_SITEKEY).includes("secret"));
 
 const zgl = (env, ciało) => worker.fetch(new Request("https://rozwod.waw.pl/api/lead", {
   method: "POST", headers: { "Content-Type": "application/json" },
@@ -556,12 +575,10 @@ const zgl = (env, ciało) => worker.fetch(new Request("https://rozwod.waw.pl/api
 }), env);
 const bezZetonu = await zgl({ TURNSTILE_SECRET: "x" }, {});
 check("brak zetonu to odmowa", bezZetonu.status === 403, bezZetonu.status);
-const trescOdmowy = await bezZetonu.text();
-check("odmowa tlumaczy sie po ludzku", trescOdmowy.includes("Odśwież stronę"));
-// Bez sekretu sprawdzenie odpada, zeby zgubiony klucz nie kosztowal zgloszen.
+check("odmowa tlumaczy sie po ludzku", (await bezZetonu.text()).includes("Odśwież stronę"));
 const bezSekretu = await zgl({}, {});
 check("bez sekretu formularz dziala", bezSekretu.status !== 403, bezSekretu.status);
-console.log(`  widget na ${zFormularzem.length} stronach z formularzem, brak żetonu to 403`);
+console.log(`  ${WIDGETY.filter(w=>w.sitekey).length} widget · ${ALL_HOSTS.length - luki.length} z ${ALL_HOSTS.length} domen chronionych`);
 
 // 24. sprawdzanie zetonu Turnstile
 // W koncie klucz jest powiazaniem z magazynem sekretow, wiec env.TURNSTILE_SECRET
@@ -616,6 +633,13 @@ check("awaria sieci przepuszcza", w.ok, w.powod);
 // Brak klucza: sprawdzenie pomijane, formularz dziala.
 w = await sprawdzTurnstile("zeton", {}, "rozwod.waw.pl");
 check("brak klucza pomija sprawdzenie", w.ok && w.powod === "brak klucza", w.powod);
+// Domena bez widgetu nie moze odrzucac zgloszen, bo nie ma czego sprawdzac.
+w = await sprawdzTurnstile("", { TURNSTILE_SECRET: zMagazynu }, "rozwodmokotow.pl");
+check("domena bez widgetu przepuszcza", w.ok && w.powod === "brak widgetu", w.powod);
+// Kazdy widget siega po wlasne powiazanie.
+udajCloudflare({ success: true, action: TURNSTILE_ACTION, hostname: "rozwod.waw.pl" });
+w = await sprawdzTurnstile("zeton", { TURNSTILE_SECRET_2: zMagazynu }, "rozwod.waw.pl");
+check("obce powiazanie nie dziala", w.powod === "brak klucza", w.powod);
 // Klucz jest, zetonu nie ma — odmowa bez pytania Cloudflare.
 w = await sprawdzTurnstile("", { TURNSTILE_SECRET: zMagazynu }, "rozwod.waw.pl");
 check("brak zetonu to odmowa", !w.ok && w.powod === "brak zetonu", w.powod);

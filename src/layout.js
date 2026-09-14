@@ -23,7 +23,7 @@ import { FIRM } from "./domains.js";
 import { icon } from "./icons.js";
 import { WPISY } from "./blog.js";
 import { STRONY, miasto } from "./kampanie.js";
-import { TURNSTILE_SITEKEY, TURNSTILE_ACTION } from "./turnstile.js";
+import { widgetDla, TURNSTILE_ACTION } from "./turnstile.js";
 
 /* Sieć domen w stopce — nazwy obszarów, nie dzielnic z kanwy. */
 const SIEC = [
@@ -754,7 +754,8 @@ ${stopka(hostname)}
 /* Sekcja kontaktu jest jedna dla strony glownej i stron kampanii.
    Formularz w dwoch miejscach musi byc tym samym formularzem, bo inaczej
    jedna kopia zawsze zostaje w tyle. */
-function blokKontaktu(cfg) {
+function blokKontaktu(cfg, hostname) {
+  const widget = widgetDla(hostname);
   return `<section class="sec" id="kontakt"><div class="wrap">
   <div class="sec-head">
     <p class="eyebrow">Kontakt</p>
@@ -799,15 +800,15 @@ function blokKontaktu(cfg) {
             ${esc(FIRM.name)}. <a href="/rodo">Pełna informacja RODO</a>. *</label>
         </div>
       </div>
-      <div class="cf-turnstile" data-sitekey="${TURNSTILE_SITEKEY}"
-           data-action="${TURNSTILE_ACTION}" data-language="pl" data-size="flexible"></div>
+      ${widget ? `<div class="cf-turnstile" data-sitekey="${widget.sitekey}"
+           data-action="${TURNSTILE_ACTION}" data-language="pl" data-size="flexible"></div>` : ""}
       <div class="form-stopka">
         <button type="submit" class="wyslij">Poproś o telefon</button>
         <p class="tajemnica">${icon("dokumenty")}<span>Dane trafiają wyłącznie do kancelarii.
           Gwiazdką oznaczono pola wymagane.</span></p>
       </div>
     </form>
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer><\/script>
+    ${widget ? `<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer><\/script>` : ""}
     <div class="ok" id="form-success">
       <div class="ok-znak">${icon("bezplatne-30-minut")}</div>
       <h3>Dziękuję</h3>
@@ -923,7 +924,7 @@ ${naglowekProsty(cfg)}
   </div>
 </div></section>
 
-${blokKontaktu(cfg)}
+${blokKontaktu(cfg, hostname)}
 
 <section class="sec sec-alt"><div class="wrap">
   <div class="sec-head">
@@ -1107,7 +1108,7 @@ ${naglowek(cfg)}
   </p>
 </div></section>
 
-${blokKontaktu(cfg)}
+${blokKontaktu(cfg, hostname)}
 
 <section class="sec sec-alt"><div class="wrap"><div class="dane">
   <div class="dane-foto">
