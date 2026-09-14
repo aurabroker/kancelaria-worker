@@ -73,7 +73,7 @@ export const STRONY = [
       ["Czy w sprawie o alimenty w ogóle potrzebny jest adwokat?",
        "Nie ma przymusu adwokackiego — pozew o alimenty możesz złożyć sam i sąd go rozpozna. Pomoc pełnomocnika ma znaczenie przede wszystkim wtedy, gdy druga strona zaniża dochody, prowadzi działalność gospodarczą, mieszka za granicą albo sprawa dotyczy dużej kwoty. Druga sytuacja to spór, w którym już raz zapadło niekorzystne orzeczenie: zmiana wysokości wymaga wykazania zmiany okoliczności, a to zadanie dowodowe, nie formalność."],
     ],
-    dlaczego: "Sprawy alimentacyjne mieszkańców tej okolicy trafiają do sądów, w których bywam co tydzień. Znam praktykę poszczególnych wydziałów: jakie zestawienia wydatków przekonują, jak podchodzi się do dochodów z działalności gospodarczej i kiedy realnie da się uzyskać zabezpieczenie. Prowadzę wyłącznie prawo rodzinne, bo w tych sprawach rutyna jest przewagą.",
+    dlaczego: "Sprawy alimentacyjne mieszkańców tej okolicy trafiają do sądów, w których bywam co tydzień. Znam praktykę poszczególnych wydziałów: jakie zestawienia wydatków przekonują, jak podchodzi się do dochodów z działalności gospodarczej i kiedy realnie da się uzyskać zabezpieczenie. W sprawach rodzinnych rutyna jest przewagą.",
     linki: [
       ["/opieka-nad-dzieckiem", "Kontakty z dzieckiem i władza rodzicielska"],
       ["/podzial-majatku", "Podział majątku po rozwodzie"],
@@ -129,7 +129,7 @@ export const STRONY = [
       ["Co z mieszkaniem obciążonym kredytem?",
        "Wyrok nie zmienia umowy z bankiem — wobec niego nadal odpowiadacie oboje. Zwolnienie jednego z małżonków z długu wymaga zgody banku, który bada zdolność kredytową osoby pozostającej przy kredycie tak samo jak przy nowym zobowiązaniu. Dlatego przy mieszkaniu z hipoteką planujemy podział razem ze stanowiskiem banku, a nie po jego uzyskaniu."],
     ],
-    dlaczego: "Sprawy o podział majątku prowadzę w sądach tej okolicy i wiem, ile realnie trwa uzyskanie opinii rzeczoznawcy oraz kiedy zgodny projekt podziału przechodzi bez uwag. Zajmuję się wyłącznie prawem rodzinnym, więc majątek małżeński i rozliczenie nakładów to codzienność, a nie wyjątek w kalendarzu.",
+    dlaczego: "Sprawy o podział majątku prowadzę w sądach tej okolicy i wiem, ile realnie trwa uzyskanie opinii rzeczoznawcy oraz kiedy zgodny projekt podziału przechodzi bez uwag. Majątek małżeński i rozliczenie nakładów to w mojej praktyce codzienność, a nie wyjątek w kalendarzu.",
     linki: [
       ["/separacja", "Separacja zamiast rozwodu"],
       ["/alimenty", "Alimenty na dziecko"],
@@ -185,7 +185,7 @@ export const STRONY = [
       ["Czy po separacji można wziąć rozwód?",
        "Tak. Separacja nie zamyka drogi do rozwodu — jest osobnym postępowaniem i po jej orzeczeniu można wystąpić o rozwiązanie małżeństwa. Trzeba jednak liczyć się z nową sprawą i nową opłatą. Jeżeli już na starcie wiecie, że decyzja jest ostateczna, zwykle taniej i szybciej jest pójść od razu drogą rozwodową."],
     ],
-    dlaczego: "Separacja bywa najlepszym rozwiązaniem dla osób, które nie chcą jeszcze zamykać małżeństwa, i najgorszym dla tych, które i tak skończą przy rozwodzie. Na pierwszej rozmowie mówię wprost, do której grupy należy Twoja sytuacja, zamiast prowadzić dwie sprawy tam, gdzie wystarczy jedna. Prowadzę wyłącznie prawo rodzinne w sądach tej okolicy.",
+    dlaczego: "Separacja bywa najlepszym rozwiązaniem dla osób, które nie chcą jeszcze zamykać małżeństwa, i najgorszym dla tych, które i tak skończą przy rozwodzie. Na pierwszej rozmowie mówię wprost, do której grupy należy Twoja sytuacja, zamiast prowadzić dwie sprawy tam, gdzie wystarczy jedna. Prowadzę sprawy rodzinne w sądach tej okolicy.",
     linki: [
       ["/podzial-majatku", "Podział majątku i rozdzielność"],
       ["/alimenty", "Alimenty na dziecko"],
@@ -240,7 +240,7 @@ export const STRONY = [
       ["Czy sąd wysłuchuje dziecka?",
        "Sąd w sprawach dotyczących osoby dziecka wysłucha je, jeżeli pozwala na to jego rozwój umysłowy, stan zdrowia i stopień dojrzałości, i uwzględni jego rozsądne życzenia. Takie wysłuchanie odbywa się poza salą rozpraw, w warunkach dostosowanych do wieku. To jednak coś innego niż przesłuchanie w charakterze świadka — dzieci stron poniżej siedemnastego roku życia nie mogą być świadkami."],
     ],
-    dlaczego: "W sprawach o kontakty najwięcej zależy od szczegółów harmonogramu, których nikt nie zapisuje, dopóki nie zaczną boleć: kto odbiera po zajęciach, co ze świętami, jak wygląda wyjazd zagraniczny. Piszę te dokumenty tak, żeby za dwa lata nie było o co się kłócić. Prowadzę wyłącznie prawo rodzinne w sądach tej okolicy.",
+    dlaczego: "W sprawach o kontakty najwięcej zależy od szczegółów harmonogramu, których nikt nie zapisuje, dopóki nie zaczną boleć: kto odbiera po zajęciach, co ze świętami, jak wygląda wyjazd zagraniczny. Piszę te dokumenty tak, żeby za dwa lata nie było o co się kłócić. Prowadzę sprawy rodzinne w sądach tej okolicy.",
     linki: [
       ["/alimenty", "Alimenty na dziecko"],
       ["/separacja", "Separacja zamiast rozwodu"],

@@ -1,6 +1,6 @@
 # Strony docelowe kampanii — do weryfikacji
 
-**Stan na 2026-09-13.** Cztery strony pod cztery grupy reklam. Teksty napisał
+**Stan na 2026-09-14.** Cztery strony pod cztery grupy reklam. Teksty napisał
 asystent AI. **Nie są zweryfikowane przez prawnika.**
 
 ## Co wymaga sprawdzenia w pierwszej kolejności
@@ -110,7 +110,7 @@ Nie ma przymusu adwokackiego — pozew o alimenty możesz złożyć sam i sąd g
 
 ### Dlaczego my
 
-Sprawy alimentacyjne mieszkańców tej okolicy trafiają do sądów, w których bywam co tydzień. Znam praktykę poszczególnych wydziałów: jakie zestawienia wydatków przekonują, jak podchodzi się do dochodów z działalności gospodarczej i kiedy realnie da się uzyskać zabezpieczenie. Prowadzę wyłącznie prawo rodzinne, bo w tych sprawach rutyna jest przewagą.
+Sprawy alimentacyjne mieszkańców tej okolicy trafiają do sądów, w których bywam co tydzień. Znam praktykę poszczególnych wydziałów: jakie zestawienia wydatków przekonują, jak podchodzi się do dochodów z działalności gospodarczej i kiedy realnie da się uzyskać zabezpieczenie. W sprawach rodzinnych rutyna jest przewagą.
 
 **Uwagi kancelarii:**
 
@@ -187,7 +187,7 @@ Wyrok nie zmienia umowy z bankiem — wobec niego nadal odpowiadacie oboje. Zwol
 
 ### Dlaczego my
 
-Sprawy o podział majątku prowadzę w sądach tej okolicy i wiem, ile realnie trwa uzyskanie opinii rzeczoznawcy oraz kiedy zgodny projekt podziału przechodzi bez uwag. Zajmuję się wyłącznie prawem rodzinnym, więc majątek małżeński i rozliczenie nakładów to codzienność, a nie wyjątek w kalendarzu.
+Sprawy o podział majątku prowadzę w sądach tej okolicy i wiem, ile realnie trwa uzyskanie opinii rzeczoznawcy oraz kiedy zgodny projekt podziału przechodzi bez uwag. Majątek małżeński i rozliczenie nakładów to w mojej praktyce codzienność, a nie wyjątek w kalendarzu.
 
 **Uwagi kancelarii:**
 
@@ -263,7 +263,7 @@ Tak. Separacja nie zamyka drogi do rozwodu — jest osobnym postępowaniem i po 
 
 ### Dlaczego my
 
-Separacja bywa najlepszym rozwiązaniem dla osób, które nie chcą jeszcze zamykać małżeństwa, i najgorszym dla tych, które i tak skończą przy rozwodzie. Na pierwszej rozmowie mówię wprost, do której grupy należy Twoja sytuacja, zamiast prowadzić dwie sprawy tam, gdzie wystarczy jedna. Prowadzę wyłącznie prawo rodzinne w sądach tej okolicy.
+Separacja bywa najlepszym rozwiązaniem dla osób, które nie chcą jeszcze zamykać małżeństwa, i najgorszym dla tych, które i tak skończą przy rozwodzie. Na pierwszej rozmowie mówię wprost, do której grupy należy Twoja sytuacja, zamiast prowadzić dwie sprawy tam, gdzie wystarczy jedna. Prowadzę sprawy rodzinne w sądach tej okolicy.
 
 **Uwagi kancelarii:**
 
@@ -339,7 +339,7 @@ Sąd w sprawach dotyczących osoby dziecka wysłucha je, jeżeli pozwala na to j
 
 ### Dlaczego my
 
-W sprawach o kontakty najwięcej zależy od szczegółów harmonogramu, których nikt nie zapisuje, dopóki nie zaczną boleć: kto odbiera po zajęciach, co ze świętami, jak wygląda wyjazd zagraniczny. Piszę te dokumenty tak, żeby za dwa lata nie było o co się kłócić. Prowadzę wyłącznie prawo rodzinne w sądach tej okolicy.
+W sprawach o kontakty najwięcej zależy od szczegółów harmonogramu, których nikt nie zapisuje, dopóki nie zaczną boleć: kto odbiera po zajęciach, co ze świętami, jak wygląda wyjazd zagraniczny. Piszę te dokumenty tak, żeby za dwa lata nie było o co się kłócić. Prowadzę sprawy rodzinne w sądach tej okolicy.
 
 **Uwagi kancelarii:**
 

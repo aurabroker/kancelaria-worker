@@ -875,7 +875,7 @@ ${naglowekProsty(cfg)}
   <div class="trust">
     <div>${ptak}<span>Wpis <strong>${esc(FIRM.barNumber)}</strong>, ${esc(FIRM.barCouncil)}</span></div>
     <div>${ptak}<span>Pierwsze <strong>30 minut</strong> bez opłaty</span></div>
-    <div>${ptak}<span>Wyłącznie <strong>sprawy rodzinne</strong></span></div>
+    <div>${ptak}<span>Sprawy <strong>rozwodowe i rodzinne</strong></span></div>
     <div>${ptak}<span>Biura <strong>Bemowo</strong> i <strong>Białołęka</strong> · online</span></div>
   </div>
 </div></section>
@@ -989,7 +989,7 @@ ${naglowek(cfg)}
   <div class="sec-head">
     <p class="eyebrow">Zakres spraw</p>
     <h2>Czym się zajmuję</h2>
-    <p class="sec-desc">Wyłącznie prawo rodzinne. Poniżej sprawy, które prowadzę najczęściej —
+    <p class="sec-desc">Poniżej sprawy rodzinne, które prowadzę najczęściej —
       od pierwszego pozwu po wykonanie wyroku.</p>
   </div>
   <div class="zakres">
@@ -1117,7 +1117,7 @@ ${blokKontaktu(cfg, hostname)}
   </div>
   <div>
     <h2>${esc(FIRM.attorney)}</h2>
-    <p class="dane-bio">Prowadzę wyłącznie sprawy rodzinne — rozwód, podział majątku, alimenty
+    <p class="dane-bio">Prowadzę sprawy rodzinne — rozwód, podział majątku, alimenty
       i opiekę nad dziećmi. ${esc(cfg.courtNote)}</p>
     <div class="dane-siatka">
       <div class="dane-blok"><h4>Dane kancelarii</h4><dl>

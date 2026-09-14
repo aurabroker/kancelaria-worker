@@ -660,4 +660,28 @@ for (const w of WIDGETY) {
 }
 console.log("  sekret z magazynu rozpakowany, host i działanie sprawdzane, awaria przepuszcza");
 
+// 25. brak deklaracji wylacznosci praktyki
+// Wlasciciel 14 wrzesnia 2026: na stronie nie moze stac, ze kancelaria
+// prowadzi wylacznie prawo rodzinne. Zdanie bylo w piciu miejscach.
+// Uwaga: "wylacznie winny" to termin z kodeksu i ma zostac w odpowiedziach.
+console.log("\n=== ZAKRES PRAKTYKI ===");
+const wylacznosc = /[Ww]yłącznie\s+(prawo|prawem|prawa|sprawy|sprawami|spraw)\s+rodzinn|[Zz]ajmuję się wyłącznie|[Pp]rowadzę wyłącznie/;
+const doSprawdzenia = ["/", "/pytania", "/blog", ...STRONY.map(k => "/" + k.slug)];
+for (const host of ALL_HOSTS) {
+  for (const sciezka of doSprawdzenia) {
+    const h = sciezka === "/" ? texts[host] : await (await get(host, sciezka)).text();
+    const trafienie = h.match(wylacznosc);
+    check(`${host}${sciezka} bez deklaracji wyłączności`, !trafienie, trafienie && trafienie[0]);
+  }
+}
+for (const w of WPISY) {
+  const h = await (await get(BLOG_HOST, "/blog/" + w.slug)).text();
+  const trafienie = h.match(wylacznosc);
+  check("wpis bez deklaracji wyłączności: "+w.slug, !trafienie, trafienie && trafienie[0]);
+}
+// Termin kodeksowy zostaje — to co innego niz deklaracja o zakresie praktyki.
+check("termin o winie zachowany",
+  JSON.stringify(POOLS).includes("wyłącznie winnego"));
+console.log("  żadna strona nie zawęża zakresu praktyki");
+
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));
