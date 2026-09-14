@@ -306,7 +306,9 @@ ${trackingHead(cfg)}`;
     description: cfg.desc,
     url: `https://${hostname}`,
     telephone: FIRM.phone,
-    email: FIRM.email,
+    // Adres e-mail celowo nie jest ogloszony jako kanal kontaktu — wlasciciel
+    // 14 wrzesnia 2026 przeniosl korespondencje na formularz. Zostaje tylko
+    // tam, gdzie wymaga go prawo: w informacji RODO i polityce prywatnosci.
     image: `https://${hostname}${FIRM.photoOg}`,
     vatID: FIRM.nip,
     dateModified: dzis,
@@ -460,7 +462,7 @@ function schematKampanii(cfg, hostname, strona) {
     areaServed: cfg.areas,
     provider: {
       "@type": "LegalService", name: FIRM.name, url: `https://${hostname}`,
-      telephone: FIRM.phone, email: FIRM.email, vatID: FIRM.nip,
+      telephone: FIRM.phone, vatID: FIRM.nip,
       openingHours: FIRM.hours,
       address: FIRM.offices.map(o => ({
         "@type": "PostalAddress", streetAddress: o.street,
@@ -1626,7 +1628,6 @@ ${trackingHead(cfg)}
         <p class="footer-tagline">Dyskretna i skuteczna pomoc prawna. ${cfg.district} · Warszawa i Mazowieckie.</p>
         <div class="footer-contact">
           <a href="tel:+48605089552" onclick="trackCall()">\u{1F4DE} 605 089 552</a>
-          <a href="mailto:kancelaria@idzik.org.pl">✉ kancelaria@idzik.org.pl</a>
         </div>
       </div>
     </div>
@@ -1660,7 +1661,7 @@ ${trackingHead(cfg)}
 <script src="/assets/page.js"><\/script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1/dist/confetti.browser.min.js"><\/script>
 <script>
-const SB_URL='${SUPABASE_URL}',SB_KEY='${SUPABASE_ANON}',ADM_URL='${ADM_URL}',PLATFORM='${cfg.district}';
+const SB_URL='${SUPABASE_URL}',SB_KEY='${SUPABASE_ANON_FALLBACK}',ADM_URL='${ADM_URL}',PLATFORM='${cfg.district}';
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const starBtns=[...document.querySelectorAll('.star-btn')];
 const ratingInput=document.getElementById('rating-val');
@@ -1909,7 +1910,8 @@ function buildLlms(cfg, hostname) {
 > Obszar: ${cfg.district} i okolice. Sad wlasciwy: ${cfg.court.name}.
 
 Adwokat: ${FIRM.attorney}, wpis nr ${FIRM.barNumber}, ${FIRM.barCouncil}.
-NIP ${FIRM.nip}. Telefon ${FIRM.phoneLabel}. E-mail ${FIRM.email}.
+NIP ${FIRM.nip}. Telefon ${FIRM.phoneLabel}.
+Kontakt pisemny wylacznie przez formularz na stronie.
 Pierwsza rozmowa trwajaca 30 minut jest bezplatna. To rozmowa organizacyjna:
 ustalenie zakresu sprawy, potrzebnych dokumentow i kosztow. Porada prawna
 nastepuje po zapoznaniu sie z dokumentami.

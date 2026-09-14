@@ -468,4 +468,36 @@ for (const host of ALL_HOSTS) {
 }
 console.log("  hero i dół strony: szerokość 100%, wysokość wyliczana z proporcji");
 
+// 21. adres e-mail przestaje byc ogloszonym kanalem kontaktu
+// Wlasciciel 14 wrzesnia 2026: korespondencja idzie przez formularz.
+// Adres zostaje tylko tam, gdzie wymaga go prawo — w informacji RODO
+// i w polityce prywatnosci, bo bez niego nie da sie zrealizowac praw
+// osoby, ktorej dane dotycza.
+console.log("\n=== ADRES E-MAIL ===");
+const bezAdresu = ["/", "/pytania", "/opinia.html", "/dziekujemy.html", "/llms.txt",
+                   ...STRONY.map(k => "/" + k.slug)];
+for (const host of ALL_HOSTS) {
+  for (const sciezka of bezAdresu) {
+    const r = await get(host, sciezka);
+    const h = await r.text();
+    check(`${host}${sciezka} odpowiada`, r.status === 200, r.status);
+    check(`${host}${sciezka} bez adresu`, !h.includes(FIRM.email));
+    check(`${host}${sciezka} bez odnosnika mailto`, !h.includes("mailto:"));
+  }
+  // Formularz zostaje jedyna droga pisemna i musi byc wskazany.
+  check(host+" odnosnik do formularza", texts[host].includes('<a href="#kontakt">Formularz kontaktowy</a>'));
+}
+if (BLOG_HOST) {
+  for (const sciezka of ["/blog", "/blog/" + WPISY[0].slug]) {
+    const h = await (await get(BLOG_HOST, sciezka)).text();
+    check(`${sciezka} bez adresu`, !h.includes(FIRM.email));
+  }
+}
+// Strony prawne musza podawac kontakt do administratora danych.
+for (const sciezka of ["/rodo", "/polityka-prywatnosci"]) {
+  const h = await (await get(ALL_HOSTS[0], sciezka)).text();
+  check(sciezka+" ma kontakt do administratora", h.includes(FIRM.email));
+}
+console.log("  adres tylko w informacji RODO i polityce prywatności");
+
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));

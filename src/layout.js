@@ -906,7 +906,7 @@ ${blokKontaktu(cfg)}
   <p class="kam-dlaczego">${esc(strona.dlaczego)}</p>
   <p class="kam-dlaczego" style="color:var(--muted);font-size:14.5px">Wpis ${esc(FIRM.barNumber)} w ${esc(FIRM.barCouncil)}.
     Biura przy ${esc(FIRM.offices[0].street)} i ${esc(FIRM.offices[1].street)} w Warszawie.
-    Konsultacje online dla całej Polski. Telefon ${esc(telTxt)}, e-mail ${esc(FIRM.email)}.</p>
+    Konsultacje online dla całej Polski. Telefon ${esc(telTxt)} albo formularz powyżej.</p>
   <div class="kam-linki">
     ${strona.linki.map(([u, t]) => `<a href="${u}">${esc(t)}</a>`).join("\n    ")}
   </div>
@@ -1099,8 +1099,8 @@ ${blokKontaktu(cfg)}
       </dl></div>
       <div class="dane-blok"><h4>Kontakt</h4>
         <p><a href="tel:${tel}" onclick="trackCall()">${esc(telTxt)}</a></p>
-        <p><a href="mailto:${FIRM.email}">${esc(FIRM.email)}</a></p>
-        <p class="drobne">Wiadomości odczytuję do 2 godzin w dni robocze.
+        <p><a href="#kontakt">Formularz kontaktowy</a></p>
+        <p class="drobne">Odpowiadam do 2 godzin w dni robocze.
           Konsultacje online i telefoniczne dla całej Polski.</p>
       </div>
       ${FIRM.offices.map(o => `<div class="dane-blok">
