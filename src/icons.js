@@ -9,24 +9,6 @@
    ikona działa w 20 px na telefonie i w 30 px na komputerze.
    ============================================================ */
 
-/* ============================================================
-   ZNAK KANCELARII
-   ------------------------------------------------------------
-   Monogram M odrysowany wektorowo z logo przekazanego przez
-   wlasciciela 14 wrzesnia 2026. Plik zrodlowy nie trafil do
-   repozytorium — gdy sie pojawi, podmienic ten ksztalt na
-   oryginal i usunac ten komentarz.
-
-   Litera jest gruba, ale rysujemy sam jej kontur cienka kreska,
-   tak jak w logo. Przekatne sa rownolegle, dolina V konczy sie
-   nad podstawa, nogi sa zamkniete u dolu.
-   ============================================================ */
-export const ZNAK =
-  '<svg class="znak" viewBox="-2 -2 104 104" fill="none" stroke="currentColor" ' +
-  'stroke-width="2.4" stroke-linejoin="miter" aria-hidden="true" focusable="false">' +
-  '<path d="M0 100 L0 0 L12 0 L50 50 L88 0 L100 0 L100 100 L88 100 ' +
-  'L88 22 L50 72 L12 22 L12 100 Z"/></svg>';
-
 export const ICONS = {
   "rozwod-bez-orzekania-o-winie": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"7\" cy=\"12\" r=\"4.6\"/><circle cx=\"17\" cy=\"12\" r=\"4.6\"/></svg>",  // rozwód bez orzekania o winie
   "rozwod-z-orzeczeniem-o-winie": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"7\" cy=\"12\" r=\"4.6\"/><circle cx=\"17\" cy=\"12\" r=\"4.6\"/><circle cx=\"17\" cy=\"12\" r=\"1.9\" fill=\"currentColor\" stroke=\"none\"/></svg>",  // rozwód z orzeczeniem o winie

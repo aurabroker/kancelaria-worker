@@ -44,6 +44,8 @@ export const FIRM = {
   hours: "Mo-Fr 09:00-17:00",   // godziny pracy kancelarii, potwierdzone
   // Portret adwokatki. Pliki osadzone w src/photo.js i serwowane
   // pod tymi adresami z rocznym cache.
+  logo:    "/assets/logo.webp",   // 554x130, jednobarwne z kanalem alfa
+  wnetrze: "/assets/wnetrze.webp", // pas nad stopka, grafika wygenerowana
   photo:   "/assets/adwokat.webp",
   photoOg: "/assets/adwokat-og.webp",
 };

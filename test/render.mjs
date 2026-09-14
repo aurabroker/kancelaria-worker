@@ -1,7 +1,7 @@
 import worker, { TRACKING } from "../src/worker.js";
 import { DOMAIN_CONFIG, ALL_HOSTS, FIRM } from "../src/domains.js";
 import { POOLS } from "../src/faq.js";
-import { ICONS, icon, ZNAK } from "../src/icons.js";
+import { ICONS, icon } from "../src/icons.js";
 import { WPISY, BLOG_HOST } from "../src/blog.js";
 import { STRONY, KAMPANIE_HOST, miasto } from "../src/kampanie.js";
 import { CSS } from "../src/layout.js";
@@ -398,26 +398,56 @@ check("wpis domeny ma pierwszenstwo",
   texts["rozwodtarchomin.pl"].includes("window.ADS_LEAD = '" + tar.conversionTag + "'"));
 console.log(`  ${KONTO} na ${ALL_HOSTS.length} domenach, stronach kampanii i blogu`);
 
-// 19. znak kancelarii
+// 19. logo kancelarii
 // Wlasciciel 14 wrzesnia 2026: logo bylo przekazane, a strona go nie miala.
-console.log("\n=== ZNAK KANCELARII ===");
-check("znak to grafika wektorowa", ZNAK.indexOf("<svg") === 0 && ZNAK.indexOf("<path") > 0);
-check("znak dziedziczy kolor", ZNAK.includes('stroke="currentColor"'));
-check("znak ukryty przed czytnikiem", ZNAK.includes('aria-hidden="true"'));
+// Odrysowany recznie monogram sie nie zgadzal, wiec osadzamy plik zrodlowy.
+console.log("\n=== LOGO KANCELARII ===");
+const logoOdp = await get(ALL_HOSTS[0], FIRM.logo);
+check("plik logo oddawany", logoOdp.status === 200, logoOdp.status);
+check("logo to webp", logoOdp.headers.get("content-type") === "image/webp");
+const logoBajty = (await logoOdp.arrayBuffer()).byteLength;
+check("logo nie jest puste", logoBajty > 2000, logoBajty);
+check("logo nie przesadza z waga", logoBajty < 40000, logoBajty);
+console.log(`  ${FIRM.logo} · ${(logoBajty/1024).toFixed(1)} kB`);
+for (const host of ALL_HOSTS) {
+  const cfg = DOMAIN_CONFIG[host];
+  const strony = [["/", texts[host]]];
+  for (const k of STRONY) strony.push(["/"+k.slug, await (await get(host, "/"+k.slug)).text()]);
+  if (host === BLOG_HOST) strony.push(["/blog", await (await get(host, "/blog")).text()]);
+  for (const [gdzie, h] of strony) {
+    check(`${host}${gdzie} logo w naglowku`, h.includes(`src="${FIRM.logo}"`));
+    check(`${host}${gdzie} wymiary logo`, h.includes('width="554" height="130"'));
+    // Bez wymiarow uklad skacze przy wczytywaniu, a logo jest nad zgieciem.
+    check(`${host}${gdzie} opis logo`, h.includes(`alt="${FIRM.name}"`));
+  }
+  // Dzielnica przy logo tylko tam, gdzie to nie jest Warszawa.
+  const maDzielnice = texts[host].includes('class="brand-dzielnica"');
+  check(host+" dzielnica przy logo", maDzielnice === (cfg.district !== "Warszawa"), cfg.district);
+  // W stopce ten sam plik, wybielony filtrem.
+  check(host+" logo w stopce", texts[host].includes('class="logo logo-jasne"'));
+}
+check("filtr wybielajacy w arkuszu", CSS.includes(".logo-jasne{filter:brightness(0) invert(1)}"));
+check("recznie odrysowany monogram usuniety", !CSS.includes(".znak{"));
+console.log("  logo w nagłówku i stopce na 11 domenach, stronach kampanii i blogu");
+
+// Pas nad stopka. Wlasciciel 14 wrzesnia 2026: zdjecie na samym dole strony.
+const wnOdp = await get(ALL_HOSTS[0], FIRM.wnetrze);
+check("plik wnetrza oddawany", wnOdp.status === 200, wnOdp.status);
+const wnBajty = (await wnOdp.arrayBuffer()).byteLength;
+check("wnetrze nie przesadza z waga", wnBajty < 90000, wnBajty);
 for (const host of ALL_HOSTS) {
   const h = texts[host];
-  check(host+" znak w naglowku", h.indexOf('class="brand"') < h.indexOf('class="znak"'));
-  check(host+" znak w stopce", h.includes('class="stopka-znak"'));
-  check(host+" nazwisko przy znaku", h.includes('class="brand-name"'));
-  check(host+" podpis Adwokat", h.includes('class="brand-sub">Adwokat'));
-  for (const k of STRONY) {
-    const s2 = await (await get(host, "/" + k.slug)).text();
-    check(`${host}/${k.slug} znak`, s2.includes('class="znak"'));
-  }
+  check(host+" pas nad stopka", h.includes('class="pas-wnetrze"'));
+  check(host+" pas przed stopka", h.indexOf("pas-wnetrze") < h.indexOf("<footer"));
+  check(host+" pas po danych kancelarii", h.indexOf("pas-wnetrze") > h.indexOf("dane-blok"));
+  // Grafika wygenerowana: pusty opis i zadnego podpisu, zeby niczego nie twierdzila.
+  const znacznik = h.slice(h.indexOf("pas-wnetrze"), h.indexOf("pas-wnetrze") + 260);
+  check(host+" wnetrze bez opisu", znacznik.includes('alt=""'));
+  check(host+" wnetrze wczytywane leniwie", znacznik.includes('loading="lazy"'));
+  check(host+" wnetrze z wymiarami", znacznik.includes('width="1600" height="1062"'));
 }
-const bl = await (await get(BLOG_HOST, "/blog")).text();
-check("znak na blogu", bl.includes('class="znak"'));
-console.log("  monogram w nagłówku i stopce na 11 domenach, stronach kampanii i blogu");
+check("wnetrze ma kadrowanie", CSS.includes("aspect-ratio:3/2;object-fit:cover"));
+console.log(`  pas nad stopką · ${(wnBajty/1024).toFixed(0)} kB, wczytywany leniwie`);
 
 // 20. proporcje zdjec
 // Wlasciciel 14 wrzesnia 2026: zdjecie na dole strony bylo rozciagniete.
