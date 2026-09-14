@@ -23,6 +23,7 @@ import { FIRM } from "./domains.js";
 import { icon } from "./icons.js";
 import { WPISY } from "./blog.js";
 import { STRONY, miasto } from "./kampanie.js";
+import { TURNSTILE_SITEKEY, TURNSTILE_ACTION } from "./turnstile.js";
 
 /* Sieć domen w stopce — nazwy obszarów, nie dzielnic z kanwy. */
 const SIEC = [
@@ -563,6 +564,27 @@ footer a:hover{color:#fff;text-decoration:underline}
   max-height:300px;display:block}
 @media(min-width:900px){.pas-wnetrze img{max-height:400px}}
 
+/* ── baner zgody na pomiar ── */
+#zgoda-baner{position:fixed;left:0;right:0;bottom:0;z-index:200;background:var(--paper);
+  border-top:2px solid var(--accent);box-shadow:0 -6px 24px rgba(18,32,60,.13);
+  padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+#zgoda-baner p{font-size:13.5px;line-height:1.55;color:var(--muted);margin:0;max-width:78ch}
+#zgoda-baner a{color:var(--clay)}
+.zgoda-akcje{display:flex;flex-wrap:wrap;gap:10px}
+.zgoda-akcje button{font:500 14px 'IBM Plex Sans',sans-serif;padding:11px 20px;
+  border-radius:3px;border:1.5px solid var(--accent);cursor:pointer}
+.zgoda-tak{background:var(--accent);color:var(--paper)}
+.zgoda-tak:hover{background:var(--ink)}
+.zgoda-nie{background:transparent;color:var(--accent)}
+.zgoda-nie:hover{background:var(--chalk)}
+@media(min-width:900px){
+  #zgoda-baner{flex-direction:row;align-items:center;justify-content:space-between;
+    gap:28px;padding:18px 40px}
+  .zgoda-akcje{flex:none}
+}
+
+.cf-turnstile{margin:0 0 18px}
+
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 `;
 
@@ -630,6 +652,7 @@ function stopka(hostname) {
       <a href="/pytania">Pytania</a>
       <a href="/polityka-prywatnosci">Polityka prywatności</a>
       <a href="/rodo">Informacja RODO</a>
+      <a href="#" onclick="return zgodaUstawienia()">Ustawienia prywatności</a>
     </nav>
   </div>
 </div></footer>`;
@@ -776,12 +799,15 @@ function blokKontaktu(cfg) {
             ${esc(FIRM.name)}. <a href="/rodo">Pełna informacja RODO</a>. *</label>
         </div>
       </div>
+      <div class="cf-turnstile" data-sitekey="${TURNSTILE_SITEKEY}"
+           data-action="${TURNSTILE_ACTION}" data-language="pl" data-size="flexible"></div>
       <div class="form-stopka">
         <button type="submit" class="wyslij">Poproś o telefon</button>
         <p class="tajemnica">${icon("dokumenty")}<span>Dane trafiają wyłącznie do kancelarii.
           Gwiazdką oznaczono pola wymagane.</span></p>
       </div>
     </form>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer><\/script>
     <div class="ok" id="form-success">
       <div class="ok-znak">${icon("bezplatne-30-minut")}</div>
       <h3>Dziękuję</h3>
@@ -815,6 +841,7 @@ function stopkaProsta() {
     <nav>
       <a href="/polityka-prywatnosci">Polityka prywatności</a>
       <a href="/rodo">Informacja RODO</a>
+      <a href="#" onclick="return zgodaUstawienia()">Ustawienia prywatności</a>
     </nav>
   </div>
 </div></footer>`;

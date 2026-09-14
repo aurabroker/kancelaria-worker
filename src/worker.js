@@ -12,6 +12,7 @@ import { icon } from "./icons.js";
 import { buildHome, buildBlogIndex, buildBlogWpis, buildKampania, CSS as LAYOUT_CSS } from "./layout.js";
 import { WPISY, BLOG_HOST } from "./blog.js";
 import { STRONY, KAMPANIE_HOST } from "./kampanie.js";
+import { sprawdzTurnstile, TURNSTILE_SITEKEY, TURNSTILE_ACTION } from "./turnstile.js";
 
 /* Pomiar. GA4 i konto Google Ads sa wspolne dla calej sieci.
    Identyfikator konta podal wlasciciel 13 wrzesnia 2026. Etykieta leada to
@@ -164,13 +165,22 @@ async function handleLead(request, cfg, hostname, env) {
     return jsonError(400, "Nieprawidłowy JSON");
   }
 
-  const { imie, telefon, email = "", temat = "", wiadomosc = "", zgoda = false, utm = {} } = body;
+  const { imie, telefon, email = "", temat = "", wiadomosc = "", zgoda = false,
+          utm = {}, turnstile = "" } = body;
   if (zgoda !== true) {
     return jsonError(400, "Zgoda na przetwarzanie danych jest wymagana");
   }
 
   if (!imie?.trim() || !telefon?.trim()) {
     return jsonError(400, "Imię i telefon są wymagane");
+  }
+
+  // Turnstile przed zapisem: odrzucony zeton nie moze kosztowac wpisu w bazie.
+  const brama = await sprawdzTurnstile(
+    turnstile, env, hostname, request.headers.get("CF-Connecting-IP"));
+  if (!brama.ok) {
+    console.error("turnstile odrzucil:", brama.powod);
+    return jsonError(403, "Nie udało się potwierdzić, że formularz wypełnia człowiek. Odśwież stronę i spróbuj ponownie.");
   }
 
   // Klucz z sekretu Workera, gdy ustawiony. Literal ponizej jest awaryjny
@@ -1448,6 +1458,59 @@ const PAGE_JS = `
    Rozwijane pytania dziala natywnie na <details>, wiec JS obsluguje
    wylacznie formularz i pomiar. */
 
+/* ── ZGODA NA POMIAR ──────────────────────────────────────────────
+   Baner buduje sie tutaj, a nie w szablonie, bo ten plik jest na
+   kazdej stronie serwisu — od strony glownej po informacje RODO.
+   Tryb zgody jest ustawiony w naglowku dokumentu, wiec do czasu
+   klikniecia zadne cookie sie nie zapisuje. */
+
+function zgodaZapisz(wybor) {
+  try { localStorage.setItem('zgoda-pomiar', wybor); } catch (e) {}
+  if (wybor === 'tak' && window.gtag) {
+    gtag('consent', 'update', {
+      ad_storage: 'granted', ad_user_data: 'granted',
+      ad_personalization: 'granted', analytics_storage: 'granted'
+    });
+  }
+  const b = document.getElementById('zgoda-baner');
+  if (b) b.remove();
+}
+
+function zgodaPokaz() {
+  if (document.getElementById('zgoda-baner')) return;
+  const b = document.createElement('div');
+  b.id = 'zgoda-baner';
+  b.setAttribute('role', 'dialog');
+  b.setAttribute('aria-label', 'Zgoda na pomiar ruchu');
+  b.innerHTML =
+    '<p>Chcemy wiedzieć, które reklamy przyprowadzają klientów, więc korzystamy ' +
+    'z Google Analytics i Google Ads. Bez Twojej zgody nie zapisujemy żadnych ' +
+    'plików cookie. Formularz i telefon działają tak samo w obu przypadkach. ' +
+    '<a href="/polityka-prywatnosci">Polityka prywatności</a>.</p>' +
+    '<div class="zgoda-akcje">' +
+    '<button type="button" class="zgoda-tak">Zgadzam się</button>' +
+    '<button type="button" class="zgoda-nie">Tylko niezbędne</button>' +
+    '</div>';
+  b.querySelector('.zgoda-tak').onclick = () => zgodaZapisz('tak');
+  b.querySelector('.zgoda-nie').onclick = () => zgodaZapisz('nie');
+  document.body.appendChild(b);
+}
+
+/* Wolane z odnosnika w stopce, zeby dalo sie zmienic zdanie. */
+function zgodaUstawienia() {
+  try { localStorage.removeItem('zgoda-pomiar'); } catch (e) {}
+  zgodaPokaz();
+  return false;
+}
+
+try {
+  if (localStorage.getItem('zgoda-pomiar') === null) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', zgodaPokaz);
+    } else { zgodaPokaz(); }
+  }
+} catch (e) {}
+
 function trackLead() {
   try {
     if (window.gtag) {
@@ -1487,6 +1550,7 @@ async function submitLead(e) {
     wiadomosc: document.getElementById('wiadomosc').value,
     zgoda:     document.getElementById('zgoda').checked,
     utm,
+    turnstile: (form.querySelector('[name="cf-turnstile-response"]') || {}).value || '',
   };
 
   try {
@@ -1503,6 +1567,8 @@ async function submitLead(e) {
       return;
     }
     btn.textContent = data.error || 'Nie udało się wysłać';
+    // Zeton jest jednorazowy — po nieudanej probie widget musi go odnowic.
+    if (window.turnstile) turnstile.reset();
   } catch {
     btn.textContent = 'Brak połączenia — spróbuj ponownie';
   }
@@ -1843,6 +1909,22 @@ function trackingHead(cfg) {
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
+  /* Tryb zgody Google, wersja druga. Domyslnie odmowa: dopoki odwiedzajacy
+     nie kliknie, zaden plik cookie analityczny ani reklamowy sie nie zapisze.
+     Wybor pamietamy lokalnie i odtwarzamy przed pierwszym pomiarem. */
+  gtag('consent', 'default', {
+    ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
+    analytics_storage: 'denied', functionality_storage: 'granted',
+    security_storage: 'granted', wait_for_update: 500
+  });
+  try {
+    if (localStorage.getItem('zgoda-pomiar') === 'tak') {
+      gtag('consent', 'update', {
+        ad_storage: 'granted', ad_user_data: 'granted',
+        ad_personalization: 'granted', analytics_storage: 'granted'
+      });
+    }
+  } catch (e) {}
   gtag('js', new Date());
 ${TRACKING.ga4 ? `  gtag('config', '${TRACKING.ga4}');\n` : ""}${ads.id ? `  gtag('config', '${ads.id}');\n` : ""}${ads.lead ? `  window.ADS_LEAD = '${ads.lead}';\n` : ""}${ads.call ? `  window.ADS_CALL = '${ads.call}';\n` : ""}<\/script>`;
 }
@@ -1960,7 +2042,7 @@ ${trackingHead(cfg)}
 <main class="section"><div class="container">${body}</div></main>
 <footer><div class="footer-bottom"><div class="container" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
   <span>© ${YEAR} ${esc(FIRM.name)} · NIP ${esc(FIRM.nip)} · Wpis ${esc(FIRM.barNumber)}</span>
-  <span><a href="/polityka-prywatnosci" style="color:inherit">Polityka prywatności</a> · <a href="/rodo" style="color:inherit">RODO</a></span>
+  <span><a href="/polityka-prywatnosci" style="color:inherit">Polityka prywatności</a> · <a href="/rodo" style="color:inherit">RODO</a> · <a href="#" onclick="return zgodaUstawienia()" style="color:inherit">Ustawienia prywatności</a></span>
 </div></div></footer>
 <script src="/assets/page.js"><\/script>
 </body>
@@ -1994,7 +2076,11 @@ function buildLegalHTML(cfg, hostname, path) {
 <h1>${rodo ? "Informacja o przetwarzaniu danych osobowych" : "Polityka prywatności"}</h1>
 <p><strong>Administrator danych.</strong> ${esc(FIRM.name)}, ${esc(FIRM.offices[0].street)}, ${esc(FIRM.offices[0].postal)} ${esc(FIRM.offices[0].city)}, NIP ${esc(FIRM.nip)}. Kontakt: ${esc(FIRM.email)}, ${esc(FIRM.phoneLabel)}.</p>
 <h2>Jakie dane zbieramy</h2>
-<p>Za pośrednictwem formularza kontaktowego zbieramy imię, numer telefonu oraz opcjonalnie adres e-mail, temat sprawy i jej krótki opis. Serwis prowadzi też własną analitykę po stronie serwera, bez plików cookie i bez zapisywania adresu IP w formie pozwalającej zidentyfikować osobę.</p>
+<p>Za pośrednictwem formularza kontaktowego zbieramy imię, numer telefonu oraz opcjonalnie adres e-mail, temat sprawy i jej krótki opis.</p>
+<h2>Pliki cookie i pomiar ruchu</h2>
+<p>Serwis korzysta z Google Analytics 4 oraz Google Ads. Narzędzia te zapisują pliki cookie i przekazują dane o korzystaniu ze strony do Google Ireland Limited, a w niektórych przypadkach poza Europejski Obszar Gospodarczy na podstawie standardowych klauzul umownych. Służą nam do sprawdzenia, które reklamy i które strony prowadzą do kontaktu.</p>
+<p><strong>Nic nie zapisuje się bez Twojej zgody.</strong> Przy pierwszej wizycie pokazujemy pytanie o zgodę, a do czasu kliknięcia wszystkie pliki cookie analityczne i reklamowe pozostają wyłączone. Zgodę możesz w każdej chwili wycofać odnośnikiem „Ustawienia prywatności” w stopce; wycofanie nie wpływa na zgodność z prawem przetwarzania sprzed wycofania.</p>
+<p>Odmowa zgody niczego nie ogranicza. Formularz kontaktowy i połączenie telefoniczne działają tak samo.</p>
 <h2>W jakim celu i na jakiej podstawie</h2>
 <p>Dane z formularza przetwarzamy wyłącznie po to, aby odpowiedzieć na zapytanie i przedstawić warunki pomocy prawnej. Podstawą jest podjęcie działań na żądanie osoby przed zawarciem umowy oraz prawnie uzasadniony interes administratora polegający na obsłudze korespondencji.</p>
 <h2>Jak długo przechowujemy</h2>

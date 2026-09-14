@@ -4,6 +4,7 @@ import { POOLS } from "../src/faq.js";
 import { ICONS, icon } from "../src/icons.js";
 import { WPISY, BLOG_HOST } from "../src/blog.js";
 import { STRONY, KAMPANIE_HOST, miasto } from "../src/kampanie.js";
+import { TURNSTILE_SITEKEY, TURNSTILE_ACTION } from "../src/turnstile.js";
 import { CSS } from "../src/layout.js";
 
 const env = {};
@@ -499,5 +500,66 @@ for (const sciezka of ["/rodo", "/polityka-prywatnosci"]) {
   check(sciezka+" ma kontakt do administratora", h.includes(FIRM.email));
 }
 console.log("  adres tylko w informacji RODO i polityce prywatności");
+
+// 22. zgoda na pomiar
+// Polityka twierdzila, ze serwis nie uzywa cookie, a GA4 i Ads je ustawialy.
+// Teraz tagi startuja w stanie odmowy i czekaja na klikniecie.
+console.log("\n=== ZGODA NA POMIAR ===");
+for (const host of ALL_HOSTS) {
+  const h = texts[host];
+  check(host+" domyslna odmowa", h.includes("ad_storage: 'denied'") &&
+        h.includes("analytics_storage: 'denied'"));
+  check(host+" zgoda przed pomiarem",
+    h.indexOf("consent', 'default'") < h.indexOf("gtag('config'"));
+  check(host+" odtworzenie wyboru", h.includes("localStorage.getItem('zgoda-pomiar')"));
+  check(host+" odnosnik do ustawien", h.includes("zgodaUstawienia()"));
+}
+const skryptStrony = await (await get(ALL_HOSTS[0], "/assets/page.js")).text();
+check("baner w skrypcie strony", skryptStrony.includes("zgoda-baner") && skryptStrony.includes("zgodaPokaz"));
+check("zgoda podnosi tryb", skryptStrony.includes("'consent', 'update'"));
+check("styl banera w arkuszu", CSS.includes("#zgoda-baner"));
+for (const sciezka of ["/polityka-prywatnosci", "/rodo"]) {
+  const h = await (await get(ALL_HOSTS[0], sciezka)).text();
+  // Zdanie o braku cookie bylo nieprawda i nie moze wrocic.
+  check(sciezka+" bez falszywego zdania", !h.includes("bez plików cookie"));
+  check(sciezka+" opisuje GA4 i Ads", h.includes("Google Analytics 4") && h.includes("Google Ads"));
+  check(sciezka+" mowi o wycofaniu zgody", h.includes("wycofać"));
+}
+console.log("  tryb zgody v2, baner na wszystkich stronach, polityka zgodna z kodem");
+
+// 23. Turnstile
+console.log("\n=== TURNSTILE ===");
+const zFormularzem = ["/", ...STRONY.map(k => "/" + k.slug)];
+for (const host of ALL_HOSTS) {
+  for (const sciezka of zFormularzem) {
+    const h = sciezka === "/" ? texts[host] : await (await get(host, sciezka)).text();
+    check(`${host}${sciezka} widget`, h.includes('class="cf-turnstile"'));
+    check(`${host}${sciezka} klucz witryny`, h.includes(`data-sitekey="${TURNSTILE_SITEKEY}"`));
+    check(`${host}${sciezka} dzialanie`, h.includes(`data-action="${TURNSTILE_ACTION}"`));
+    check(`${host}${sciezka} skrypt widgetu`,
+      h.includes("challenges.cloudflare.com/turnstile/v0/api.js") && h.includes("async defer"));
+  }
+  // Strony bez formularza nie ciagna skryptu.
+  const bezFormularza = await (await get(host, "/pytania")).text();
+  check(host+"/pytania bez widgetu", !bezFormularza.includes("cf-turnstile"));
+}
+check("zeton wysylany z formularza", skryptStrony.includes("cf-turnstile-response"));
+check("zeton odnawiany po bledzie", skryptStrony.includes("turnstile.reset()"));
+// Klucz tajny nie moze byc w repozytorium.
+check("brak klucza tajnego w kodzie", !CSS.includes("0x4AAAAAAA") &&
+      !JSON.stringify(TURNSTILE_SITEKEY).includes("secret"));
+
+const zgl = (env, ciało) => worker.fetch(new Request("https://rozwod.waw.pl/api/lead", {
+  method: "POST", headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ imie: "Anna", telefon: "600100200", zgoda: true, ...ciało })
+}), env);
+const bezZetonu = await zgl({ TURNSTILE_SECRET: "x" }, {});
+check("brak zetonu to odmowa", bezZetonu.status === 403, bezZetonu.status);
+const trescOdmowy = await bezZetonu.text();
+check("odmowa tlumaczy sie po ludzku", trescOdmowy.includes("Odśwież stronę"));
+// Bez sekretu sprawdzenie odpada, zeby zgubiony klucz nie kosztowal zgloszen.
+const bezSekretu = await zgl({}, {});
+check("bez sekretu formularz dziala", bezSekretu.status !== 403, bezSekretu.status);
+console.log(`  widget na ${zFormularzem.length} stronach z formularzem, brak żetonu to 403`);
 
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));
