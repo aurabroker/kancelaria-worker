@@ -421,7 +421,8 @@ button{font:inherit;cursor:pointer}
 /* ── zaufanie i stopka ── */
 .dane{display:grid;gap:26px}
 @media(min-width:900px){.dane{grid-template-columns:minmax(0,280px) minmax(0,1fr);gap:44px;align-items:start}}
-.dane-foto img{width:100%;border-radius:3px;border:1px solid var(--rule)}
+.dane-foto img{width:100%;height:auto;aspect-ratio:560/747;object-fit:cover;
+  border-radius:3px;border:1px solid var(--rule)}
 .dane h2{font-size:24px;margin-bottom:10px}
 .dane-bio{font-size:15.5px;line-height:1.6;color:var(--muted);max-width:58ch;margin:0 0 22px}
 .dane-siatka{display:grid;gap:22px}

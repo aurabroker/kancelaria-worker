@@ -419,4 +419,23 @@ const bl = await (await get(BLOG_HOST, "/blog")).text();
 check("znak na blogu", bl.includes('class="znak"'));
 console.log("  monogram w nagłówku i stopce na 11 domenach, stronach kampanii i blogu");
 
+// 20. proporcje zdjec
+// Wlasciciel 14 wrzesnia 2026: zdjecie na dole strony bylo rozciagniete.
+// Przyczyna: regula ustawiala szerokosc na 100% i nie zdejmowala wysokosci
+// z atrybutu height, wiec przegladarka trzymala 747 px przy waskiej kolumnie.
+console.log("\n=== PROPORCJE ZDJEC ===");
+for (const sel of [".hero-foto img", ".dane-foto img"]) {
+  const i = CSS.indexOf(sel + "{");
+  check("regula istnieje: " + sel, i > 0);
+  const regula = CSS.slice(i, CSS.indexOf("}", i));
+  check(sel + " ma height:auto", /height:\s*auto/.test(regula), regula.slice(0, 80));
+  check(sel + " ustawia szerokosc", /width:\s*100%/.test(regula));
+}
+for (const host of ALL_HOSTS) {
+  const h = texts[host];
+  // Atrybuty wymiarow zostaja — rezerwuja miejsce i chronia przed skokiem ukladu.
+  check(host+" zdjecia z wymiarami", (h.match(/<img[^>]+width="560" height="747"/g) || []).length === 2);
+}
+console.log("  hero i dół strony: szerokość 100%, wysokość wyliczana z proporcji");
+
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));
