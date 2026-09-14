@@ -14,3 +14,11 @@ invocation_logs = true
 binding     = "RESEND_API_KEY"
 store_id    = "15030d8ca051490e96bd866168384aa9"
 secret_name = "RESEND_API_KEY"
+
+# To samo dotyczy klucza Turnstile: brak wpisu oznacza, ze nastepne
+# wgranie wersji zdejmie powiazanie, a formularz przestanie sprawdzac,
+# czy wypelnia go czlowiek.
+[[secrets_store_secrets]]
+binding     = "TURNSTILE_SECRET"
+store_id    = "15030d8ca051490e96bd866168384aa9"
+secret_name = "TURNSTILE_SECRET"

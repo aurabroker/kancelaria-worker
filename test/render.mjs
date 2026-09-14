@@ -1,10 +1,11 @@
 import worker, { TRACKING } from "../src/worker.js";
+import { readFile } from "node:fs/promises";
 import { DOMAIN_CONFIG, ALL_HOSTS, FIRM } from "../src/domains.js";
 import { POOLS } from "../src/faq.js";
 import { ICONS, icon } from "../src/icons.js";
 import { WPISY, BLOG_HOST } from "../src/blog.js";
 import { STRONY, KAMPANIE_HOST, miasto } from "../src/kampanie.js";
-import { TURNSTILE_SITEKEY, TURNSTILE_ACTION } from "../src/turnstile.js";
+import { TURNSTILE_SITEKEY, TURNSTILE_ACTION, sprawdzTurnstile } from "../src/turnstile.js";
 import { CSS } from "../src/layout.js";
 
 const env = {};
@@ -561,5 +562,70 @@ check("odmowa tlumaczy sie po ludzku", trescOdmowy.includes("Odśwież stronę")
 const bezSekretu = await zgl({}, {});
 check("bez sekretu formularz dziala", bezSekretu.status !== 403, bezSekretu.status);
 console.log(`  widget na ${zFormularzem.length} stronach z formularzem, brak żetonu to 403`);
+
+// 24. sprawdzanie zetonu Turnstile
+// W koncie klucz jest powiazaniem z magazynem sekretow, wiec env.TURNSTILE_SECRET
+// daje OBIEKT. Bez rozpakowania do Cloudflare poleciałby napis "[object Object]"
+// i kazde zgloszenie dostawaloby odmowe.
+console.log("\n=== SPRAWDZANIE ZETONU ===");
+const prawdziwyFetch = globalThis.fetch;
+let ostatnieWyslane = null;
+const udajCloudflare = (odpowiedz) => {
+  globalThis.fetch = async (url, opcje) => {
+    ostatnieWyslane = { url: String(url), body: String(opcje.body) };
+    if (odpowiedz instanceof Error) throw odpowiedz;
+    return new Response(JSON.stringify(odpowiedz), { headers: { "Content-Type": "application/json" } });
+  };
+};
+const zMagazynu = { get: async () => "tajny-klucz" };
+
+udajCloudflare({ success: true, action: TURNSTILE_ACTION, hostname: "rozwod.waw.pl" });
+let w = await sprawdzTurnstile("zeton", { TURNSTILE_SECRET: zMagazynu }, "rozwod.waw.pl");
+check("sekret z magazynu przechodzi", w.ok, w.powod);
+check("klucz wysylany jako napis", ostatnieWyslane.body.includes("secret=tajny-klucz"));
+check("napis obiektu nie wycieka", !ostatnieWyslane.body.includes("object+Object"));
+check("adres sprawdzajacy", ostatnieWyslane.url.endsWith("/turnstile/v0/siteverify"));
+
+w = await sprawdzTurnstile("zeton", { TURNSTILE_SECRET: "wprost" }, "rozwod.waw.pl");
+check("sekret jako zwykly napis", w.ok && ostatnieWyslane.body.includes("secret=wprost"));
+
+w = await sprawdzTurnstile("zeton", { TURNSTILE_SECRET: zMagazynu }, "rozwod.waw.pl", "1.2.3.4");
+check("adres klienta dolaczany", ostatnieWyslane.body.includes("remoteip=1.2.3.4"));
+
+udajCloudflare({ success: true, action: TURNSTILE_ACTION, hostname: "www.rozwodwola.pl" });
+w = await sprawdzTurnstile("zeton", { TURNSTILE_SECRET: zMagazynu }, "rozwodwola.pl");
+check("przedrostek www akceptowany", w.ok, w.powod);
+
+udajCloudflare({ success: true, action: TURNSTILE_ACTION, hostname: "obca-domena.pl" });
+w = await sprawdzTurnstile("zeton", { TURNSTILE_SECRET: zMagazynu }, "rozwod.waw.pl");
+check("obcy host odrzucony", !w.ok, w.powod);
+
+udajCloudflare({ success: true, action: "cos-innego", hostname: "rozwod.waw.pl" });
+w = await sprawdzTurnstile("zeton", { TURNSTILE_SECRET: zMagazynu }, "rozwod.waw.pl");
+check("obce dzialanie odrzucone", !w.ok, w.powod);
+
+udajCloudflare({ success: false, "error-codes": ["invalid-input-response"] });
+w = await sprawdzTurnstile("zuzyty", { TURNSTILE_SECRET: zMagazynu }, "rozwod.waw.pl");
+check("zuzyty zeton odrzucony", !w.ok && w.powod.includes("invalid-input-response"), w.powod);
+
+// Awaria po stronie Cloudflare nie moze kosztowac zgloszenia.
+udajCloudflare(new Error("siec padla"));
+w = await sprawdzTurnstile("zeton", { TURNSTILE_SECRET: zMagazynu }, "rozwod.waw.pl");
+check("awaria sieci przepuszcza", w.ok, w.powod);
+
+// Brak klucza: sprawdzenie pomijane, formularz dziala.
+w = await sprawdzTurnstile("zeton", {}, "rozwod.waw.pl");
+check("brak klucza pomija sprawdzenie", w.ok && w.powod === "brak klucza", w.powod);
+// Klucz jest, zetonu nie ma — odmowa bez pytania Cloudflare.
+w = await sprawdzTurnstile("", { TURNSTILE_SECRET: zMagazynu }, "rozwod.waw.pl");
+check("brak zetonu to odmowa", !w.ok && w.powod === "brak zetonu", w.powod);
+
+globalThis.fetch = prawdziwyFetch;
+
+// Powiazanie musi byc zadeklarowane, bo wrangler wysyla tylko to, co widzi.
+const toml = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
+check("powiazanie w wrangler.toml", toml.includes('binding     = "TURNSTILE_SECRET"'));
+check("nazwa sekretu w wrangler.toml", toml.includes('secret_name = "TURNSTILE_SECRET"'));
+console.log("  sekret z magazynu rozpakowany, host i działanie sprawdzane, awaria przepuszcza");
 
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));

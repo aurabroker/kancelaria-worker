@@ -10,18 +10,19 @@ Bez niej formularz na tej domenie zwróci odmowę i zgłoszenie przepadnie.
 Cloudflare → Turnstile → `rozwod_formularz` → Settings → Hostname Management
 → dodaj `rozwodmokotow.pl` → Save.
 
-## 2. Klucz tajny Turnstile
+## 2. Klucz tajny Turnstile — ZROBIONE
 
-Worker czyta go ze zmiennej `TURNSTILE_SECRET`. Dopóki jej nie ma,
-sprawdzenie jest **pomijane** i formularz przyjmuje wszystko.
+Powiązanie `TURNSTILE_SECRET` jest w Workerze, w magazynie sekretów
+`15030d8ca051490e96bd866168384aa9`, obok `RESEND_API_KEY`.
 
-```
-npx wrangler secret put TURNSTILE_SECRET
-```
+Dwie rzeczy z tym związane są już w kodzie i nie wymagają działania:
 
-Klucz znajdziesz w panelu przy widgecie albo poleceniem
-`npx wrangler turnstile widget get 0x4AAAAAAE0dkaYqWjSNBY_Q --json`.
-Nie wklejaj go do repozytorium.
+- Powiązanie z magazynem zwraca **obiekt**, nie napis. Worker rozpakowuje
+  go metodą `.get()`. Bez tego do Cloudflare poleciałby napis
+  `[object Object]` i każde zgłoszenie dostawałoby odmowę.
+- Wpis jest zadeklarowany w `wrangler.toml`. Wrangler wysyła przy wgrywaniu
+  wersji dokładnie te powiązania, które widzi w tym pliku, więc brak wpisu
+  zdjąłby sekret przy następnym wdrożeniu.
 
 ## 3. Zgoda pani adwokat na treści
 

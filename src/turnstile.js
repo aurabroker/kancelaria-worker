@@ -3,10 +3,10 @@
    ------------------------------------------------------------
    Widget zalozony w koncie Cloudflare pod nazwa rozwod_formularz.
    Klucz witryny jest publiczny i moze lezec w repozytorium.
-   Klucz tajny NIE MOZE — Worker czyta go ze zmiennej srodowiskowej
-   TURNSTILE_SECRET, ustawianej poleceniem:
-
-       npx wrangler secret put TURNSTILE_SECRET
+   Klucz tajny NIE MOZE — Worker czyta go z powiazania TURNSTILE_SECRET.
+   W koncie jest to powiazanie z magazynem sekretow, wiec env.TURNSTILE_SECRET
+   daje OBIEKT, z ktorego wartosc wyciaga sie przez .get(). Obsluga obu form
+   ponizej kosztuje kilka linii i chroni przed cicha zmiana typu powiazania.
 
    ZACHOWANIE PRZY BRAKU KLUCZA TAJNEGO. Sprawdzenie jest wtedy
    pomijane, a formularz dziala. To swiadomy wybor: zgubiony sekret
@@ -23,8 +23,23 @@ const ENDPOINT = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
  * Sprawdza zeton z formularza.
  * Zwraca { ok, powod } — nigdy nie rzuca wyjatkiem.
  */
+/**
+ * Zwraca wartosc sekretu niezaleznie od typu powiazania w Cloudflare.
+ * Powiazanie "Secret" daje wprost napis, "Secrets Store Secret" obiekt
+ * z metoda .get(). Bez tego do Cloudflare poleciałby napis
+ * "[object Object]", a kazde zgloszenie dostawaloby odmowe.
+ */
+async function czytajSekret(binding) {
+  if (!binding) return "";
+  if (typeof binding === "string") return binding;
+  if (typeof binding.get === "function") {
+    try { return (await binding.get()) || ""; } catch { return ""; }
+  }
+  return "";
+}
+
 export async function sprawdzTurnstile(token, env, hostname, ip) {
-  const secret = env && env.TURNSTILE_SECRET;
+  const secret = await czytajSekret(env && env.TURNSTILE_SECRET);
   if (!secret) {
     console.error("turnstile: brak TURNSTILE_SECRET — sprawdzenie pominiete");
     return { ok: true, powod: "brak klucza" };
