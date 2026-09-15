@@ -167,10 +167,20 @@ const KOLUMNY_OBOWIAZKOWE = ["imie", "telefon"];
    wskazana kolumne i ponawiamy zapis. Kolumny zdjete w ten sposob wracaja
    do wywolujacego, zeby dalo sie potem poprawic tabele. */
 const KOLUMNY_NIEZNANE = new Set();
+let nauczonoO = 0;
+// Pamiec o brakujacych kolumnach wygasa, bo tabele sie poprawia. Bez tego
+// izolat odrzucalby kolumne jeszcze dlugo po jej dodaniu w bazie i dane
+// z formularza gubilyby sie mimo naprawionego schematu.
+const NAUKA_WAZNA_MS = 10 * 60 * 1000;
 
 async function zapiszLead(rekord, anonKey) {
   const zdjete = [];
   const biezacy = { ...rekord };
+
+  if (KOLUMNY_NIEZNANE.size && Date.now() - nauczonoO > NAUKA_WAZNA_MS) {
+    console.error("Supabase: zapominam o brakujacych kolumnach, sprawdzam schemat od nowa");
+    KOLUMNY_NIEZNANE.clear();
+  }
   // Kolumny rozpoznane jako nieistniejace przy wczesniejszych zgloszeniach
   // odpadaja od razu. Izolat Workera zyje miedzy zadaniami, wiec pierwsze
   // zgloszenie po wdrozeniu placi za nauke, kolejne juz nie.
@@ -204,6 +214,7 @@ async function zapiszLead(rekord, anonKey) {
     delete biezacy[kolumna];
     zdjete.push(kolumna);
     KOLUMNY_NIEZNANE.add(kolumna);
+    nauczonoO = Date.now();
     console.error("Supabase: tabela nie ma kolumny", kolumna, "— ponawiam bez niej");
   }
   return { ok: false, kod: "db-za-duzo-prob", tekst: "", zdjete };

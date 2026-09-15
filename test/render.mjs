@@ -790,7 +790,21 @@ await wyslij2();
 check("drugie zgloszenie bez ponawiania", probZapisu === 1, probZapisu);
 check("pierwsze zgloszenie ponawialo", probPierwszej > 1, probPierwszej);
 
+// Po naprawie tabeli Worker musi przestac odrzucac kolumny. Bez wygasania
+// pamieci dane gubilyby sie jeszcze dlugo po dodaniu kolumn w bazie.
+for (const k of ["dzielnica", "status", "utm_source", "utm_medium",
+                 "utm_campaign", "utm_content", "utm_term"]) ISTNIEJA.add(k);
+const realnyCzas = Date.now;
+Date.now = () => realnyCzas() + 11 * 60 * 1000;   // jedenascie minut pozniej
+zapisanyRekord = null;
+const o3 = await wyslij2();
+Date.now = realnyCzas;
+check("po naprawie tabeli komplet kolumn", zapisanyRekord &&
+  "dzielnica" in zapisanyRekord && "utm_source" in zapisanyRekord,
+  Object.keys(zapisanyRekord || {}).join(","));
+check("odpowiedz bez uwagi", !(await o3.json()).uwaga);
+
 globalThis.fetch = fetchBezKolumn;
-console.log(`  brakujące kolumny odrzucane w locie · pierwszy zapis ${probPierwszej} prób, drugi 1`);
+console.log(`  brakujące kolumny odrzucane w locie · pierwszy zapis ${probPierwszej} prób, drugi 1 · pamięć wygasa`);
 
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));
