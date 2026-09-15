@@ -69,6 +69,30 @@ jako jedyny ma żywą kampanię.
 
 Konwersja w Google Ads potrafi pojawić się z kilkugodzinnym opóźnieniem.
 
+## Stan po wdrożeniu — 15 września 2026
+
+Serwis działa na produkcji. Droga do tego stanu, dla pamięci:
+
+| Wersja | Co poszło |
+| --- | --- |
+| 49 | pierwsze przepięcie: blog, strony kampanii, zgoda na pomiar, Turnstile |
+| 50 | usunięte deklaracje wyłączności zakresu praktyki |
+| 51 | mail odłączony od zapisu do bazy, logi Workera włączone |
+| 52 | przyczyna błędu bazy dopisana do maila i odpowiedzi |
+| 53 | zapis mimo brakujących kolumn w tabeli |
+| 54 | pamięć o brakujących kolumnach wygasa po dziesięciu minutach |
+
+### Czego nauczyła awaria formularza
+
+Mail wisiał za udanym zapisem do bazy, więc jedna brakująca kolumna
+kasowała zgłoszenie w całości: ani wiersza, ani wiadomości do kancelarii.
+Teraz obie drogi są niezależne i zgłoszenie ginie dopiero wtedy, gdy
+zawiodą obie. Gdy padnie baza, mail idzie mimo to, z ostrzeżeniem i
+przyczyną techniczną.
+
+Warto to zachować przy każdej kolejnej zmianie: **formularz ma mieć dwie
+niezależne drogi wyjścia.** Testy w `test/render.mjs` pilnują tego wprost.
+
 ## 6. Do zrobienia zaraz po
 
 - **Etykieta konwersji kliknięcia w numer.** Pole `adsCallLabel` w
