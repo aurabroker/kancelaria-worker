@@ -158,6 +158,57 @@ export default {
   }
 };
 
+/* Kolumny, bez ktorych wiersz traci sens. Jesli baza nie zna ktorejs
+   z nich, nie ma czego zapisywac i lepiej oddac blad. */
+const KOLUMNY_OBOWIAZKOWE = ["imie", "telefon"];
+
+/* PostgREST odpowiada bledem PGRST204, gdy wyslemy kolumne, ktorej tabela
+   nie ma, i podaje w tresci jej nazwe. Zamiast zgadywac schemat, zdejmujemy
+   wskazana kolumne i ponawiamy zapis. Kolumny zdjete w ten sposob wracaja
+   do wywolujacego, zeby dalo sie potem poprawic tabele. */
+const KOLUMNY_NIEZNANE = new Set();
+
+async function zapiszLead(rekord, anonKey) {
+  const zdjete = [];
+  const biezacy = { ...rekord };
+  // Kolumny rozpoznane jako nieistniejace przy wczesniejszych zgloszeniach
+  // odpadaja od razu. Izolat Workera zyje miedzy zadaniami, wiec pierwsze
+  // zgloszenie po wdrozeniu placi za nauke, kolejne juz nie.
+  for (const k of KOLUMNY_NIEZNANE) {
+    if (k in biezacy) { delete biezacy[k]; zdjete.push(k); }
+  }
+
+  for (let proba = 0; proba < 16; proba++) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/kancelaria_leads`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey":        anonKey,
+        "Authorization": `Bearer ${anonKey}`,
+        "Prefer":        "return=minimal",
+      },
+      body: JSON.stringify(biezacy),
+    });
+
+    if (res.ok) return { ok: true, zdjete };
+
+    const tekst = (await res.text()).slice(0, 400);
+    const brak = tekst.match(/Could not find the '([^']+)' column/);
+    if (!brak || !(brak[1] in biezacy)) {
+      return { ok: false, kod: `db${res.status}`, tekst, zdjete };
+    }
+    const kolumna = brak[1];
+    if (KOLUMNY_OBOWIAZKOWE.includes(kolumna)) {
+      return { ok: false, kod: "db-brak-kolumny", tekst, zdjete };
+    }
+    delete biezacy[kolumna];
+    zdjete.push(kolumna);
+    KOLUMNY_NIEZNANE.add(kolumna);
+    console.error("Supabase: tabela nie ma kolumny", kolumna, "— ponawiam bez niej");
+  }
+  return { ok: false, kod: "db-za-duzo-prob", tekst: "", zdjete };
+}
+
 // ── OBSŁUGA LEADA ──────────────────────────────────────────────────────────
 async function handleLead(request, cfg, hostname, env) {
   let body;
@@ -192,46 +243,27 @@ async function handleLead(request, cfg, hostname, env) {
      za udanym zapisem, wiec awaria bazy kasowala zgloszenie w calosci —
      ani wiersza, ani wiadomosci. Teraz probujemy obu drog i uznajemy
      zgloszenie za przyjete, jesli zadziala chocby jedna. */
-  let zapis = { ok: false, kod: "", tekst: "" };
+  let zapis = { ok: false, kod: "", tekst: "", zdjete: [] };
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/kancelaria_leads`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey":        anonKey,
-        "Authorization": `Bearer ${anonKey}`,
-        "Prefer":        "return=minimal",
-      },
-      body: JSON.stringify({
-        imie:          imie.trim(),
-        telefon:       telefon.trim(),
-        email:         email.trim(),
-        temat,
-        wiadomosc:     wiadomosc.trim(),
-        zrodlo_domena: hostname,
-        dzielnica:     cfg.district,
-        status:        "nowy",
-        utm_source:    (utm.utm_source   || "").slice(0, 64),
-        utm_medium:    (utm.utm_medium   || "").slice(0, 64),
-        utm_campaign:  (utm.utm_campaign || "").slice(0, 64),
-        utm_content:   (utm.utm_content  || "").slice(0, 64),
-        utm_term:      (utm.utm_term     || "").slice(0, 64),
-      }),
-    });
-
-    if (res.ok) {
-      zapis.ok = true;
-    } else {
-      zapis.kod = `db${res.status}`;
-      // Tresc bledu PostgREST mowi wprost, co jest nie tak: brak kolumny,
-      // odmowa reguly dostepu, niewazny klucz. Nie ma w niej nic wrazliwego,
-      // wiec idzie do powiadomienia — inaczej przyczyna zostaje niewidoczna.
-      zapis.tekst = (await res.text()).slice(0, 400);
-      console.error("Supabase:", res.status, zapis.tekst);
-    }
+    zapis = await zapiszLead({
+      imie:          imie.trim(),
+      telefon:       telefon.trim(),
+      email:         email.trim(),
+      temat,
+      wiadomosc:     wiadomosc.trim(),
+      zrodlo_domena: hostname,
+      dzielnica:     cfg.district,
+      status:        "nowy",
+      utm_source:    (utm.utm_source   || "").slice(0, 64),
+      utm_medium:    (utm.utm_medium   || "").slice(0, 64),
+      utm_campaign:  (utm.utm_campaign || "").slice(0, 64),
+      utm_content:   (utm.utm_content  || "").slice(0, 64),
+      utm_term:      (utm.utm_term     || "").slice(0, 64),
+    }, anonKey);
+    if (!zapis.ok) console.error("Supabase:", zapis.kod, zapis.tekst);
+    if (zapis.zdjete.length) console.error("Supabase: pominieto kolumny:", zapis.zdjete.join(", "));
   } catch (e) {
-    zapis.kod = "db-wyjatek";
-    zapis.tekst = e instanceof Error ? e.message : String(e);
+    zapis = { ok: false, kod: "db-wyjatek", tekst: e instanceof Error ? e.message : String(e), zdjete: [] };
     console.error("Supabase:", zapis.tekst);
   }
 
@@ -245,6 +277,7 @@ async function handleLead(request, cfg, hostname, env) {
       bazaPadla: !zapis.ok,
       bazaKod:   zapis.kod,
       bazaTekst: zapis.tekst,
+      bazaZdjete: zapis.zdjete,
     }, FIRM);
   } catch (e) {
     console.error("mail:", e instanceof Error ? e.message : String(e));
@@ -255,7 +288,9 @@ async function handleLead(request, cfg, hostname, env) {
     if (!mail.sent) console.error("lead zapisany, ale bez powiadomienia:", mail.reason);
     // Zgloszenie przyjete, ale jesli cos po drodze padlo, niech to widac
     // takze w odpowiedzi — inaczej awaria zapisu jest niewidoczna z zewnatrz.
-    const uwaga = [zapis.ok ? "" : zapis.kod, mail.sent ? "" : "mail"].filter(Boolean).join("+");
+    const uwaga = [zapis.ok ? "" : zapis.kod, mail.sent ? "" : "mail",
+                   zapis.zdjete.length ? "bez:" + zapis.zdjete.join(",") : ""]
+                  .filter(Boolean).join("+");
     return new Response(JSON.stringify({ ok: true, ...(uwaga ? { uwaga } : {}) }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders() }

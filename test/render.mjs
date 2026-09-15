@@ -742,4 +742,55 @@ const tomlLogi = await readFile(new URL("../wrangler.toml", import.meta.url), "u
 check("logi Workera wlaczone", /\[observability\.logs\][\s\S]*?enabled = true/.test(tomlLogi));
 console.log("  zgłoszenie ginie dopiero wtedy, gdy zawiodą obie drogi");
 
+// 27. zapis mimo brakujacych kolumn
+// 15 wrzesnia 2026 baza odpowiadala PGRST204: wysylalismy kolumny, ktorych
+// tabela nie ma. Kod zdejmuje wskazana kolumne i ponawia zapis, zamiast
+// tracic zgloszenie przez jedno pole.
+console.log("\n=== BRAKUJACE KOLUMNY ===");
+const fetchBezKolumn = globalThis.fetch;
+const ISTNIEJA = new Set(["imie", "telefon", "email", "temat", "wiadomosc", "zrodlo_domena"]);
+let zapisanyRekord = null, probZapisu = 0, mailZKolumnami = null;
+globalThis.fetch = async (url, o) => {
+  const u = String(url);
+  if (u.includes("siteverify")) return new Response(JSON.stringify({ success: true,
+    action: TURNSTILE_ACTION, hostname: "rozwod.waw.pl" }), { headers: { "Content-Type": "application/json" } });
+  if (u.includes("supabase.co")) {
+    probZapisu++;
+    const rek = JSON.parse(String(o.body));
+    const obca = Object.keys(rek).find(k => !ISTNIEJA.has(k));
+    if (obca) return new Response(JSON.stringify({ code: "PGRST204",
+      message: `Could not find the '${obca}' column of 'kancelaria_leads' in the schema cache` }), { status: 400 });
+    zapisanyRekord = rek;
+    return new Response("", { status: 201 });
+  }
+  if (u.includes("resend.com")) { mailZKolumnami = JSON.parse(String(o.body)); return new Response("{}", { status: 200 }); }
+  return new Response("", { status: 404 });
+};
+const srodowisko2 = { TURNSTILE_SECRET: { get: async () => "k" }, RESEND_API_KEY: "re_x" };
+const wyslij2 = () => worker.fetch(new Request("https://rozwod.waw.pl/api/lead", {
+  method: "POST", headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ imie: "Anna", telefon: "600100200", email: "a@b.pl",
+                         wiadomosc: "test", zgoda: true, turnstile: "z" })
+}), srodowisko2);
+
+let o1 = await wyslij2();
+check("zapis mimo brakow", o1.status === 200, o1.status);
+check("wiersz trafil do bazy", !!zapisanyRekord);
+check("dane kontaktowe zachowane", zapisanyRekord &&
+  zapisanyRekord.imie === "Anna" && zapisanyRekord.telefon === "600100200" &&
+  zapisanyRekord.wiadomosc === "test");
+const u1 = (await o1.json()).uwaga || "";
+check("odpowiedz wymienia pominiete kolumny", u1.includes("bez:dzielnica"), u1);
+check("mail nie straszy o braku wpisu", mailZKolumnami && !mailZKolumnami.html.includes("nie ma w bazie"));
+
+// Druga proba korzysta z nauki: zadnych zbednych zapytan do bazy.
+const probPierwszej = probZapisu;
+probZapisu = 0; zapisanyRekord = null;
+await wyslij2();
+check("drugie zgloszenie bez ponawiania", probZapisu === 1, probZapisu);
+check("pierwsze zgloszenie ponawialo", probPierwszej > 1, probPierwszej);
+
+globalThis.fetch = fetchBezKolumn;
+console.log(`  brakujące kolumny odrzucane w locie · pierwszy zapis ${probPierwszej} prób, drugi 1`);
+
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));
