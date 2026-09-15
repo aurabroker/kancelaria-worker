@@ -684,4 +684,62 @@ check("termin o winie zachowany",
   JSON.stringify(POOLS).includes("wyłącznie winnego"));
 console.log("  żadna strona nie zawęża zakresu praktyki");
 
+// 26. zgloszenie nie przepada, gdy jedna droga zawiedzie
+// 15 wrzesnia 2026 formularz zwracal 500: zapis do bazy padal, a mail
+// wisial za udanym zapisem, wiec zgloszenie ginelo w calosci.
+console.log("\n=== ODPORNOSC FORMULARZA ===");
+const realnyFetch = globalThis.fetch;
+const udaj = ({ baza, resend }) => {
+  globalThis.fetch = async (url, opcje) => {
+    const u = String(url);
+    if (u.includes("siteverify")) {
+      return new Response(JSON.stringify({ success: true, action: TURNSTILE_ACTION,
+        hostname: "rozwod.waw.pl" }), { headers: { "Content-Type": "application/json" } });
+    }
+    if (u.includes("supabase.co")) return new Response(baza.tresc || "", { status: baza.status });
+    if (u.includes("resend.com")) {
+      ostatniMail = JSON.parse(String(opcje.body));
+      return new Response(JSON.stringify({ id: "x" }), { status: resend.status });
+    }
+    return new Response("", { status: 404 });
+  };
+};
+let ostatniMail = null;
+const srodowisko = { TURNSTILE_SECRET: { get: async () => "k" }, RESEND_API_KEY: "re_x" };
+const wyslij = () => worker.fetch(new Request("https://rozwod.waw.pl/api/lead", {
+  method: "POST", headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ imie: "Anna", telefon: "600100200", zgoda: true, turnstile: "z" })
+}), srodowisko);
+
+udaj({ baza: { status: 201 }, resend: { status: 200 } });
+let odp = await wyslij();
+check("obie drogi dzialaja", odp.status === 200, odp.status);
+check("mail bez ostrzezenia o bazie", ostatniMail && !ostatniMail.html.includes("nie ma w bazie"));
+
+// Baza odmawia (np. po rotacji klucza) — mail ratuje zgloszenie.
+ostatniMail = null;
+udaj({ baza: { status: 401, tresc: "invalid api key" }, resend: { status: 200 } });
+odp = await wyslij();
+check("padla baza, mail ratuje", odp.status === 200, odp.status);
+check("mail ostrzega o braku wpisu", ostatniMail && ostatniMail.html.includes("nie ma w bazie"));
+
+// Padl Resend — lead jest w bazie, wiec zgloszenie przyjete.
+udaj({ baza: { status: 201 }, resend: { status: 500 } });
+odp = await wyslij();
+check("padl mail, baza ratuje", odp.status === 200, odp.status);
+
+// Obie drogi padly — dopiero to jest bledem, z numerem telefonu w tresci.
+udaj({ baza: { status: 401 }, resend: { status: 500 } });
+odp = await wyslij();
+const odpJson = await odp.json();
+check("obie drogi padly to 500", odp.status === 500, odp.status);
+check("komunikat podaje telefon", odpJson.error.includes(FIRM.phoneLabel), odpJson.error);
+check("odpowiedz niesie kod przyczyny", !!odpJson.kod, JSON.stringify(odpJson));
+check("kod bez danych wrazliwych", !/re_|eyJ|secret/i.test(odpJson.kod), odpJson.kod);
+
+globalThis.fetch = realnyFetch;
+const tomlLogi = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
+check("logi Workera wlaczone", /\[observability\.logs\][\s\S]*?enabled = true/.test(tomlLogi));
+console.log("  zgłoszenie ginie dopiero wtedy, gdy zawiodą obie drogi");
+
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));

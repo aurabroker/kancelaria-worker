@@ -188,6 +188,11 @@ async function handleLead(request, cfg, hostname, env) {
   // jako sekret i usun go z kodu.
   const anonKey = (env && env.SUPABASE_ANON) || SUPABASE_ANON_FALLBACK;
 
+  /* Zapis i powiadomienie sa od siebie niezalezne. Wczesniej mail wisial
+     za udanym zapisem, wiec awaria bazy kasowala zgloszenie w calosci —
+     ani wiersza, ani wiadomosci. Teraz probujemy obu drog i uznajemy
+     zgloszenie za przyjete, jesli zadziala chocby jedna. */
+  let zapis = { ok: false, kod: "" };
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/kancelaria_leads`, {
       method: "POST",
@@ -214,34 +219,50 @@ async function handleLead(request, cfg, hostname, env) {
       }),
     });
 
-    if (!res.ok) {
-      const err = await res.text();
-      console.error("Supabase error:", err);
-      return jsonError(500, "Błąd zapisu — spróbuj ponownie");
+    if (res.ok) {
+      zapis.ok = true;
+    } else {
+      zapis.kod = `db${res.status}`;
+      console.error("Supabase:", res.status, (await res.text()).slice(0, 300));
     }
+  } catch (e) {
+    zapis.kod = "db-wyjatek";
+    console.error("Supabase:", e instanceof Error ? e.message : String(e));
+  }
 
-    // Powiadomienie mailowe jest best-effort: lead jest juz zapisany,
-    // wiec blad wysylki nie moze przerwac obslugi formularza.
-    await sendLeadNotification(env, {
+  let mail = { sent: false, reason: "nie proboWano" };
+  try {
+    mail = await sendLeadNotification(env, {
       imie: imie.trim(), telefon: telefon.trim(), email: email.trim(),
       temat, wiadomosc: wiadomosc.trim(), zrodlo_domena: hostname,
       dzielnica: cfg.district, ...utm,
+      // Kancelaria ma wiedziec, ze tego zgloszenia nie ma w bazie.
+      bazaPadla: !zapis.ok,
     }, FIRM);
+  } catch (e) {
+    console.error("mail:", e instanceof Error ? e.message : String(e));
+  }
 
+  if (zapis.ok || mail.sent) {
+    if (!zapis.ok) console.error("lead przyjety mimo bledu bazy:", zapis.kod);
+    if (!mail.sent) console.error("lead zapisany, ale bez powiadomienia:", mail.reason);
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders() }
     });
-
-  } catch (e) {
-    console.error(e);
-    return jsonError(500, "Błąd serwera");
   }
+
+  // Obie drogi zawiodly — dopiero teraz zgloszenie naprawde przepadlo.
+  console.error("lead utracony:", zapis.kod, mail.reason);
+  return jsonError(500, "Nie udało się wysłać. Zadzwoń: " + FIRM.phoneLabel,
+                   `${zapis.kod}/${mail.reason}`);
 }
 
 // ── POMOCNICZE ─────────────────────────────────────────────────────────────
-function jsonError(status, msg) {
-  return new Response(JSON.stringify({ ok: false, error: msg }), {
+function jsonError(status, msg, kod) {
+  // "kod" to krotki znacznik przyczyny. Nie zawiera nic wrazliwego, a
+  // pozwala rozpoznac blad z konsoli przegladarki, bez czytania logow.
+  return new Response(JSON.stringify({ ok: false, error: msg, ...(kod ? { kod } : {}) }), {
     status,
     headers: { "Content-Type": "application/json", ...corsHeaders() }
   });
