@@ -390,6 +390,19 @@ button{font:inherit;cursor:pointer}
 .faq p{font-size:15px;line-height:1.65;color:var(--muted);margin:0 0 18px;max-width:70ch;padding-right:34px}
 .faq-more{margin-top:20px;font-size:15px}
 
+/* Podstrona /pytania. Kazda kategoria ma wlasna kotwice, zeby dalo sie
+   podlinkowac pojedynczy dzial — z reklamy albo z odpowiedzi na maila. */
+.pyt-spis{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:26px}
+.pyt-spis a{display:flex;align-items:center;gap:11px;background:var(--paper);
+  padding:14px 16px;text-decoration:none;color:var(--ink);font-size:15px;line-height:1.28}
+.pyt-spis a:hover{background:var(--chalk);color:var(--clay)}
+.pyt-spis .ico{width:21px;height:21px;flex:none;color:var(--accent)}
+.pyt-spis b{margin-left:auto;flex:none;font-weight:400;font-size:13px;color:var(--muted)}
+.pyt-grupa{scroll-margin-top:16px}
+.pyt-grupa .sec-head{margin-bottom:6px}
+.pyt-gora{margin:16px 0 0;font-size:14px}
+
 /* ── formularz ── */
 .form-grid{display:grid;gap:28px}
 @media(min-width:900px){.form-grid{grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:48px;align-items:start}}
@@ -942,6 +955,76 @@ ${blokKontaktu(cfg, hostname)}
 
 </main>
 ${stopkaProsta()}
+<script src="/assets/page.js"><\/script>
+</body>
+</html>`;
+}
+
+/* Ikona dzialu na podstronie /pytania. Klucze odpowiadaja CATEGORIES z faq.js —
+   gdy dojdzie nowa kategoria, brak wpisu daje neutralna ikone dokumentow. */
+const IKONA_KAT = {
+  podstawy:   "pozew",
+  wina:       "rozwod-z-orzeczeniem-o-winie",
+  czas:       "termin",
+  koszty:     "dokumenty",
+  dzieci:     "wladza-rodzicielska",
+  alimenty:   "alimenty-na-dziecko",
+  majatek:    "podzial-majatku",
+  separacja:  "separacja",
+  zagranica:  "sprawa-zagraniczna",
+  procedura:  "dowody",
+};
+
+/* Polska odmiana rzeczownika po liczbie: 1 pytanie, 2-4 pytania, 5+ pytan.
+   Nastolatki (12-14) ida jak 5+, mimo koncowki 2-4. */
+function odmianaPytan(n) {
+  const d = n % 10, s = n % 100;
+  if (n === 1) return "pytanie";
+  if (d >= 2 && d <= 4 && !(s >= 12 && s <= 14)) return "pytania";
+  return "pyta\u0144";
+}
+
+/* Podstrona /pytania. Wczesniej byla to sciana dwustu naglowkow w jednym
+   ciagu, bez naglowka serwisu i bez formularza — czytalo sie to jak wydruk.
+   Teraz: spis dzialow, pytania rozwijane natywnym <details>, ten sam
+   formularz co na stronie glownej. */
+export function buildPytania({ cfg, hostname, grupy, head, schema }) {
+  const razem = grupy.reduce((a, g) => a + g.items.length, 0);
+  return `<!DOCTYPE html>
+<html lang="pl">
+<head>
+${head}
+${schema}
+</head>
+<body>
+${naglowek(cfg, true)}
+<main>
+<section class="sec" style="border-top:none"><div class="wrap">
+  <p class="okruchy"><a href="/">Strona g\u0142\u00f3wna</a> \u00b7 Pytania i odpowiedzi</p>
+  <div class="sec-head">
+    <p class="eyebrow">Baza wiedzy</p>
+    <h1 style="font-size:clamp(29px,5.5vw,44px);line-height:1.12;margin:0 0 12px">Pytania o rozw\u00f3d \u2014 ${esc(cfg.district)}</h1>
+    <p class="sec-desc">${razem} odpowiedzi przygotowanych przez ${esc(FIRM.attorney)}${grupy.length < 2 ? "" : `, w ${grupy.length} dzia\u0142ach`}.
+      Je\u017celi nie znajdziesz swojej sytuacji, napisz przez formularz na dole strony
+      \u2014 odpowiadamy w ci\u0105gu jednego dnia roboczego.</p>
+  </div>
+  ${grupy.length < 2 ? "" : `<nav class="pyt-spis">
+    ${grupy.map(g => `<a href="#${g.cat}">${icon(IKONA_KAT[g.cat] || "dokumenty")}${esc(g.label)}<b>${g.items.length}</b></a>`).join("\n    ")}
+  </nav>`}
+</div></section>
+${grupy.map(g => `<section class="sec pyt-grupa" id="${g.cat}"><div class="wrap">
+  <div class="sec-head">
+    <p class="eyebrow">${g.items.length} ${odmianaPytan(g.items.length)}</p>
+    <h2>${esc(g.label)}</h2>
+  </div>
+  <div class="faq">
+    ${g.items.map(f => `<details><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join("\n    ")}
+  </div>
+  ${grupy.length < 2 ? "" : `<p class="pyt-gora"><a href="#">\u2191 Wr\u00f3\u0107 do spisu dzia\u0142\u00f3w</a></p>`}
+</div></section>`).join("\n")}
+${blokKontaktu(cfg, hostname)}
+</main>
+${stopka(hostname)}
 <script src="/assets/page.js"><\/script>
 </body>
 </html>`;

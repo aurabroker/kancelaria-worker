@@ -9,7 +9,8 @@ import { CATEGORIES, faqForHost, faqPoolGrouped , PIN } from "./faq.js";
 import { sendLeadNotification } from "./mail.js";
 import { photoResponse, PHOTO_DIMS } from "./photo.js";
 import { icon } from "./icons.js";
-import { buildHome, buildBlogIndex, buildBlogWpis, buildKampania, CSS as LAYOUT_CSS } from "./layout.js";
+import { buildHome, buildBlogIndex, buildBlogWpis, buildKampania, buildPytania,
+         CSS as LAYOUT_CSS } from "./layout.js";
 import { WPISY, BLOG_HOST } from "./blog.js";
 import { STRONY, KAMPANIE_HOST } from "./kampanie.js";
 import { sprawdzTurnstile } from "./turnstile.js";
@@ -461,7 +462,7 @@ function glowaBloga(cfg, hostname, { tytul, opis, sciezka }) {
 <meta property="og:title" content="${esc(tytul)}">
 <meta property="og:description" content="${esc(opis)}">
 <meta property="og:url" content="${url}">
-<meta property="og:type" content="${sciezka === "/blog" ? "website" : "article"}">
+<meta property="og:type" content="${sciezka.startsWith("/blog/") ? "article" : "website"}">
 <meta property="og:locale" content="pl_PL">
 <meta property="og:image" content="https://${hostname}${FIRM.photoOg}">
 <meta name="twitter:card" content="summary_large_image">
@@ -2149,24 +2150,28 @@ ${trackingHead(cfg)}
 }
 
 function buildPytaniaHTML(cfg, hostname) {
-  const groups = faqPoolGrouped(hostname);
-  const all = groups.flatMap(g => g.items);
-  const schema = JSON.stringify({
+  const grupy = faqPoolGrouped(hostname);
+  const all   = grupy.flatMap(g => g.items);
+  const tytul = `Pytania o rozw\u00f3d \u2014 ${cfg.district} | Kancelaria Idzik-Cie\u015bla`;
+  const opis  = `Odpowiedzi na najcz\u0119stsze pytania o rozw\u00f3d, alimenty, podzia\u0142 maj\u0105tku i opiek\u0119 nad dzie\u0107mi. ${cfg.district}.`;
+  const schema = ldjson({
     "@context": "https://schema.org", "@type": "FAQPage",
-    mainEntity: all.map(f => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } }))
+    mainEntity: all.map(f => ({
+      "@type": "Question", name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a }
+    }))
+  }) + "\n" + ldjson({
+    "@context": "https://schema.org", "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Strona g\u0142\u00f3wna", item: `https://${hostname}/` },
+      { "@type": "ListItem", position: 2, name: "Pytania i odpowiedzi", item: `https://${hostname}/pytania` },
+    ]
   });
-  const body = `<div class="prose">
-<p class="section-label">Baza wiedzy · ${esc(cfg.district)}</p>
-<h1>Pytania o rozwód — ${esc(cfg.district)}</h1>
-<p class="section-desc">Odpowiedzi przygotowane przez ${esc(FIRM.attorney)}. Stan prawny na ${YEAR} rok. Jeżeli nie znajdziesz swojej sytuacji, zadzwoń pod ${esc(FIRM.phoneLabel)} — pierwsza rozmowa trwa 30 minut i jest bezpłatna.</p>
-${groups.map(g => `<h2>${esc(g.label)}</h2>
-${g.items.map(f => `<h3 style="font-size:1rem;margin:1.2rem 0 .3rem">${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join("\n")}`).join("\n")}
-<p style="margin-top:2.5rem"><a href="/#kontakt" class="btn btn-primary">Umów bezpłatną konsultację →</a></p>
-</div>
-<script type="application/ld+json">${schema}<\/script>`;
-  return shell(cfg, hostname, `Pytania o rozwód — ${cfg.district} | Kancelaria Idzik-Cieśla`,
-    `Odpowiedzi na najczęstsze pytania o rozwód, alimenty, podział majątku i opiekę nad dziećmi. ${cfg.district}.`,
-    body, { path: "/pytania" });
+  return buildPytania({
+    cfg, hostname, grupy,
+    head: glowaBloga(cfg, hostname, { tytul, opis, sciezka: "/pytania" }),
+    schema,
+  });
 }
 
 function buildLegalHTML(cfg, hostname, path) {

@@ -2,7 +2,7 @@ import worker, { TRACKING } from "../src/worker.js";
 import { readFile } from "node:fs/promises";
 import { chceMarkdown, markdownWlaczony, MARKDOWN_DOMYSLNIE } from "../src/markdown.js";
 import { DOMAIN_CONFIG, ALL_HOSTS, FIRM } from "../src/domains.js";
-import { POOLS } from "../src/faq.js";
+import { POOLS, faqPoolGrouped } from "../src/faq.js";
 import { ICONS, icon } from "../src/icons.js";
 import { WPISY, BLOG_HOST } from "../src/blog.js";
 import { STRONY, KAMPANIE_HOST, miasto } from "../src/kampanie.js";
@@ -548,7 +548,9 @@ const wszystkieDomeny = WIDGETY.flatMap(w => w.domeny);
 check("zadna domena w dwoch widgetach", new Set(wszystkieDomeny).size === wszystkieDomeny.length);
 for (const host of ALL_HOSTS) check("domena opisana w widgecie: "+host, wszystkieDomeny.includes(host));
 
-const zFormularzem = ["/", ...STRONY.map(k => "/" + k.slug)];
+// /pytania od 15 wrzesnia 2026 ma ten sam blok kontaktu co strona glowna,
+// wiec wchodzi do listy chronionych. Strony prawne zostaja bez formularza.
+const zFormularzem = ["/", "/pytania", ...STRONY.map(k => "/" + k.slug)];
 for (const host of ALL_HOSTS) {
   const w = widgetDla(host);
   for (const sciezka of zFormularzem) {
@@ -566,8 +568,11 @@ for (const host of ALL_HOSTS) {
       check(`${host}${sciezka} bez skryptu`, !h.includes("challenges.cloudflare.com"));
     }
   }
-  const bezFormularza = await (await get(host, "/pytania")).text();
-  check(host+"/pytania bez widgetu", !bezFormularza.includes("cf-turnstile"));
+  // Kontrola po drugiej stronie: strona prawna nie ma formularza, wiec nie
+  // moze ciagnac skryptu widgetu ani zostawiac pustego kontenera.
+  const bezFormularza = await (await get(host, "/rodo")).text();
+  check(host+"/rodo bez formularza", !bezFormularza.includes('id="contact-form"'));
+  check(host+"/rodo bez widgetu", !bezFormularza.includes("cf-turnstile"));
 }
 check("zeton wysylany z formularza", skryptStrony.includes("cf-turnstile-response"));
 check("zeton odnawiany po bledzie", skryptStrony.includes("turnstile.reset()"));
@@ -872,5 +877,42 @@ const mdWpis = await (await worker.fetch(new Request(`https://${BLOG_HOST}/blog/
 check("markdown wpisu ma wszystkie sekcje",
   WPISY[0].sekcje.every(sk => mdWpis.includes(sk.h)));
 console.log(`  ${zMarkdownem.length} adresów z wariantem markdown · domyślnie wyłączone`);
+
+// 29. Podstrona /pytania
+// Do 15 wrzesnia 2026 ta strona stala na starym szkielecie: tekstowy wordmark
+// zamiast logo, stopka z samym copyrightem i dwiescie pytan wylanych jako ciag
+// naglowkow h3. Wygladala jak wydruk, nie jak strona. Ten test pilnuje, zeby
+// nie wrocila do tamtego stanu.
+console.log("\n=== PODSTRONA PYTANIA ===");
+let pytanBadanych = 0;
+for (const host of ALL_HOSTS) {
+  const h = await (await get(host, "/pytania")).text();
+  const ile = (re) => (h.match(re) || []).length;
+  const grupy = faqPoolGrouped(host);
+  pytanBadanych += grupy.reduce((a, g) => a + g.items.length, 0);
+
+  check(host + "/pytania ma logo", h.includes('class="logo"'));
+  check(host + "/pytania ma nawigacje", h.includes('class="top-nav"'));
+  check(host + "/pytania ma pelna stopke", h.includes("stopka-siec"));
+  check(host + "/pytania bez ubogiej stopki", !h.includes("footer-bottom"));
+  check(host + "/pytania bez wordmarku", !h.includes("nav-logo-name"));
+  check(host + "/pytania ma formularz", h.includes('id="contact-form"'));
+
+  // Pytania rozwijane, a nie sciana naglowkow.
+  check(host + "/pytania rozwijane", ile(/<details>/g) === grupy.reduce((a, g) => a + g.items.length, 0));
+  check(host + "/pytania bez sciany h3", !h.includes('<h3 style="font-size:1rem'));
+
+  // Kazdy dzial ma kotwice rowna kluczowi kategorii, zeby dalo sie
+  // podlinkowac pojedynczy blok.
+  for (const g of grupy) check(host + "/pytania kotwica " + g.cat, h.includes(`id="${g.cat}"`));
+  // Spis ma sens dopiero od dwoch dzialow.
+  check(host + "/pytania spis gdy warto",
+    ile(/class="pyt-spis"/g) === (grupy.length > 1 ? 1 : 0));
+
+  check(host + "/pytania schema FAQ", h.includes('"@type":"FAQPage"'));
+  check(host + "/pytania okruchy", h.includes("BreadcrumbList"));
+}
+check("styl spisu w arkuszu", CSS.includes(".pyt-spis"));
+console.log(`  11 domen · ${pytanBadanych} pytań w rozwijanych blokach · pełny nagłówek, stopka i formularz`);
 
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));
