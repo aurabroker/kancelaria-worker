@@ -192,7 +192,7 @@ async function handleLead(request, cfg, hostname, env) {
      za udanym zapisem, wiec awaria bazy kasowala zgloszenie w calosci —
      ani wiersza, ani wiadomosci. Teraz probujemy obu drog i uznajemy
      zgloszenie za przyjete, jesli zadziala chocby jedna. */
-  let zapis = { ok: false, kod: "" };
+  let zapis = { ok: false, kod: "", tekst: "" };
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/kancelaria_leads`, {
       method: "POST",
@@ -223,11 +223,16 @@ async function handleLead(request, cfg, hostname, env) {
       zapis.ok = true;
     } else {
       zapis.kod = `db${res.status}`;
-      console.error("Supabase:", res.status, (await res.text()).slice(0, 300));
+      // Tresc bledu PostgREST mowi wprost, co jest nie tak: brak kolumny,
+      // odmowa reguly dostepu, niewazny klucz. Nie ma w niej nic wrazliwego,
+      // wiec idzie do powiadomienia — inaczej przyczyna zostaje niewidoczna.
+      zapis.tekst = (await res.text()).slice(0, 400);
+      console.error("Supabase:", res.status, zapis.tekst);
     }
   } catch (e) {
     zapis.kod = "db-wyjatek";
-    console.error("Supabase:", e instanceof Error ? e.message : String(e));
+    zapis.tekst = e instanceof Error ? e.message : String(e);
+    console.error("Supabase:", zapis.tekst);
   }
 
   let mail = { sent: false, reason: "nie proboWano" };
@@ -238,6 +243,8 @@ async function handleLead(request, cfg, hostname, env) {
       dzielnica: cfg.district, ...utm,
       // Kancelaria ma wiedziec, ze tego zgloszenia nie ma w bazie.
       bazaPadla: !zapis.ok,
+      bazaKod:   zapis.kod,
+      bazaTekst: zapis.tekst,
     }, FIRM);
   } catch (e) {
     console.error("mail:", e instanceof Error ? e.message : String(e));
@@ -246,7 +253,10 @@ async function handleLead(request, cfg, hostname, env) {
   if (zapis.ok || mail.sent) {
     if (!zapis.ok) console.error("lead przyjety mimo bledu bazy:", zapis.kod);
     if (!mail.sent) console.error("lead zapisany, ale bez powiadomienia:", mail.reason);
-    return new Response(JSON.stringify({ ok: true }), {
+    // Zgloszenie przyjete, ale jesli cos po drodze padlo, niech to widac
+    // takze w odpowiedzi — inaczej awaria zapisu jest niewidoczna z zewnatrz.
+    const uwaga = [zapis.ok ? "" : zapis.kod, mail.sent ? "" : "mail"].filter(Boolean).join("+");
+    return new Response(JSON.stringify({ ok: true, ...(uwaga ? { uwaga } : {}) }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders() }
     });

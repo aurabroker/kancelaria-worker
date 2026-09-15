@@ -62,8 +62,11 @@ export async function sendLeadNotification(env, lead, firm) {
     .filter(Boolean).join(" / ");
 
   const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;font-size:15px;line-height:1.55;color:#11161C">
-${lead.bazaPadla ? `<p style="margin:0 0 14px;padding:10px 14px;background:#FBE9E7;border-left:3px solid #96342C;font-size:14px">
-<strong>Uwaga: tego zgłoszenia nie ma w bazie.</strong> Zapis się nie powiódł, więc ta wiadomość jest jedynym śladem. Zachowaj ją.</p>` : ""}
+${lead.bazaPadla ? `<div style="margin:0 0 14px;padding:10px 14px;background:#FBE9E7;border-left:3px solid #96342C;font-size:14px">
+<strong>Uwaga: tego zgłoszenia nie ma w bazie.</strong> Zapis się nie powiódł, więc ta wiadomość jest jedynym śladem. Zachowaj ją.
+${lead.bazaKod ? `<p style="margin:8px 0 0;font:12px ui-monospace,Menlo,Consolas,monospace;color:#57616E">
+Przyczyna techniczna: ${esc(lead.bazaKod)} ${esc(lead.bazaTekst || "")}</p>` : ""}
+</div>` : ""}
 <h2 style="font-size:17px;margin:0 0 4px">Nowe zgłoszenie z formularza</h2>
 <p style="margin:0 0 16px;color:#57616E;font-size:13px">${esc(lead.zrodlo_domena)} &middot; ${esc(lead.dzielnica || "")}</p>
 <table style="border-collapse:collapse;font-size:15px">
