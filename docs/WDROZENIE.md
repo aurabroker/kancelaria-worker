@@ -93,6 +93,67 @@ przyczyną techniczną.
 Warto to zachować przy każdej kolejnej zmianie: **formularz ma mieć dwie
 niezależne drogi wyjścia.** Testy w `test/render.mjs` pilnują tego wprost.
 
+## Przepięcie domen dzielnicowych
+
+Dziesięć domen dzielnicowych nie jest podłączonych do Workera. Każda stoi
+na osobnym projekcie Cloudflare Pages, budowanym z repozytorium
+`aurabroker/divorce`, po jednym katalogu na dzielnicę. Stąd stara wersja
+na tych adresach.
+
+**Nie kasuj rekordów DNS ręcznie.** Wpis A albo CNAME należy do projektu
+Pages. Skasowany z poziomu DNS zostanie odtworzony albo zablokuje dodanie
+domeny do Workera. Domenę trzeba najpierw oddać z Pages.
+
+### Kolejność dla jednej domeny
+
+1. **Pages → projekt dzielnicy → Custom domains → usuń domenę.**
+   Usuń zarówno domenę główną, jak i wariant `www`, jeśli tam jest.
+   Cloudflare skasuje przy tym rekordy, które sam założył.
+2. **DNS → sprawdź, co zostało.** Jeśli po kroku pierwszym nadal wisi
+   jakiś ręczny rekord A albo CNAME dla domeny głównej lub `www`, skasuj
+   go teraz. **Rekordów MX i TXT nie ruszaj** — to poczta i weryfikacje.
+3. **Workers i Pages → `kancelaria-worker` → Domains → Add Custom Domain.**
+   Wpisz domenę. Cloudflare sam założy właściwy rekord i wystawi certyfikat.
+   Powtórz dla `www`, jeśli ma działać.
+4. **Sprawdź stronę.** Nowy układ, logo w nagłówku, baner zgody przy
+   pierwszej wizycie, widget pod formularzem.
+5. **Wyślij jedno zgłoszenie testowe** i sprawdź, czy przyszedł mail
+   i czy wiersz jest w tabeli `kancelaria_leads` z nazwą tej domeny
+   w polu `zrodlo_domena`.
+
+Przerwa w działaniu to kilkanaście sekund między krokiem pierwszym
+a trzecim. Certyfikat bywa wystawiany do kilku minut — do tego czasu
+przeglądarka może pokazać ostrzeżenie.
+
+### Kolejność domen
+
+Zacznij od `rozwodbemowo.pl`. Nie ma tam kampanii, więc pomyłka nic nie
+kosztuje. Potem osiem kolejnych. `rozwodtarchomin.pl` na końcu, bo jako
+jedyny ma żywy budżet reklamowy.
+
+### Droga odwrotu
+
+**Nie kasuj projektów Pages.** Zostaw je bez domen własnych przez tydzień.
+Powrót to ponowne dodanie domeny do projektu Pages i usunięcie jej z Workera.
+
+### Czego nie przenosimy
+
+Sprawdzone i odrzucone: teksty dzielnicowe są w 85 procentach identyczne
+między sobą, obrazy są w starej identyfikacji, a blog dociąga się do
+przeglądarki z Supabase, więc wyszukiwarki widzą pustą stronę.
+
+Jedyne, co warto sprawdzić przed skasowaniem projektów, to tabela
+`div_review` w Supabase. Jeśli są tam zatwierdzone opinie klientów,
+przenosimy je na nową stronę. Jeśli jest pusta, temat zamknięty.
+
+### Znany błąd na starej stronie
+
+Stara witryna Tarchomina podaje jako właściwy Sąd Okręgowy w Warszawie
+przy alei Solidarności. Tarchomin leży na Białołęce, więc właściwy jest
+Sąd Okręgowy Warszawa-Praga. Nowa wersja podaje Pragę. To dodatkowy
+powód, żeby nie zwlekać z tą domeną — reklama prowadzi dziś na stronę
+z błędną informacją o sądzie.
+
 ## 6. Do zrobienia zaraz po
 
 - **Etykieta konwersji kliknięcia w numer.** Pole `adsCallLabel` w
