@@ -26,7 +26,7 @@ import { STRONY, miasto } from "./kampanie.js";
 import { widgetDla, TURNSTILE_ACTION } from "./turnstile.js";
 
 /* Sieć domen w stopce — nazwy obszarów, nie dzielnic z kanwy. */
-const SIEC = [
+export const SIEC = [
   ["rozwod.waw.pl", "Warszawa"], ["rozwodmokotow.pl", "Mokotów"],
   ["rozwodwola.pl", "Wola"], ["rozwodzoliborz.pl", "Żoliborz"],
   ["rozwodbielany.pl", "Bielany"], ["rozwodochota.pl", "Ochota"],
@@ -44,18 +44,18 @@ const esc = (v) => String(v ?? "").replace(/[&<>"]/g, c =>
    ścieżki o bardzo różnej długości. To rozgałęzienie jest tu
    informacją — lista sześciu kroków je ukrywała. */
 
-const PIEN = [
+export const PIEN = [
   ["Pierwsza rozmowa", "30 minut, bez opłaty"],
   ["Przygotowanie pozwu", "1–3 tygodnie"],
   ["Złożenie pozwu", "opłata 600 zł"],
   ["Odpowiedź na pozew", "2 tygodnie od doręczenia"],
 ];
-const ZGODNA = [["Jedna rozprawa", "ok. 30 minut"], ["Wyrok", "uprawomocnienie 3 tyg."]];
-const SPORNA = [["Świadkowie", "kilka terminów"], ["Opinia biegłych", "4–8 miesięcy"],
+export const ZGODNA = [["Jedna rozprawa", "ok. 30 minut"], ["Wyrok", "uprawomocnienie 3 tyg."]];
+export const SPORNA = [["Świadkowie", "kilka terminów"], ["Opinia biegłych", "4–8 miesięcy"],
                 ["Kolejne rozprawy", "co 2–4 miesiące"], ["Wyrok", "możliwa apelacja"]];
 
 /* ---------- SCENARIUSZE MIESZKANIOWE ---------- */
-const MIESZKANIE = [
+export const MIESZKANIE = [
   { nr: 1, ikona: "mieszkanie", tytul: "Zostaję i spłacam drugą stronę",
     cytat: "Chcę zostać w mieszkaniu z dziećmi i mam zdolność, żeby udźwignąć ratę sama.",
     kroki: ["Wycena mieszkania i ustalenie spłaty — zwykle połowa różnicy między wartością a saldem kredytu.",
@@ -81,7 +81,7 @@ const MIESZKANIE = [
    Kanwa marki dala dwadziescia cztery ikony. Ta sekcja jest ich
    glownym miejscem pracy: jeden kafelek to jedna sprawa, ktora
    kancelaria prowadzi, opisana jednym zdaniem. */
-const ZAKRES = [
+export const ZAKRES = [
   ["rozwod-bez-orzekania-o-winie", "Rozwód bez orzekania o winie",
    "Najkrótsza droga, gdy oboje chcecie zakończyć małżeństwo."],
   ["rozwod-z-orzeczeniem-o-winie", "Rozwód z orzeczeniem o winie",

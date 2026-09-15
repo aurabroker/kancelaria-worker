@@ -13,6 +13,8 @@ import { buildHome, buildBlogIndex, buildBlogWpis, buildKampania, CSS as LAYOUT_
 import { WPISY, BLOG_HOST } from "./blog.js";
 import { STRONY, KAMPANIE_HOST } from "./kampanie.js";
 import { sprawdzTurnstile } from "./turnstile.js";
+import { markdownWlaczony, chceMarkdown, odpowiedzMarkdown, mdStronaGlowna,
+         mdKampania, mdBlogLista, mdBlogWpis, mdPytania } from "./markdown.js";
 
 /* Pomiar. GA4 i konto Google Ads sa wspolne dla calej sieci.
    Identyfikator konta podal wlasciciel 13 wrzesnia 2026. Etykieta leada to
@@ -45,6 +47,9 @@ export default {
     const url      = new URL(request.url);
     const hostname = url.hostname.replace(/^www\./, "");
     const cfg      = DOMAIN_CONFIG[hostname] || DEFAULT_CONFIG;
+    // Markdown dla agentow. Wylaczone, dopoki zmienna MARKDOWN_DLA_AGENTOW
+    // nie dostanie wartosci "tak" — patrz src/markdown.js.
+    const md = markdownWlaczony(env) && chceMarkdown(request.headers.get("Accept"));
 
     // POST /api/lead — zapis do Supabase
     if (request.method === "POST" && url.pathname === "/api/lead") {
@@ -69,11 +74,12 @@ export default {
     // GET /alimenty, /podzial-majatku, /separacja, /opieka-nad-dzieckiem
     const kampania = STRONY.find(k => url.pathname === "/" + k.slug);
     if (kampania) {
+      if (md) return odpowiedzMarkdown(mdKampania({ cfg, hostname, strona: kampania }));
       return new Response(buildKampania({
         cfg, hostname, strona: kampania,
         head: glowaKampanii(cfg, hostname, kampania),
         schema: schematKampanii(cfg, hostname, kampania),
-      }), { headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(600) } });
+      }), { headers: naglowkiStrony(600) });
     }
 
     // GET /blog oraz /blog/<wpis> — tylko na domenie glownej
@@ -82,6 +88,7 @@ export default {
         return Response.redirect(`https://${BLOG_HOST}${url.pathname}`, 301);
       }
       if (url.pathname === "/blog") {
+        if (md) return odpowiedzMarkdown(mdBlogLista(hostname));
         return new Response(buildBlogIndex({
           cfg, hostname,
           head: glowaBloga(cfg, hostname, {
@@ -90,11 +97,12 @@ export default {
             sciezka: "/blog",
           }),
           schema: schematBlogu(hostname),
-        }), { headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(600) } });
+        }), { headers: naglowkiStrony(600) });
       }
       const slug = url.pathname.slice("/blog/".length).replace(/\/$/, "");
       const wpis = WPISY.find(w => w.slug === slug);
       if (wpis) {
+        if (md) return odpowiedzMarkdown(mdBlogWpis(hostname, wpis));
         return new Response(buildBlogWpis({
           cfg, hostname, wpis,
           head: glowaBloga(cfg, hostname, {
@@ -103,12 +111,12 @@ export default {
             sciezka: `/blog/${wpis.slug}`,
           }),
           schema: schematWpisu(hostname, wpis),
-        }), { headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(600) } });
+        }), { headers: naglowkiStrony(600) });
       }
     }
     if (url.pathname === "/pytania") {
-      return new Response(buildPytaniaHTML(cfg, hostname), {
-        headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(300) } });
+      if (md) return odpowiedzMarkdown(mdPytania(cfg, hostname), 300);
+      return new Response(buildPytaniaHTML(cfg, hostname), { headers: naglowkiStrony(300) });
     }
     if (url.pathname === "/polityka-prywatnosci" || url.pathname === "/rodo") {
       return new Response(buildLegalHTML(cfg, hostname, url.pathname), {
@@ -145,9 +153,13 @@ export default {
 
     // GET / — strona glowna
     if (url.pathname === "/") {
-      return new Response(buildHTML(cfg, hostname, url), {
-        headers: { "Content-Type": "text/html; charset=utf-8", ...cacheHeaders(300) }
-      });
+      if (md) {
+        const adGroup = url.searchParams.get("utm_content");
+        const h1 = (AD_HEADLINES[adGroup] && AD_HEADLINES[adGroup](cfg)) || cfg.h1;
+        return odpowiedzMarkdown(mdStronaGlowna({
+          cfg, hostname, h1, faqItems: [PIN, ...faqForHost(hostname, 7)] }), 300);
+      }
+      return new Response(buildHTML(cfg, hostname, url), { headers: naglowkiStrony(300) });
     }
 
     // Wszystko pozostale to prawdziwy 404, nie kopia strony glownej.
@@ -334,6 +346,16 @@ function corsHeaders() {
 
 function cacheHeaders(seconds) {
   return { "Cache-Control": `public, max-age=${seconds}` };
+}
+
+/* Strony, ktore maja wariant markdown, MUSZA oglaszac Vary: Accept —
+   inaczej pamiec podreczna poda markdown przegladarce albo HTML agentowi. */
+function naglowkiStrony(seconds) {
+  return {
+    "Content-Type": "text/html; charset=utf-8",
+    "Vary": "Accept",
+    ...cacheHeaders(seconds),
+  };
 }
 
 // ── PAGE.JS Z WSTRZYKNIĘTĄ KONFIGURACJĄ ───────────────────────────────────

@@ -1,5 +1,6 @@
 import worker, { TRACKING } from "../src/worker.js";
 import { readFile } from "node:fs/promises";
+import { chceMarkdown, markdownWlaczony, MARKDOWN_DOMYSLNIE } from "../src/markdown.js";
 import { DOMAIN_CONFIG, ALL_HOSTS, FIRM } from "../src/domains.js";
 import { POOLS } from "../src/faq.js";
 import { ICONS, icon } from "../src/icons.js";
@@ -806,5 +807,70 @@ check("odpowiedz bez uwagi", !(await o3.json()).uwaga);
 
 globalThis.fetch = fetchBezKolumn;
 console.log(`  brakujące kolumny odrzucane w locie · pierwszy zapis ${probPierwszej} prób, drugi 1 · pamięć wygasa`);
+
+// 28. markdown dla agentow
+// Domyslnie wylaczone. Wlacza sie zmienna MARKDOWN_DLA_AGENTOW bez wdrozenia.
+console.log("\n=== MARKDOWN DLA AGENTOW ===");
+check("domyslnie wylaczone", MARKDOWN_DOMYSLNIE === false);
+check("zmienna wlacza", markdownWlaczony({ MARKDOWN_DLA_AGENTOW: "tak" }) === true);
+check("zmienna wylacza", markdownWlaczony({ MARKDOWN_DLA_AGENTOW: "nie" }) === false);
+check("brak zmiennej to stan domyslny", markdownWlaczony({}) === MARKDOWN_DOMYSLNIE);
+check("wielkosc liter bez znaczenia", markdownWlaczony({ MARKDOWN_DLA_AGENTOW: " TAK " }) === true);
+
+// Naglowek przegladarki nie moze byc wziety za prosbe agenta.
+check("przegladarka nie chce markdown",
+  !chceMarkdown("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"));
+check("agent chce markdown", chceMarkdown("text/markdown"));
+check("markdown w liscie", chceMarkdown("text/markdown, text/plain;q=0.5"));
+check("waga zero to odmowa", !chceMarkdown("text/markdown;q=0"));
+check("pusty naglowek", !chceMarkdown(""));
+
+const zMd = { MARKDOWN_DLA_AGENTOW: "tak" };
+const naglowekAgenta = { "Accept": "text/markdown" };
+const naglowekPrzegladarki = { "Accept": "text/html,application/xhtml+xml,*/*;q=0.8" };
+const zMarkdownem = ["/", "/pytania", "/blog", "/blog/" + WPISY[0].slug,
+                     ...STRONY.map(k => "/" + k.slug)];
+
+for (const sciezka of zMarkdownem) {
+  const adres = `https://${BLOG_HOST}${sciezka}`;
+  // Przelacznik wylaczony: agent dostaje HTML jak dotad.
+  const bez = await worker.fetch(new Request(adres, { headers: naglowekAgenta }), {});
+  check(sciezka + " wylaczone oddaje HTML",
+    (bez.headers.get("content-type") || "").startsWith("text/html"), bez.headers.get("content-type"));
+
+  const md = await worker.fetch(new Request(adres, { headers: naglowekAgenta }), zMd);
+  const tresc = await md.text();
+  check(sciezka + " wlaczone oddaje markdown",
+    md.headers.get("content-type") === "text/markdown; charset=utf-8", md.headers.get("content-type"));
+  // Bez Vary pamiec podreczna podalaby markdown przegladarce.
+  check(sciezka + " markdown oglasza Vary", md.headers.get("vary") === "Accept");
+  check(sciezka + " markdown bez znacznikow HTML", !/<[a-z\/][a-z]*[ >]/i.test(tresc),
+    (tresc.match(/<[a-z\/][a-z]*[ >]/i) || [])[0]);
+  check(sciezka + " markdown ma naglowek pierwszego stopnia", tresc.startsWith("# "));
+  check(sciezka + " markdown podaje zrodlo", tresc.includes(adres));
+  check(sciezka + " markdown ma kontakt", tresc.includes(FIRM.phoneLabel));
+  check(sciezka + " markdown ma zastrzezenie", tresc.includes("nie stanowią porady prawnej"));
+  check(sciezka + " markdown lzejszy od HTML", tresc.length < (await (await worker.fetch(
+    new Request(adres), {})).text()).length);
+
+  // Przegladarka dostaje HTML takze przy wlaczonym przelaczniku.
+  const html = await worker.fetch(new Request(adres, { headers: naglowekPrzegladarki }), zMd);
+  check(sciezka + " przegladarka dostaje HTML",
+    (html.headers.get("content-type") || "").startsWith("text/html"));
+  check(sciezka + " HTML oglasza Vary", html.headers.get("vary") === "Accept");
+}
+
+// Tresc musi sie zgadzac ze strona, nie byc osobnym bytem.
+const mdGlowna = await (await worker.fetch(new Request(`https://${BLOG_HOST}/`,
+  { headers: naglowekAgenta }), zMd)).text();
+check("markdown zna sad wlasciwy", mdGlowna.includes(DOMAIN_CONFIG[BLOG_HOST].courtNote));
+check("markdown zna oplate od pozwu", mdGlowna.includes("600 zł"));
+check("markdown wymienia strony kampanii",
+  STRONY.every(k => mdGlowna.includes(`/${k.slug}`)));
+const mdWpis = await (await worker.fetch(new Request(`https://${BLOG_HOST}/blog/${WPISY[0].slug}`,
+  { headers: naglowekAgenta }), zMd)).text();
+check("markdown wpisu ma wszystkie sekcje",
+  WPISY[0].sekcje.every(sk => mdWpis.includes(sk.h)));
+console.log(`  ${zMarkdownem.length} adresów z wariantem markdown · domyślnie wyłączone`);
 
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));
