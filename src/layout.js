@@ -21,7 +21,7 @@
 
 import { FIRM } from "./domains.js";
 import { icon } from "./icons.js";
-import { WPISY } from "./blog.js";
+import { WPISY, BLOG_HOST } from "./blog.js";
 import { STRONY, miasto } from "./kampanie.js";
 import { widgetDla, TURNSTILE_ACTION } from "./turnstile.js";
 
@@ -607,7 +607,13 @@ footer a:hover{color:#fff;text-decoration:underline}
 /* Naglowek i stopka sa wspolne dla strony glownej i wpisow bloga.
    Na podstronach kotwice prowadza na strone glowna, bo tamtych sekcji
    tutaj nie ma. */
-function naglowek(cfg, podstrona = false) {
+/* Blog stoi tylko na domenie glownej — na dzielnicowej /blog odpowiada
+   przekierowaniem 301. Odnosnik wzgledny kazalby robotowi przejsc przez to
+   przekierowanie przy kazdej z dziesieciu domen, a Search Console
+   raportowala te adresy jako "Strona z przekierowaniem". Linkujemy wprost
+   do celu: jeden skok mniej dla czlowieka, zero przekierowan dla robota. */
+function naglowek(cfg, podstrona = false, hostname = BLOG_HOST) {
+  const blog = hostname === BLOG_HOST ? "/blog" : `https://${BLOG_HOST}/blog`;
   const tel = FIRM.phone, telTxt = FIRM.phoneLabel;
   return podstrona ? `<div class="accent-bar"></div>
 
@@ -623,7 +629,7 @@ function naglowek(cfg, podstrona = false) {
     <a href="/#koszty">Koszty</a>
     <a href="/#mieszkanie">Mieszkanie i kredyt</a>
     <a href="/#pytania">Pytania</a>
-    <a href="/blog">Blog</a>
+    <a href="${blog}">Blog</a>
   </nav>
   <a class="top-tel" href="tel:${tel}" onclick="trackCall()">${icon("konsultacja-telefoniczna")}${esc(telTxt)}</a>
 </div></div></header>`
@@ -641,7 +647,7 @@ function naglowek(cfg, podstrona = false) {
     <a href="#koszty">Koszty</a>
     <a href="#mieszkanie">Mieszkanie i kredyt</a>
     <a href="#pytania">Pytania</a>
-    <a href="/blog">Blog</a>
+    <a href="${blog}">Blog</a>
   </nav>
   <a class="top-tel" href="tel:${tel}" onclick="trackCall()">${icon("konsultacja-telefoniczna")}${esc(telTxt)}</a>
 </div></div></header>`;
@@ -661,7 +667,7 @@ function stopka(hostname) {
   <div class="stopka-dol">
     <span>© ${new Date().getUTCFullYear()} ${esc(FIRM.name)} · NIP ${esc(FIRM.nip)}</span>
     <nav>
-      <a href="/blog">Blog</a>
+      <a href="${hostname === BLOG_HOST ? "/blog" : `https://${BLOG_HOST}/blog`}">Blog</a>
       <a href="/pytania">Pytania</a>
       <a href="/polityka-prywatnosci">Polityka prywatności</a>
       <a href="/rodo">Informacja RODO</a>
@@ -689,7 +695,7 @@ ${head}
 ${schema}
 </head>
 <body>
-${naglowek(cfg, true)}
+${naglowek(cfg, true, hostname)}
 <main>
 <section class="sec" style="border-top:none"><div class="wrap">
   <p class="okruchy"><a href="/">Strona główna</a> · Blog</p>
@@ -725,7 +731,7 @@ ${head}
 ${schema}
 </head>
 <body>
-${naglowek(cfg, true)}
+${naglowek(cfg, true, hostname)}
 <main>
 <section class="sec" style="border-top:none"><div class="wrap">
   <p class="okruchy"><a href="/">Strona główna</a> · <a href="/blog">Blog</a> · ${esc(wpis.kategoria)}</p>
@@ -997,7 +1003,7 @@ ${head}
 ${schema}
 </head>
 <body>
-${naglowek(cfg, true)}
+${naglowek(cfg, true, hostname)}
 <main>
 <section class="sec" style="border-top:none"><div class="wrap">
   <p class="okruchy"><a href="/">Strona g\u0142\u00f3wna</a> \u00b7 Pytania i odpowiedzi</p>
@@ -1042,7 +1048,7 @@ ${schema}
 </head>
 <body>
 
-${naglowek(cfg)}
+${naglowek(cfg, false, hostname)}
 
 <main>
 

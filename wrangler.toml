@@ -31,3 +31,11 @@ secret_name = "TURNSTILE_SECRET"
 binding     = "TURNSTILE_SECRET_2"
 store_id    = "15030d8ca051490e96bd866168384aa9"
 secret_name = "TURNSTILE_SECRET_2"
+
+# Markdown dla agentow, wlaczony 17 wrzesnia 2026 na polecenie wlasciciela.
+# Zmienna MUSI stac tutaj, a nie w panelu: wrangler wysyla przy wgrywaniu
+# wersji dokladnie te ustawienia, ktore widzi w tym pliku, wiec wpis dodany
+# recznie w panelu zniknalby przy najblizszym wdrozeniu.
+# Wartosc "nie" wylacza z powrotem, bez zmiany kodu.
+[vars]
+MARKDOWN_DLA_AGENTOW = "tak"

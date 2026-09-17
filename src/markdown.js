@@ -10,10 +10,12 @@
    Dlatego nie ma w nim śmieci, a treść jest identyczna co do
    znaczenia z tym, co widzi człowiek.
 
-   PRZEŁĄCZNIK. Domyślnie wyłączone. Włącza się bez wdrożenia:
-   w panelu Workera dodaj zmienną MARKDOWN_DLA_AGENTOW o wartości
-   "tak". Wartość "nie" wyłącza z powrotem, niezależnie od stałej
-   poniżej.
+   PRZEŁĄCZNIK. Stała poniżej to stan domyślny; nadpisuje go zmienna
+   MARKDOWN_DLA_AGENTOW ("tak" włącza, "nie" wyłącza). Zmienną ustawia
+   się w wrangler.toml, NIE w panelu Workera — wrangler wysyła przy
+   wgrywaniu wersji dokładnie te ustawienia, które widzi w pliku, więc
+   wpis dodany ręcznie w panelu zniknąłby przy najbliższym wdrożeniu.
+   Włączone 17 września 2026.
    ============================================================ */
 
 import { FIRM } from "./domains.js";

@@ -309,7 +309,10 @@ const mapaGl = await (await get(BLOG_HOST, "/sitemap.xml")).text();
 check("mapa glownej z blogiem", (mapaGl.match(/\/blog/g) || []).length === WPISY.length + 1);
 const brak = await get(BLOG_HOST, "/blog/nie-ma-takiego-wpisu");
 check("nieznany wpis to 404", brak.status === 404, brak.status);
-for (const host of ALL_HOSTS) check(host+" link do bloga w nawigacji", texts[host].includes('href="/blog"'));
+// Kazda domena linkuje do bloga; dzielnicowa wprost do domeny glownej,
+// zeby nie przechodzic przez przekierowanie (szczegoly w tescie 30).
+for (const host of ALL_HOSTS) check(host+" link do bloga w nawigacji",
+  texts[host].includes(host === BLOG_HOST ? 'href="/blog"' : `href="https://${BLOG_HOST}/blog"`));
 console.log(`  ${WPISY.length} wpisów na ${BLOG_HOST} · 10 domen przekierowuje · mapa i llms.txt zaktualizowane`);
 
 // 17. strony docelowe kampanii
@@ -914,5 +917,30 @@ for (const host of ALL_HOSTS) {
 }
 check("styl spisu w arkuszu", CSS.includes(".pyt-spis"));
 console.log(`  11 domen · ${pytanBadanych} pytań w rozwijanych blokach · pełny nagłówek, stopka i formularz`);
+
+// 30. Odnosniki do bloga bez przekierowania
+// Blog stoi tylko na domenie glownej, a /blog na dzielnicowej odpowiada
+// przekierowaniem 301. Dopoki naglowek i stopka linkowaly wzglednie, robot
+// przechodzil przez to przekierowanie na kazdej z dziesieciu domen, a Search
+// Console raportowala je jako "Strona z przekierowaniem". Linkujemy wprost.
+console.log("\n=== ODNOSNIKI DO BLOGA ===");
+for (const host of ALL_HOSTS) {
+  const glowna = host === BLOG_HOST;
+  for (const sciezka of ["/", "/pytania"]) {
+    const h = await (await get(host, sciezka)).text();
+    const wzgl = (h.match(/href="\/blog"/g) || []).length;
+    const bezw = (h.match(new RegExp(`href="https://${BLOG_HOST}/blog"`, "g")) || []).length;
+    // Naglowek i stopka — dwa odnosniki na stronie.
+    check(`${host}${sciezka} odnosniki do bloga`,
+      glowna ? (wzgl === 2 && bezw === 0) : (wzgl === 0 && bezw === 2),
+      `wzgl:${wzgl} bezwzgl:${bezw}`);
+  }
+  // Samo przekierowanie zostaje: adres wpisany z palca ma dojsc do celu.
+  const przekierowanie = await get(host, "/blog");
+  check(host + "/blog " + (glowna ? "serwuje blog" : "przekierowuje 301"),
+    glowna ? przekierowanie.status === 200 : przekierowanie.status === 301,
+    przekierowanie.status);
+}
+console.log("  11 domen · odnosniki prosto do domeny bloga · 301 dalej działa");
 
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));
