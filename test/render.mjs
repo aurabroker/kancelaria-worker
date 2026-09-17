@@ -356,7 +356,13 @@ for (const host of ALL_HOSTS) {
     }
     // Linkowanie wewnetrzne.
     check(`${host}/${k.slug} link do strony glownej`, h.includes('href="/"'));
-    for (const [u] of k.linki) check(`${host}/${k.slug} link ${u}`, h.includes(`href="${u}"`));
+    // Odnosnik do wpisu bloga jest bezwzgledny wszedzie poza domena bloga,
+    // zeby nie prowadzic przez przekierowanie 301 (test 30).
+    for (const [u] of k.linki) {
+      const oczekiwany = u.startsWith("/blog/") && host !== BLOG_HOST
+        ? `https://${BLOG_HOST}${u}` : u;
+      check(`${host}/${k.slug} link ${u}`, h.includes(`href="${oczekiwany}"`));
+    }
     // Strona docelowa nie ma nawigacji, ktora wyprowadza z lejka.
     check(`${host}/${k.slug} bez nawigacji`, !h.includes('class="top-nav"'));
   }
@@ -941,6 +947,31 @@ for (const host of ALL_HOSTS) {
     glowna ? przekierowanie.status === 200 : przekierowanie.status === 301,
     przekierowanie.status);
 }
-console.log("  11 domen · odnosniki prosto do domeny bloga · 301 dalej działa");
+// Pelny obchod: kazdy odnosnik wewnetrzny na kazdej domenie ma oddawac 200.
+// Samo pilnowanie naglowka nie wystarczylo — linki do wpisow siedza takze
+// w tresci strony glownej i na stronach kampanii, i one tez przekierowywaly.
+const STRONY_DO_OBCHODU = ["/", "/pytania", "/polityka-prywatnosci", "/rodo",
+                           ...STRONY.map(k => "/" + k.slug)];
+let odnosnikowSprawdzonych = 0;
+for (const host of ALL_HOSTS) {
+  const cele = new Set();
+  for (const sciezka of STRONY_DO_OBCHODU) {
+    const h = await (await get(host, sciezka)).text();
+    for (const m of h.matchAll(/href="([^"]+)"/g)) {
+      let cel = m[1];
+      if (cel.startsWith("#") || cel.startsWith("tel:") || cel.startsWith("mailto:")) continue;
+      if (cel.startsWith(`https://${host}`)) cel = cel.slice(`https://${host}`.length);
+      if (!cel.startsWith("/")) continue;   // odnosniki na inne domeny pomijamy
+      cele.add(cel.split("#")[0] || "/");
+    }
+  }
+  for (const cel of cele) {
+    const r = await get(host, cel);
+    odnosnikowSprawdzonych++;
+    check(`${host}${cel} bez przekierowania`, r.status === 200,
+      r.status + (r.headers.get("location") ? " -> " + r.headers.get("location") : ""));
+  }
+}
+console.log(`  11 domen · ${odnosnikowSprawdzonych} odnośników wewnętrznych, każdy 200 · 301 dla wpisanych z palca dalej działa`);
 
 console.log("\n" + (fail===0 ? "WSZYSTKIE TESTY PRZESZLY" : `BLEDOW: ${fail}`));

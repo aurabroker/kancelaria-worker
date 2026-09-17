@@ -607,6 +607,13 @@ footer a:hover{color:#fff;text-decoration:underline}
 /* Naglowek i stopka sa wspolne dla strony glownej i wpisow bloga.
    Na podstronach kotwice prowadza na strone glowna, bo tamtych sekcji
    tutaj nie ma. */
+/* Odnosnik do bloga z domeny dzielnicowej wskazuje domene glowna wprost.
+   Wzglednie wskazany adres /blog/... trafia na dzielnicowej w przekierowanie
+   301 — czlowiek traci skok, a robot raportuje "Strona z przekierowaniem". */
+function blogUrl(sciezka, hostname) {
+  return hostname === BLOG_HOST ? sciezka : `https://${BLOG_HOST}${sciezka}`;
+}
+
 /* Blog stoi tylko na domenie glownej — na dzielnicowej /blog odpowiada
    przekierowaniem 301. Odnosnik wzgledny kazalby robotowi przejsc przez to
    przekierowanie przy kazdej z dziesieciu domen, a Search Console
@@ -955,7 +962,7 @@ ${blokKontaktu(cfg, hostname)}
     Biura przy ${esc(FIRM.offices[0].street)} i ${esc(FIRM.offices[1].street)} w Warszawie.
     Konsultacje online dla całej Polski. Telefon ${esc(telTxt)} albo formularz powyżej.</p>
   <div class="kam-linki">
-    ${strona.linki.map(([u, t]) => `<a href="${u}">${esc(t)}</a>`).join("\n    ")}
+    ${strona.linki.map(([u, t]) => `<a href="${u.startsWith("/blog/") ? blogUrl(u, hostname) : u}">${esc(t)}</a>`).join("\n    ")}
   </div>
 </div></section>
 
@@ -1147,7 +1154,7 @@ ${naglowek(cfg, false, hostname)}
   </div>
   <p class="sec-desc" style="margin:14px 0 26px;max-width:72ch">Wina ma jeden wymierny skutek:
     alimenty między byłymi małżonkami. Nie przesądza o dzieciach ani, co do zasady, o podziale
-    majątku. <a href="/blog/rozwod-z-wina-czy-bez-orzekania">Kiedy walka o winę się opłaca</a>.</p>
+    majątku. <a href="${blogUrl('/blog/rozwod-z-wina-czy-bez-orzekania', hostname)}">Kiedy walka o winę się opłaca</a>.</p>
 
   <p class="tag tag-zmienne">Zależne od sprawy — nie u każdego</p>
   <div class="koszt">
